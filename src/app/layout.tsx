@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   title: { default: `${BRAND.name} — Learn guitar & piano`, template: `%s · ${BRAND.name}` },
   description: BRAND.description,
   applicationName: BRAND.name,
-  manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {

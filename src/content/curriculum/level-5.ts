@@ -1,3 +1,616 @@
 import type { Lesson } from "../types";
+import { chordMidi } from "@/lib/music/chords";
+import { scaleMidi } from "@/lib/music/scales";
+import { alankarMidi, ALANKARS } from "@/lib/music/sargam";
+import { explain, lesson, listen, practice, q, selfCheck, show } from "./advanced-builders";
 
-export const LEVEL_5: Lesson[] = [];
+/**
+ * Level 5 — Scales & music theory (track: theory, shared by guitar and piano).
+ * Note data is generated from the tested theory library wherever possible.
+ */
+const C_MAJOR = scaleMidi("C", "major");
+const G_MAJOR = scaleMidi("G", "major");
+const A_NAT_MINOR = scaleMidi("A", "naturalMinor", 3);
+const A_HARM_MINOR = scaleMidi("A", "harmonicMinor", 3);
+const A_MEL_MINOR = scaleMidi("A", "melodicMinor", 3);
+const C_MAJ_PENTA = scaleMidi("C", "majorPentatonic");
+const A_MIN_PENTA = scaleMidi("A", "minorPentatonic", 3);
+
+export const LEVEL_5: Lesson[] = [
+  lesson({
+    id: "t5-major-scale",
+    track: "theory",
+    level: 5,
+    order: 1,
+    title: "The major scale",
+    summary: "Whole, whole, half, whole, whole, whole, half — the recipe behind 'Do Re Mi'.",
+    minutes: 12,
+    skills: ["major-scale"],
+    prerequisites: ["l1-octaves-chromatic"],
+    topics: ["scales", "theory-basics"],
+    glossary: [
+      { term: "Scale", meaning: "A set of notes in order, going up or down, that music is built from." },
+      { term: "Whole step (tone)", meaning: "Two semitones — skipping one key/fret." },
+      { term: "Half step (semitone)", meaning: "The very next key or fret." },
+    ],
+    steps: [
+      explain("recipe", "The recipe: W W H W W W H", "A major scale is 8 notes from one note to the same note an octave higher. The gaps between them always follow the same recipe: Whole, Whole, Half, Whole, Whole, Whole, Half. Starting on C, that gives only white keys: C D E F G A B C.", {
+        hinglish: "Major scale ka formula: Whole-Whole-Half-Whole-Whole-Whole-Half. C se shuru karo toh sirf safed keys aati hain.",
+        visual: { type: "keyboard", low: 60, high: 72, highlight: C_MAJOR, caption: "C major scale" },
+      }),
+      listen("hear-c-major", "Hear C major", "Up and back down. This happy sound is the major scale.", { type: "notes", notes: [...C_MAJOR, ...C_MAJOR.slice(0, -1).reverse()], step: 0.35 }),
+      explain("g-major", "Same recipe, new starting note", "Start the recipe on G and you need one black key: G A B C D E F♯ G. The F has to be raised to F♯ to keep the half step between the 7th and 8th notes.", {
+        visual: { type: "keyboard", low: 67, high: 79, highlight: G_MAJOR, caption: "G major: G A B C D E F♯ G" },
+      }),
+      practice("play-c-major", "Play C major", "Play the C major scale going up. Piano: RH fingers 1 2 3 1 2 3 4 5 (thumb tucks under after E). Guitar: any octave is fine.", { type: "play-sequence", instrument: "either", notes: C_MAJOR, anyOctave: true, fingers: [1, 2, 3, 1, 2, 3, 4, 5], prompt: "Play C D E F G A B C." }, { mastery: true }),
+      practice("play-g-major", "Play G major", "Remember F♯!", { type: "play-sequence", instrument: "either", notes: G_MAJOR, anyOctave: true, prompt: "Play G A B C D E F♯ G." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "What is the step pattern of a major scale?", ["W W H W W W H", "W H W W H W W", "H W W W H W W"], 0, "Major = Whole Whole Half Whole Whole Whole Half."),
+      q("q2", "Which note is sharp in G major?", ["C♯", "F♯", "B♭"], 1, "G major has one sharp: F♯."),
+      q("q3", "Where are the half steps in C major?", ["E–F and B–C", "C–D and G–A", "D–E and A–B"], 0, "Between degrees 3–4 (E–F) and 7–8 (B–C)."),
+      q("q4", "How many different notes are in a major scale (not counting the octave)?", ["5", "7", "12"], 1, "Seven different notes, then the octave repeats the first."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-minor-scales",
+    track: "theory",
+    level: 5,
+    order: 2,
+    title: "Minor scales: natural, harmonic & melodic",
+    summary: "The darker scale family — and why there are three versions.",
+    minutes: 14,
+    skills: ["minor-scales"],
+    prerequisites: ["t5-major-scale"],
+    topics: ["scales"],
+    steps: [
+      explain("natural", "Natural minor: W H W W H W W", "The natural minor scale has a lowered (flat) 3rd, 6th and 7th compared to major. A natural minor uses only white keys: A B C D E F G A.", { visual: { type: "keyboard", low: 57, high: 69, highlight: A_NAT_MINOR, caption: "A natural minor" } }),
+      listen("compare-major-minor", "Major vs minor", "C major, then A natural minor. Notice the darker mood.", { type: "compare", a: C_MAJOR, b: A_NAT_MINOR, labelA: "C major", labelB: "A natural minor" }),
+      explain("harmonic", "Harmonic minor: raise the 7th", "Raise the 7th note by a semitone: A B C D E F G♯ A. This creates a strong pull back to A, and a distinctive 'exotic' gap between F and G♯ (three semitones).", { visual: { type: "keyboard", low: 57, high: 69, highlight: A_HARM_MINOR, caption: "A harmonic minor" } }),
+      explain("melodic", "Melodic minor: raise the 6th and 7th going up", "Going up: A B C D E F♯ G♯ A — smooth and singable. In classical music it comes back down as natural minor. (In jazz, the raised version is used both ways.)", { visual: { type: "keyboard", low: 57, high: 69, highlight: A_MEL_MINOR, caption: "A melodic minor (ascending)" } }),
+      listen("three-minors", "Hear harmonic minor", "Listen for the leap between F and G♯.", { type: "notes", notes: A_HARM_MINOR, step: 0.35 }),
+      practice("play-nat-minor", "Play A natural minor", "All naturals: A B C D E F G A.", { type: "play-sequence", instrument: "either", notes: A_NAT_MINOR, anyOctave: true, prompt: "Play A natural minor going up." }, { mastery: true }),
+      practice("play-harm-minor", "Play A harmonic minor", "Same as natural, but G♯.", { type: "play-sequence", instrument: "either", notes: A_HARM_MINOR, anyOctave: true, prompt: "Play A harmonic minor going up." }),
+      practice("ear-maj-min", "Major or minor?", "Listen and choose.", { type: "ear-choice", prompt: "Is this scale or chord major or minor?", rounds: 6, mode: "major-minor" }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Natural minor step pattern?", ["W H W W H W W", "W W H W W W H", "H W W H W W W"], 0, "Natural minor = W H W W H W W."),
+      q("q2", "What makes harmonic minor different from natural minor?", ["Raised 3rd", "Raised 7th", "Lowered 5th"], 1, "Harmonic minor raises the 7th degree."),
+      q("q3", "A melodic minor ascending is…", ["A B C D E F G A", "A B C D E F♯ G♯ A", "A B C♯ D E F♯ G♯ A"], 1, "Melodic minor raises the 6th and 7th going up."),
+      q("q4", "Which scale sounds 'darker'?", ["Major", "Minor"], 1, "The lowered 3rd gives minor its darker sound."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-intervals",
+    track: "theory",
+    level: 5,
+    order: 3,
+    title: "Intervals: major, minor & perfect",
+    summary: "Measure the distance between two notes in semitones.",
+    minutes: 14,
+    skills: ["intervals"],
+    prerequisites: ["t5-major-scale"],
+    topics: ["theory-basics", "ear-training"],
+    glossary: [{ term: "Interval", meaning: "The distance between two notes, counted in semitones and named (e.g. major 3rd = 4 semitones)." }],
+    steps: [
+      explain("table", "The interval table", "Count semitones from the lower note: 1 = minor 2nd, 2 = major 2nd, 3 = minor 3rd, 4 = major 3rd, 5 = perfect 4th, 6 = tritone, 7 = perfect 5th, 8 = minor 6th, 9 = major 6th, 10 = minor 7th, 11 = major 7th, 12 = octave. On guitar, each fret is one semitone, so frets count intervals for you.", {}),
+      listen("thirds", "Major 3rd vs minor 3rd", "C–E (4 semitones) then C–E♭ (3 semitones). The major 3rd sounds bright, the minor 3rd darker.", { type: "compare", a: ["C4", "E4"], b: ["C4", "Eb4"], labelA: "Major 3rd", labelB: "Minor 3rd" }),
+      listen("fifth-octave", "Perfect 5th and octave", "C–G (7 semitones) sounds open and strong; C–C is an octave.", { type: "compare", a: ["C4", "G4"], b: ["C4", "C5"], labelA: "Perfect 5th", labelB: "Octave" }),
+      practice("play-intervals", "Play intervals above C", "Play C, then a major 3rd (E), then a perfect 5th (G), then an octave (C).", { type: "play-sequence", instrument: "either", notes: ["C4", "E4", "G4", "C5"], prompt: "Play C, E, G, C (root, M3, P5, octave)." }),
+      practice("ear-intervals", "Recognise intervals by ear", "Choose the interval you hear.", { type: "ear-choice", prompt: "Which interval is this?", rounds: 8, mode: "interval", options: ["Major 2nd", "Major 3rd", "Perfect 4th", "Perfect 5th", "Octave"] }, { mastery: true, passAccuracy: 0.7 }),
+    ],
+    quiz: [
+      q("q1", "How many semitones in a perfect 5th?", ["5", "7", "8"], 1, "Perfect 5th = 7 semitones (C to G)."),
+      q("q2", "C to E♭ is a…", ["Major 3rd", "Minor 3rd", "Perfect 4th"], 1, "3 semitones = minor 3rd."),
+      q("q3", "On guitar, moving up 5 frets on one string gives a…", ["Perfect 4th", "Perfect 5th", "Major 3rd"], 0, "5 semitones = perfect 4th."),
+      q("q4", "Which interval is 6 semitones?", ["Tritone", "Minor 6th", "Major 6th"], 0, "6 semitones is the tritone (augmented 4th / diminished 5th)."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-triads",
+    track: "theory",
+    level: 5,
+    order: 4,
+    title: "Triads: major, minor, diminished & augmented",
+    summary: "Three-note chords built by stacking 3rds.",
+    minutes: 14,
+    skills: ["triads"],
+    prerequisites: ["t5-intervals"],
+    topics: ["chords", "theory-basics"],
+    glossary: [{ term: "Triad", meaning: "A three-note chord: root, 3rd and 5th." }],
+    steps: [
+      explain("stack", "Stacking 3rds", "A triad is a root plus the notes a 3rd and a 5th above it. The type depends on the 3rds: Major = major 3rd + minor 3rd (4+3 semitones), Minor = 3+4, Diminished = 3+3, Augmented = 4+4.", {
+        visual: { type: "keyboard", low: 60, high: 72, highlight: chordMidi("C", 4), caption: "C major triad: C E G" },
+      }),
+      listen("four-types", "Hear the four types (on C)", "C major (C E G), C minor (C E♭ G), C diminished (C E♭ G♭), C augmented (C E G♯).", { type: "chords", chords: ["C", "Cm", "Cdim", "Caug"], beatsEach: 2, bpm: 60, instrument: "piano" }),
+      practice("play-c", "Build C major", "Play C, E and G together.", { type: "play-chord", instrument: "either", chord: "C", prompt: "Play a C major triad." }, { mastery: true }),
+      practice("play-am", "Build A minor", "A minor: A, C, E.", { type: "play-chord", instrument: "either", chord: "Am", prompt: "Play an A minor triad." }, { mastery: true }),
+      practice("ear-triads", "Major or minor triad?", "Listen and choose.", { type: "ear-choice", prompt: "Major or minor triad?", rounds: 8, mode: "major-minor" }),
+    ],
+    quiz: [
+      q("q1", "Which notes make C major?", ["C E G", "C E♭ G", "C F A"], 0, "Root C, major 3rd E, perfect 5th G."),
+      q("q2", "A diminished triad is built from…", ["Two major 3rds", "Two minor 3rds", "Major then minor 3rd"], 1, "Diminished = minor 3rd + minor 3rd (3+3)."),
+      q("q3", "C augmented contains…", ["C E G♯", "C E♭ G♭", "C E G"], 0, "Augmented raises the 5th: C E G♯."),
+      q("q4", "What is the only difference between C major and C minor?", ["The root", "The 3rd", "The 5th"], 1, "Minor lowers the 3rd (E → E♭)."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-seventh-chords",
+    track: "theory",
+    level: 5,
+    order: 5,
+    title: "Seventh chords",
+    summary: "Add a 7th on top: maj7, dominant 7, minor 7, half-diminished.",
+    minutes: 12,
+    skills: ["seventh-chords"],
+    prerequisites: ["t5-triads"],
+    topics: ["chords"],
+    steps: [
+      explain("types", "Four common seventh chords", "Cmaj7 = C E G B (major triad + major 7th) — dreamy. C7 = C E G B♭ (major triad + minor 7th) — bluesy, wants to move. Cm7 = C E♭ G B♭ — mellow. Cm7♭5 (half-diminished) = C E♭ G♭ B♭ — tense.", {}),
+      listen("hear-7ths", "Hear them", "Cmaj7, C7, Cm7, Cm7♭5.", { type: "chords", chords: ["Cmaj7", "C7", "Cm7", "Cm7b5"], beatsEach: 2, bpm: 60, instrument: "piano" }),
+      listen("g7-c", "Dominant 7th resolving", "G7 pulls strongly to C — this is the most common 'ending' sound in Western music.", { type: "chords", chords: ["G7", "C"], beatsEach: 2, bpm: 70 }),
+      practice("play-g7", "Play G7", "G B D F.", { type: "play-chord", instrument: "either", chord: "G7", prompt: "Play a G7 chord." }, { mastery: true }),
+      practice("play-am7", "Play Am7", "A C E G.", { type: "play-chord", instrument: "either", chord: "Am7", prompt: "Play an Am7 chord." }),
+    ],
+    quiz: [
+      q("q1", "C7 contains…", ["C E G B", "C E G B♭", "C E♭ G B♭"], 1, "Dominant 7th = major triad + minor 7th."),
+      q("q2", "Which chord sounds 'dreamy' with a major 7th?", ["Cmaj7", "C7", "Cm7"], 0, "Cmaj7 has the major 7th, B."),
+      q("q3", "G7 usually resolves to…", ["C", "D", "F♯"], 0, "V7 → I: G7 → C."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-chord-construction",
+    track: "theory",
+    level: 5,
+    order: 6,
+    title: "Building any chord",
+    summary: "Use scale degrees: 1-3-5, 1-♭3-5, 1-3-5-♭7…",
+    minutes: 12,
+    skills: ["chord-construction"],
+    prerequisites: ["t5-seventh-chords"],
+    topics: ["chords", "theory-basics"],
+    steps: [
+      explain("formula", "Chord formulas", "Think of a chord as numbers from the root's major scale. Major = 1 3 5. Minor = 1 ♭3 5. Dominant 7 = 1 3 5 ♭7. Sus2 = 1 2 5. Sus4 = 1 4 5. Add9 = 1 3 5 9. Example: D major scale is D E F♯ G A B C♯, so D major = D F♯ A and Dm = D F A.", {}),
+      show("d-major", "D major on the keyboard", "D, F♯, A.", { type: "keyboard", low: 60, high: 72, highlight: chordMidi("D", 4), caption: "D major" }),
+      show("d-major-gtr", "D major on guitar", "The open D chord uses exactly D, F♯ and A.", { type: "chord-diagram", chords: ["D", "Dm", "Dsus4"] }),
+      practice("play-d", "Build D major", "D F♯ A.", { type: "play-chord", instrument: "either", chord: "D", prompt: "Play D major." }, { mastery: true }),
+      practice("play-esus4", "Build Esus4", "E A B (1 4 5).", { type: "play-chord", instrument: "either", chord: "Esus4", prompt: "Play Esus4." }),
+    ],
+    quiz: [
+      q("q1", "The formula 1 ♭3 5 is…", ["Major", "Minor", "Sus4"], 1, "Lowered 3rd = minor."),
+      q("q2", "D major contains…", ["D F A", "D F♯ A", "D G A"], 1, "D major = D F♯ A."),
+      q("q3", "Sus4 replaces the 3rd with…", ["The 2nd", "The 4th", "The 6th"], 1, "Suspended 4th: 1 4 5."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-inversions",
+    track: "theory",
+    level: 5,
+    order: 7,
+    title: "Chord inversions",
+    summary: "Same notes, different bottom note.",
+    minutes: 10,
+    skills: ["inversions"],
+    prerequisites: ["t5-chord-construction"],
+    topics: ["chords", "piano-technique"],
+    glossary: [{ term: "Inversion", meaning: "A chord with a note other than the root at the bottom." }],
+    steps: [
+      explain("three-positions", "Root, 1st and 2nd inversion", "C major in root position: C E G. First inversion moves C to the top: E G C (the 3rd is in the bass). Second inversion: G C E (the 5th is in the bass). It's still C major — it just sounds a little different and lets your hand move less between chords.", {}),
+      listen("hear-inv", "Hear the inversions", "Root position, first inversion, second inversion.", { type: "notes", notes: [...chordMidi("C", 4, 0), ...chordMidi("C", 4, 1), ...chordMidi("C", 4, 2)], step: 0.3, instrument: "piano" }),
+      practice("play-1st", "Play C in first inversion", "E4 G4 C5, one at a time.", { type: "play-sequence", instrument: "either", notes: chordMidi("C", 4, 1), prompt: "Play E G C (first inversion)." }, { mastery: true }),
+      practice("play-2nd", "Play C in second inversion", "G4 C5 E5.", { type: "play-sequence", instrument: "either", notes: chordMidi("C", 4, 2), prompt: "Play G C E (second inversion)." }),
+    ],
+    quiz: [
+      q("q1", "E G C is C major in…", ["Root position", "First inversion", "Second inversion"], 1, "The 3rd (E) is in the bass: first inversion."),
+      q("q2", "Which note is lowest in second inversion?", ["Root", "3rd", "5th"], 2, "Second inversion has the 5th in the bass."),
+      q("q3", "Why use inversions?", ["To change the chord type", "To move smoothly between chords", "To make it minor"], 1, "Inversions keep hand movement small and lines smooth."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-key-signatures",
+    track: "theory",
+    level: 5,
+    order: 8,
+    title: "Keys & key signatures",
+    summary: "The sharps or flats written at the start of the music.",
+    minutes: 12,
+    skills: ["key-signatures"],
+    prerequisites: ["t5-major-scale"],
+    topics: ["reading-music", "theory-basics"],
+    glossary: [
+      { term: "Key", meaning: "The 'home' note and scale a piece is built on, e.g. G major." },
+      { term: "Key signature", meaning: "Sharps or flats at the start of each line that apply to every note of that letter." },
+    ],
+    steps: [
+      explain("what", "What a key signature tells you", "Instead of writing ♯ every time, music puts the scale's sharps or flats at the start of each staff. G major's key signature has one sharp (F♯): every F is played as F♯. F major has one flat (B♭).", {}),
+      explain("orders", "The order of sharps and flats", "Sharps always appear in the order F C G D A E B ('Father Charles Goes Down And Ends Battle'). Flats appear in the reverse order B E A D G C F. Examples: D major = 2 sharps (F♯ C♯); A major = 3 sharps (F♯ C♯ G♯); B♭ major = 2 flats (B♭ E♭); E♭ major = 3 flats (B♭ E♭ A♭).", {}),
+      show("f-major", "F major", "F G A B♭ C D E F — one flat.", { type: "keyboard", low: 65, high: 77, highlight: scaleMidi("F", "major"), caption: "F major: one flat (B♭)" }),
+      practice("play-f-major", "Play F major", "Remember B♭.", { type: "play-sequence", instrument: "either", notes: scaleMidi("F", "major"), anyOctave: true, prompt: "Play the F major scale." }, { mastery: true }),
+      practice("play-d-major", "Play D major", "Two sharps: F♯ and C♯.", { type: "play-sequence", instrument: "either", notes: scaleMidi("D", "major"), anyOctave: true, prompt: "Play the D major scale." }),
+    ],
+    quiz: [
+      q("q1", "How many sharps in D major?", ["1", "2", "3"], 1, "D major: F♯ and C♯."),
+      q("q2", "Which key has one flat?", ["F major", "G major", "B♭ major"], 0, "F major has B♭."),
+      q("q3", "What's the first sharp in any key signature?", ["C♯", "F♯", "G♯"], 1, "Sharps are always added in the order F C G D A E B."),
+      q("q4", "E♭ major has how many flats?", ["2", "3", "4"], 1, "B♭, E♭ and A♭."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-circle-of-fifths",
+    track: "theory",
+    level: 5,
+    order: 9,
+    title: "The circle of fifths",
+    summary: "A map of all 12 keys, each a fifth apart.",
+    minutes: 12,
+    skills: ["circle-of-fifths"],
+    prerequisites: ["t5-key-signatures"],
+    topics: ["theory-basics"],
+    steps: [
+      explain("map", "Going round the circle", "Start at C (no sharps). Go up a perfect 5th each time and add one sharp: C → G (1♯) → D (2♯) → A (3♯) → E (4♯) → B (5♯) → F♯ (6♯). Going the other way, down a 5th (= up a 4th), adds flats: C → F (1♭) → B♭ (2♭) → E♭ (3♭) → A♭ (4♭) → D♭ (5♭) → G♭ (6♭). F♯ and G♭ are the same keys on the piano, closing the circle.", {}),
+      listen("fifths", "Hear the roots go round", "C, G, D, A, E, B — each a fifth higher (folded into one octave range).", { type: "notes", notes: ["C4", "G4", "D4", "A4", "E4", "B4"], step: 0.5 }),
+      explain("why", "Why it's useful", "Neighbouring keys on the circle share almost all their notes, so music often moves between them. The chords next to each other (like C, G and F) are the I, V and IV chords of a key — the most common chords in songs.", {}),
+      practice("play-fifths", "Play the circle", "Play the roots C G D A E (any octave).", { type: "play-sequence", instrument: "either", notes: ["C4", "G4", "D4", "A4", "E4"], anyOctave: true, prompt: "Play C, G, D, A, E." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Which key comes after G clockwise on the circle?", ["D", "C", "F"], 0, "Up a 5th from G is D."),
+      q("q2", "Going counter-clockwise from C you reach…", ["G", "F", "E"], 1, "Counter-clockwise adds flats: C → F."),
+      q("q3", "How many sharps in A major?", ["2", "3", "4"], 1, "C(0) G(1) D(2) A(3)."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-scale-degrees",
+    track: "theory",
+    level: 5,
+    order: 10,
+    title: "Scale degrees",
+    summary: "Numbering notes 1–7 so ideas work in every key.",
+    minutes: 10,
+    skills: ["scale-degrees"],
+    prerequisites: ["t5-major-scale"],
+    topics: ["theory-basics"],
+    steps: [
+      explain("names", "Numbers and names", "Each scale note gets a number: 1 tonic (home), 2 supertonic, 3 mediant, 4 subdominant, 5 dominant, 6 submediant, 7 leading tone. In C: 1=C, 4=F, 5=G. In G: 1=G, 4=C, 5=D. Thinking in numbers lets you play the same tune in any key.", {}),
+      listen("pull", "The leading tone pulls home", "Play up to B (7) and stop… it wants to go to C (1).", { type: "notes", notes: ["C4", "D4", "E4", "F4", "G4", "A4", "B4"], step: 0.4 }),
+      practice("degrees-g", "Play degrees 1-3-5 in G", "G B D.", { type: "play-sequence", instrument: "either", notes: ["G4", "B4", "D5"], anyOctave: true, prompt: "Play scale degrees 1, 3, 5 in G major." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "What is degree 5 called?", ["Tonic", "Dominant", "Mediant"], 1, "5 = dominant."),
+      q("q2", "In G major, degree 4 is…", ["C", "D", "F♯"], 0, "G A B C — the 4th note is C."),
+      q("q3", "The 7th degree in a major scale is called the…", ["Subdominant", "Leading tone", "Supertonic"], 1, "It 'leads' up a semitone to the tonic."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-progressions",
+    track: "theory",
+    level: 5,
+    order: 11,
+    title: "Chord progressions: I–IV–V and I–V–vi–IV",
+    summary: "The chord sequences behind thousands of songs.",
+    minutes: 14,
+    skills: ["chord-progressions"],
+    prerequisites: ["t5-triads", "t5-scale-degrees"],
+    topics: ["chords", "songs"],
+    glossary: [{ term: "Roman numerals", meaning: "Chord names by scale degree: upper case = major (I, IV, V), lower case = minor (ii, iii, vi)." }],
+    steps: [
+      explain("diatonic", "Chords from the scale", "Build a triad on every note of C major and you get: I C, ii Dm, iii Em, IV F, V G, vi Am, vii° Bdim. Upper-case numerals are major chords, lower-case are minor.", {}),
+      listen("i-iv-v", "I–IV–V–I", "In C: C – F – G – C. The backbone of blues, rock and folk.", { type: "chords", chords: ["C", "F", "G", "C"], beatsEach: 4, bpm: 90 }),
+      listen("pop", "I–V–vi–IV", "In C: C – G – Am – F. You'll hear this in a huge number of pop and film songs worldwide.", { type: "chords", chords: ["C", "G", "Am", "F"], beatsEach: 4, bpm: 90 }),
+      show("pop-g", "Same progression in G", "I–V–vi–IV in G is G – D – Em – C. On guitar these are all easy open chords.", { type: "chord-diagram", chords: ["G", "D", "Em", "C"] }),
+      practice("play-g", "Play the first chord: G", "Start the I–V–vi–IV in G.", { type: "play-chord", instrument: "either", chord: "G", prompt: "Play G major (the I chord in G)." }),
+      practice("play-em", "Play the vi chord: Em", "The vi chord in G is E minor.", { type: "play-chord", instrument: "either", chord: "Em", prompt: "Play E minor (vi in G)." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "In C major, the IV chord is…", ["F", "G", "Dm"], 0, "Degree 4 of C is F, and the IV chord is F major."),
+      q("q2", "I–V–vi–IV in G is…", ["G D Em C", "G C D Em", "G Am C D"], 0, "I=G, V=D, vi=Em, IV=C."),
+      q("q3", "Lower-case roman numerals mean…", ["Major chords", "Minor chords"], 1, "ii, iii and vi are minor."),
+      q("q4", "Which chord in a major key is diminished?", ["ii", "vii°", "IV"], 1, "The chord on degree 7 (e.g. Bdim in C) is diminished."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-transposition",
+    track: "theory",
+    level: 5,
+    order: 12,
+    title: "Transposition & the capo",
+    summary: "Move a song to a new key — and how a capo does it for guitarists.",
+    minutes: 12,
+    skills: ["transposition", "capo"],
+    prerequisites: ["t5-progressions"],
+    topics: ["chords", "guitar-chords", "songs"],
+    glossary: [
+      { term: "Transpose", meaning: "Move every note and chord up or down by the same number of semitones." },
+      { term: "Capo", meaning: "A clamp across the guitar neck that raises every open string by the same number of semitones." },
+    ],
+    steps: [
+      explain("shift", "Shift everything equally", "To transpose, move every chord by the same number of semitones. C–G–Am–F up 2 semitones becomes D–A–Bm–G. The song keeps its shape; only its pitch changes — handy for singing in a comfortable range.", {}),
+      listen("hear-transposed", "Hear it transposed", "C–G–Am–F, then up 2 semitones: D–A–Bm–G.", { type: "chords", chords: ["C", "G", "Am", "F", "D", "A", "Bm", "G"], beatsEach: 2, bpm: 100 }),
+      explain("capo", "What a capo does", "A capo on fret 2 raises every string by 2 semitones. If you play a G chord SHAPE with a capo on fret 2, the SOUND is A. So the 'shape' you finger and the 'sounding' chord are different! To play a song in A with easy shapes, use capo 2 and play in G shapes. Try it in the Guitar Lab's capo simulator (/guitar-lab?tab=capo).", { hinglish: "Capo 2 par G ka shape bajaoge toh awaaz A ki aayegi — shape aur asli chord alag hote hain." }),
+      show("capo-shapes", "Shapes with capo 2", "These G-family shapes with capo 2 SOUND as A, E, F♯m and D.", { type: "chord-diagram", chords: ["G", "D", "Em", "C"], caption: "Capo 2: G→A, D→E, Em→F♯m, C→D" }),
+      practice("transpose-play", "Play C–G–Am–F up 2 semitones (roots)", "Play the new roots: D, A, B, G.", { type: "play-sequence", instrument: "either", notes: ["D4", "A4", "B4", "G4"], anyOctave: true, prompt: "Play the roots D, A, B, G." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "C–F–G transposed up 2 semitones is…", ["D–G–A", "D–F–A", "E–A–B"], 0, "Each chord moves up 2: C→D, F→G, G→A."),
+      q("q2", "A G shape with capo on fret 3 sounds as…", ["A", "B♭", "C"], 1, "G + 3 semitones = B♭."),
+      q("q3", "To sound in D using C shapes, put the capo on fret…", ["1", "2", "3"], 1, "C + 2 semitones = D."),
+      q("q4", "Does a capo change the key of the song you hear?", ["Yes, compared with the same shapes without a capo", "No, never"], 0, "The capo raises the pitch. That's why you choose the capo position to match the original key."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-relative-keys",
+    track: "theory",
+    level: 5,
+    order: 13,
+    title: "Relative major & minor",
+    summary: "C major and A minor share the same notes.",
+    minutes: 10,
+    skills: ["relative-keys"],
+    prerequisites: ["t5-minor-scales", "t5-key-signatures"],
+    topics: ["scales", "theory-basics"],
+    steps: [
+      explain("same-notes", "Same notes, different home", "Every major key has a relative minor that starts on its 6th degree and shares the same key signature. C major ↔ A minor (no sharps/flats). G major ↔ E minor (F♯). F major ↔ D minor (B♭). The difference is which note feels like 'home'.", {}),
+      listen("compare-rel", "C major vs A minor", "Same notes, different home note.", { type: "compare", a: C_MAJOR, b: A_NAT_MINOR, labelA: "C major", labelB: "A minor" }),
+      practice("play-e-minor", "Play E natural minor", "The relative minor of G: E F♯ G A B C D E.", { type: "play-sequence", instrument: "either", notes: scaleMidi("E", "naturalMinor", 3), anyOctave: true, prompt: "Play E natural minor." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Relative minor of C major?", ["A minor", "C minor", "E minor"], 0, "Degree 6 of C is A."),
+      q("q2", "Relative minor of G major?", ["E minor", "D minor", "B minor"], 0, "Degree 6 of G is E."),
+      q("q3", "Relative keys share the same…", ["Tonic", "Key signature", "Tempo"], 1, "Same notes, same key signature, different tonic."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-harmony",
+    track: "theory",
+    level: 5,
+    order: 14,
+    title: "Basic harmony",
+    summary: "Why some notes clash and others blend — and how melody fits chords.",
+    minutes: 12,
+    skills: ["harmony-basics"],
+    prerequisites: ["t5-progressions"],
+    topics: ["theory-basics"],
+    glossary: [
+      { term: "Consonance", meaning: "Notes that sound stable and blend (octaves, 5ths, 3rds)." },
+      { term: "Dissonance", meaning: "Notes that sound tense and want to move (2nds, 7ths, tritone)." },
+    ],
+    steps: [
+      explain("cons-diss", "Tension and release", "Music moves between tension (dissonance) and rest (consonance). Thirds, fifths and octaves feel stable. Seconds, sevenths and the tritone feel tense. A melody note that belongs to the current chord (a 'chord tone') sounds settled; other notes add colour and lead onward.", {}),
+      listen("consonant", "Consonant vs dissonant", "C+G (open, stable) then C+D♭ (crunchy).", { type: "compare", a: ["C4", "G4"], b: ["C4", "Db4"], labelA: "Perfect 5th", labelB: "Minor 2nd" }),
+      practice("chord-tones", "Play the chord tones of F", "Melody notes that fit an F chord: F, A, C.", { type: "play-sequence", instrument: "either", notes: ["F4", "A4", "C5"], anyOctave: true, prompt: "Play F, A, C — the chord tones of F major." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Which interval sounds most stable?", ["Octave", "Minor 2nd", "Tritone"], 0, "Octaves and fifths are the most consonant."),
+      q("q2", "A chord tone is…", ["Any note in the key", "A note that belongs to the current chord"], 1, "Chord tones are the notes of the chord itself."),
+      q("q3", "Dissonance in music is…", ["A mistake", "Tension that usually resolves", "Silence"], 1, "Dissonance creates tension, which then resolves."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-ear-training",
+    track: "theory",
+    level: 5,
+    order: 15,
+    title: "Ear training foundations",
+    summary: "High vs low, intervals and chord quality — by ear.",
+    minutes: 12,
+    skills: ["ear-training"],
+    prerequisites: ["t5-intervals", "t5-triads"],
+    topics: ["ear-training"],
+    steps: [
+      explain("how", "How to train your ear", "Ear training is like learning faces: at first everything sounds similar, then patterns jump out. Short, regular sessions work best (5 minutes a day). Sing what you hear — even quietly — it connects your ear to your voice.", {}),
+      practice("high-low", "Higher or lower?", "Is the second note higher or lower?", { type: "ear-choice", prompt: "Is the second note higher or lower than the first?", rounds: 8, mode: "high-low" }),
+      practice("intervals", "Name the interval", "Choose the interval.", { type: "ear-choice", prompt: "Which interval do you hear?", rounds: 8, mode: "interval", options: ["Major 3rd", "Perfect 4th", "Perfect 5th", "Octave"] }, { mastery: true, passAccuracy: 0.7 }),
+      practice("quality", "Major or minor chord?", "Choose the quality.", { type: "ear-choice", prompt: "Major or minor?", rounds: 8, mode: "major-minor" }, { mastery: true, passAccuracy: 0.75 }),
+      practice("note-names", "Name the note", "With C as a reference, which note is this?", { type: "ear-choice", prompt: "Which note is this? (C is played first as a reference)", rounds: 6, mode: "note-name", options: ["C", "D", "E", "F", "G", "A", "B"] }),
+    ],
+    quiz: [
+      q("q1", "What's the best ear-training routine for beginners?", ["Once a month for 3 hours", "A few minutes every day"], 1, "Short daily practice is far more effective."),
+      q("q2", "A song like 'Here Comes the Bride' starts with which interval?", ["Perfect 4th", "Octave", "Minor 2nd"], 0, "It begins with a rising perfect 4th — a handy reference."),
+      q("q3", "Why sing what you hear?", ["It connects ear and voice, making pitches easier to recognise", "It's required by the app"], 0, "Singing internalises pitch."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-improvisation",
+    track: "theory",
+    level: 5,
+    order: 16,
+    title: "Basic improvisation",
+    summary: "Make up melodies using the pentatonic scale over simple chords.",
+    minutes: 14,
+    skills: ["improvisation-basics", "pentatonic"],
+    prerequisites: ["t5-harmony", "t5-relative-keys"],
+    topics: ["improvisation", "scales"],
+    glossary: [{ term: "Pentatonic scale", meaning: "A five-note scale with no semitone clashes — perfect for first improvising." }],
+    steps: [
+      explain("safe-notes", "Five safe notes", "The C major pentatonic scale is C D E G A (the major scale without F and B). Over a C–Am–F–G progression, almost any of these notes sounds good. A minor pentatonic (A C D E G) uses the very same notes, starting from A.", {
+        visual: { type: "keyboard", low: 57, high: 72, highlight: C_MAJ_PENTA, caption: "C major pentatonic" },
+      }),
+      listen("penta", "Hear the pentatonic", "C D E G A C.", { type: "notes", notes: C_MAJ_PENTA, step: 0.35 }),
+      show("penta-gtr", "A minor pentatonic on guitar", "Box 1 at the 5th fret — the most famous guitar scale shape.", {
+        type: "fretboard",
+        frets: 8,
+        highlightPitchClasses: [9, 0, 2, 4, 7],
+        caption: "A minor pentatonic (A C D E G)",
+      }),
+      practice("play-penta", "Play A minor pentatonic", "A C D E G A.", { type: "play-sequence", instrument: "either", notes: A_MIN_PENTA, anyOctave: true, prompt: "Play A minor pentatonic going up." }, { mastery: true }),
+      explain("tips", "Improvising tips", "1) Start with just 2–3 notes. 2) Repeat a short idea, then change one note. 3) Leave gaps — silence is part of music. 4) End phrases on a chord tone (C over a C chord, A over Am).", {}),
+      selfCheck("improv-check", "Try it yourself", "Play along with the C–Am–F–G progression (use the 'Play example' above or the Song Lab backing).", ["I used only the pentatonic notes.", "I repeated and varied a short idea.", "I left some space between phrases.", "I ended on a chord tone."]),
+    ],
+    quiz: [
+      q("q1", "C major pentatonic notes?", ["C D E G A", "C D E F G", "C E G B D"], 0, "Major scale minus 4 and 7: C D E G A."),
+      q("q2", "A minor pentatonic shares its notes with…", ["C major pentatonic", "G major pentatonic", "E major"], 0, "Relative scales: A C D E G = C D E G A."),
+      q("q3", "Good phrase ending over a C chord?", ["C", "F♯", "B♭"], 0, "Ending on a chord tone sounds resolved."),
+    ],
+  }),
+
+  /* ---------------- Indian Sargam ---------------- */
+
+  lesson({
+    id: "t5-sargam-swaras",
+    track: "theory",
+    level: 5,
+    order: 17,
+    title: "Sargam: the seven swaras & movable Sa",
+    summary: "Sa Re Ga Ma Pa Dha Ni — and why Sa can be any note.",
+    minutes: 12,
+    skills: ["sargam-basics"],
+    prerequisites: ["t5-major-scale"],
+    topics: ["sargam", "indian-music", "bollywood"],
+    glossary: [
+      { term: "Swara", meaning: "A note in Indian music. The seven are Sa, Re, Ga, Ma, Pa, Dha, Ni." },
+      { term: "Sa (Shadja)", meaning: "The tonic or home note. Sa is MOVABLE — you choose which pitch it is." },
+      { term: "Shruti", meaning: "Fine pitch positions in Indian music; real intonation can differ slightly from piano tuning." },
+    ],
+    steps: [
+      explain("seven", "Seven swaras", "Indian music names notes relative to a home note called Sa: Sa, Re, Ga, Ma, Pa, Dha, Ni, then Sa again (taar Sa, an octave higher). These match the Western scale degrees 1–7.", { hinglish: "Sa Re Ga Ma Pa Dha Ni — yeh 1 se 7 tak ke scale degrees jaisa hai." }),
+      explain("movable", "Sa is movable — not always C", "In Western notation, C is always C. In Indian music, Sa is whatever pitch suits the singer or instrument: a harmonium player might choose C as Sa, a singer might choose D, a flute in G uses G as Sa. Every other swara follows from Sa. This app shows Sa based on the tonic you select in Settings — it does NOT label every C as Sa unless you pick C.", {}),
+      explain("tuning", "A note on intonation", "This app maps swaras to the 12 equal-tempered piano notes. That's a good approximation for learning, but Hindustani music uses just intonation and shrutis, so a trained singer's Ga or Dha may sit slightly differently, depending on the raga.", {}),
+      listen("sargam-c", "Sa Re Ga Ma Pa Dha Ni Sa (Sa = C)", "With Sa on C, the shuddha swaras are the white keys C D E F G A B C.", { type: "notes", notes: C_MAJOR, step: 0.45 }),
+      listen("sargam-d", "Same sargam with Sa = D", "Now Sa is D: D E F♯ G A B C♯ D. Same swaras, different pitches.", { type: "notes", notes: scaleMidi("D", "major"), step: 0.45 }),
+      practice("play-sargam", "Play Sa Re Ga Ma Pa (Sa = C)", "Play the first five swaras with Sa on C.", { type: "play-sequence", instrument: "either", notes: ["C4", "D4", "E4", "F4", "G4"], anyOctave: true, prompt: "Play Sa Re Ga Ma Pa with Sa = C." }, { mastery: true }),
+      practice("ear-swara", "Which swara?", "Sa is played first as a reference. Name the swara you hear.", { type: "ear-choice", prompt: "Which swara is this?", rounds: 6, mode: "swara", options: ["Sa", "Re", "Ga", "Ma", "Pa", "Dha", "Ni"] }),
+    ],
+    quiz: [
+      q("q1", "In Indian music, Sa is…", ["Always C", "A movable tonic you choose", "Always the lowest piano key"], 1, "Sa is movable: it's whatever home pitch you choose."),
+      q("q2", "If Sa = D, what is Pa?", ["G", "A", "B"], 1, "Pa is a perfect 5th above Sa: D → A."),
+      q("q3", "Which Western scale degree is Ga?", ["2", "3", "5"], 1, "Sa 1, Re 2, Ga 3, Ma 4, Pa 5, Dha 6, Ni 7."),
+      q("q4", "Does equal-tempered piano tuning match Hindustani intonation exactly?", ["Yes, always", "Not exactly — it's a close approximation"], 1, "Shruti and raga-specific intonation can differ from equal temperament."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-sargam-komal-tivra",
+    track: "theory",
+    level: 5,
+    order: 18,
+    title: "Shuddha, komal & tivra swaras",
+    summary: "The 12 swaras: natural, lowered (komal) and raised Ma (tivra).",
+    minutes: 12,
+    skills: ["komal-tivra"],
+    prerequisites: ["t5-sargam-swaras"],
+    topics: ["sargam", "indian-music"],
+    glossary: [
+      { term: "Shuddha", meaning: "Natural (pure) form of a swara." },
+      { term: "Komal", meaning: "Lowered by a semitone. Re, Ga, Dha and Ni can be komal. Written with an underline." },
+      { term: "Tivra", meaning: "Raised by a semitone. Only Ma can be tivra. Written Ma′ (with a mark above)." },
+    ],
+    steps: [
+      explain("twelve", "Twelve swaras", "Sa and Pa never change (they are 'achal', fixed). Re, Ga, Dha and Ni each have a shuddha and a komal (lower) form. Ma has a shuddha and a tivra (higher) form. With Sa = C: Sa C, komal Re D♭, Re D, komal Ga E♭, Ga E, Ma F, tivra Ma F♯, Pa G, komal Dha A♭, Dha A, komal Ni B♭, Ni B.", { hinglish: "Komal = ek semitone neeche, tivra (sirf Ma) = ek semitone upar. Sa aur Pa achal hain." }),
+      show("chromatic", "All 12 with Sa = C", "Turn on Sargam labels in Settings to see the swara names on the keys.", { type: "keyboard", low: 60, high: 72, highlight: [61, 63, 66, 68, 70], showLabels: true, caption: "Komal Re, komal Ga, tivra Ma, komal Dha, komal Ni (black keys when Sa = C)" }),
+      listen("komal-ga", "Shuddha Ga vs komal Ga", "Sa–Ga then Sa–komal Ga. Same as major 3rd vs minor 3rd.", { type: "compare", a: ["C4", "E4"], b: ["C4", "Eb4"], labelA: "Sa–Ga", labelB: "Sa–komal Ga" }),
+      practice("play-komal", "Play the komal swaras (Sa = C)", "komal Re, komal Ga, komal Dha, komal Ni.", { type: "play-sequence", instrument: "either", notes: ["Db4", "Eb4", "Ab4", "Bb4"], anyOctave: true, prompt: "Play komal Re, komal Ga, komal Dha, komal Ni (Sa = C)." }, { mastery: true }),
+      practice("play-tivra", "Play tivra Ma", "Sa, Ma, tivra Ma, Pa (C F F♯ G).", { type: "play-sequence", instrument: "either", notes: ["C4", "F4", "F#4", "G4"], anyOctave: true, prompt: "Play Sa, Ma, tivra Ma, Pa." }),
+    ],
+    quiz: [
+      q("q1", "Which swara can be tivra?", ["Re", "Ma", "Ni"], 1, "Only Ma has a tivra (raised) form."),
+      q("q2", "Which two swaras never change?", ["Sa and Pa", "Re and Ga", "Dha and Ni"], 0, "Sa and Pa are achal (immovable)."),
+      q("q3", "With Sa = C, komal Ni is…", ["B", "B♭", "A"], 1, "Ni = B, komal Ni = B♭."),
+      q("q4", "With Sa = G, tivra Ma is…", ["C", "C♯", "D"], 1, "Ma is a 4th above Sa (C); tivra Ma is a semitone higher: C♯."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-bilawal-major",
+    track: "theory",
+    level: 5,
+    order: 19,
+    title: "Bilawal thaat & the Western major scale",
+    summary: "All-shuddha swaras = the major scale.",
+    minutes: 8,
+    skills: ["bilawal"],
+    prerequisites: ["t5-sargam-komal-tivra"],
+    topics: ["sargam", "indian-music", "scales"],
+    glossary: [{ term: "Thaat", meaning: "A parent scale in Hindustani music used to group ragas. There are ten common thaats." }],
+    steps: [
+      explain("same", "Same intervals", "Bilawal thaat uses all shuddha swaras: Sa Re Ga Ma Pa Dha Ni. Its intervals are exactly those of the Western major scale (W W H W W W H). So 'Sa Re Ga Ma' with Sa = C is 'C D E F'.", {}),
+      explain("others", "Other thaats (a preview)", "Changing swaras changes the thaat: Kalyan uses tivra Ma (like the Lydian mode); Khamaj uses komal Ni (like Mixolydian); Kafi uses komal Ga and komal Ni (like Dorian); Asavari uses komal Ga, Dha and Ni (like natural minor). Thaats are a classification system — ragas are much more than their scales.", {}),
+      listen("bilawal", "Bilawal aroh (Sa = G)", "G A B C D E F♯ G — with G as Sa.", { type: "notes", notes: G_MAJOR, step: 0.4 }),
+      practice("bilawal-play", "Play Bilawal with Sa = G", "Sa Re Ga Ma Pa Dha Ni Sa from G.", { type: "play-sequence", instrument: "either", notes: G_MAJOR, anyOctave: true, prompt: "Play the Bilawal aroh with Sa = G." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Bilawal thaat matches which Western scale?", ["Major", "Natural minor", "Blues"], 0, "All shuddha swaras = major scale intervals."),
+      q("q2", "Kalyan thaat differs from Bilawal by having…", ["Komal Re", "Tivra Ma", "Komal Ni"], 1, "Kalyan uses tivra Ma."),
+      q("q3", "A thaat is…", ["A rhythm cycle", "A parent scale used to group ragas", "A type of drum"], 1, "Thaats classify ragas by their notes."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-alankars",
+    track: "theory",
+    level: 5,
+    order: 20,
+    title: "Simple alankars",
+    summary: "Classic sargam patterns for fluency: aroh–avroh, pairs, triplets.",
+    minutes: 12,
+    skills: ["alankars"],
+    prerequisites: ["t5-bilawal-major"],
+    topics: ["sargam", "indian-music", "finger-exercises"],
+    glossary: [
+      { term: "Aroh", meaning: "Ascending: Sa Re Ga Ma Pa Dha Ni Sa." },
+      { term: "Avroh", meaning: "Descending: Sa Ni Dha Pa Ma Ga Re Sa." },
+      { term: "Alankar", meaning: "An ornamental practice pattern through the swaras." },
+    ],
+    steps: [
+      explain("what", "Practice patterns", "Alankars are to Indian music what scale exercises are to Western practice. They build finger fluency and pitch memory. Practise them slowly and sing along with the swara names.", {}),
+      listen("aroh-avroh", "Aroh–Avroh (Sa = C)", ALANKARS[0].description, { type: "notes", notes: alankarMidi(ALANKARS[0].pattern, 60), step: 0.35 }),
+      practice("play-aroh", "Play aroh–avroh", "Up and back down (Sa = C).", { type: "play-sequence", instrument: "either", notes: alankarMidi(ALANKARS[0].pattern, 60), prompt: "Play Sa Re Ga Ma Pa Dha Ni Sa — Sa Ni Dha Pa Ma Ga Re Sa." }, { mastery: true, passAccuracy: 0.75 }),
+      listen("pairs", "Pairs alankar", ALANKARS[1].description, { type: "notes", notes: alankarMidi(ALANKARS[1].pattern, 60), step: 0.3 }),
+      practice("play-pairs", "Play the pairs alankar", "Sa Re, Re Ga, Ga Ma…", { type: "play-sequence", instrument: "either", notes: alankarMidi(ALANKARS[1].pattern, 60), prompt: "Play the pairs alankar." }, { mastery: true, passAccuracy: 0.75 }),
+      practice("play-triplets", "Triplets (challenge)", "Sa Re Ga, Re Ga Ma…", { type: "play-sequence", instrument: "either", notes: alankarMidi(ALANKARS[2].pattern, 60), prompt: "Play the triplets alankar." }),
+    ],
+    quiz: [
+      q("q1", "Aroh means…", ["Descending", "Ascending", "Rhythm"], 1, "Aroh = going up."),
+      q("q2", "After 'Sa Re, Re Ga', the pairs alankar continues with…", ["Ga Ma", "Ma Pa", "Re Sa"], 0, "Each pair moves up one swara."),
+      q("q3", "What's the main purpose of alankars?", ["To replace ragas", "Fluency and pitch memory", "To tune the instrument"], 1, "They build technique and familiarity with the swaras."),
+    ],
+  }),
+
+  lesson({
+    id: "t5-raga-intro",
+    track: "theory",
+    level: 5,
+    order: 21,
+    title: "What is a raga? (a first look)",
+    summary: "A raga is more than a scale: a melodic personality with rules and moods.",
+    minutes: 10,
+    skills: ["raga-concept"],
+    prerequisites: ["t5-alankars"],
+    topics: ["sargam", "indian-music"],
+    glossary: [
+      { term: "Raga", meaning: "A melodic framework with chosen swaras, typical phrases, important notes and a mood." },
+      { term: "Vadi", meaning: "The most important swara of a raga." },
+      { term: "Pakad", meaning: "A characteristic phrase that identifies a raga." },
+    ],
+    steps: [
+      explain("more-than-scale", "More than a scale", "A raga chooses certain swaras, but also HOW to move between them: typical phrases (pakad), the most important notes (vadi and samvadi), different paths going up (aroh) and down (avroh), ornaments, and a mood and traditional time of day. Two ragas can use the same notes and still be different ragas.", {}),
+      explain("bhupali", "Example: Raag Bhupali", "Bhupali uses five swaras: Sa Re Ga Pa Dha (no Ma, no Ni). With Sa = C that's C D E G A — the same pitch set as the major pentatonic scale. But a Bhupali performance has its own characteristic phrases and emphasis that a pentatonic exercise doesn't capture.", {}),
+      listen("bhupali-aroh", "Bhupali aroh (Sa = C)", "Sa Re Ga Pa Dha Sa.", { type: "notes", notes: ["C4", "D4", "E4", "G4", "A4", "C5"], step: 0.5 }),
+      explain("yaman", "Example: Raag Yaman", "Yaman (Kalyan thaat) uses tivra Ma with all other swaras shuddha. It's often one of the first ragas taught. Learning ragas properly takes a guru or a dedicated course — this lesson just opens the door.", {}),
+      practice("play-bhupali", "Play the Bhupali aroh", "Sa Re Ga Pa Dha Sa (Sa = C).", { type: "play-sequence", instrument: "either", notes: ["C4", "D4", "E4", "G4", "A4", "C5"], prompt: "Play Sa Re Ga Pa Dha Sa." }, { mastery: true }),
+      selfCheck("listen-raga", "Listening assignment", "Find a recording of a Raag Yaman or Bhupali performance (e.g. through the Video Hub) and listen for 5 minutes.", ["I listened to a raga performance.", "I noticed repeated characteristic phrases.", "I noticed which swaras felt most important."]),
+    ],
+    quiz: [
+      q("q1", "A raga is…", ["Just a scale", "A melodic framework with notes, phrases and mood", "A rhythm"], 1, "Ragas include rules of movement, key phrases and mood."),
+      q("q2", "Which swaras does Bhupali use?", ["Sa Re Ga Pa Dha", "Sa Re Ga Ma Pa", "All seven"], 0, "Bhupali omits Ma and Ni."),
+      q("q3", "Raag Yaman uses which special swara?", ["Komal Re", "Tivra Ma", "Komal Ni"], 1, "Yaman uses tivra Ma."),
+    ],
+  }),
+];
+
+/** Exported for tests. */
+export const LEVEL_5_FACTS = { C_MAJOR, G_MAJOR, A_NAT_MINOR, A_HARM_MINOR, A_MEL_MINOR, C_MAJ_PENTA, A_MIN_PENTA };
+

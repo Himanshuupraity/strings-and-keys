@@ -32,6 +32,13 @@ export function Providers({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  useEffect(() => {
+    // Offline app shell (production only, so development hot-reload isn't cached).
+    if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
+
   return (
     <>
       {children}

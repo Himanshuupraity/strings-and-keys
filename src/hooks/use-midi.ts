@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useHydrated } from "./use-prefs";
 import { connectMidi, midiSupported, type MidiConnection, type MidiNoteEvent } from "@/lib/audio/midi";
 
 export function useMidi(onNote?: (e: MidiNoteEvent) => void) {
-  const [supported, setSupported] = useState(false);
   const [devices, setDevices] = useState<string[]>([]);
   const [status, setStatus] = useState<"idle" | "connecting" | "connected" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function useMidi(onNote?: (e: MidiNoteEvent) => void) {
   useEffect(() => {
     cb.current = onNote;
   });
-  useEffect(() => setSupported(midiSupported()), []);
+  const supported = useHydrated() && midiSupported();
 
   const connect = useCallback(async () => {
     setStatus("connecting");

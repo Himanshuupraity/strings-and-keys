@@ -31,6 +31,8 @@ export function useMetronome(initial: { bpm?: number; beatsPerBar?: number; acce
   const timeouts = useRef<number[]>([]);
   const mutedRef = useRef(!!initial.muted);
   const onBeatRef = useRef(onBeat);
+  // Latest settings, so start() right after setBpm() in the same handler uses the new tempo.
+  const settings = useRef({ bpm: state.bpm, beatsPerBar: state.beatsPerBar, accent: state.accent });
   useEffect(() => {
     onBeatRef.current = onBeat;
   });
@@ -50,9 +52,9 @@ export function useMetronome(initial: { bpm?: number; beatsPerBar?: number; acce
     const s = new BeatScheduler(
       { now: () => ctx.currentTime },
       {
-        bpm: state.bpm,
-        beatsPerBar: state.beatsPerBar,
-        accentFirst: state.accent,
+        bpm: settings.current.bpm,
+        beatsPerBar: settings.current.beatsPerBar,
+        accentFirst: settings.current.accent,
         onSchedule: (e) => {
           if (!mutedRef.current) scheduleClick(ctx, e.time, e.accent);
           const delay = Math.max(0, (e.time - ctx.currentTime) * 1000);
@@ -68,18 +70,21 @@ export function useMetronome(initial: { bpm?: number; beatsPerBar?: number; acce
     sched.current = s;
     s.start();
     setState((st) => ({ ...st, running: true }));
-  }, [state.bpm, state.beatsPerBar, state.accent]);
+  }, []);
 
   const setBpm = useCallback((bpm: number) => {
     const b = clampBpm(bpm);
+    settings.current.bpm = b;
     sched.current?.setBpm(b);
     setState((s) => ({ ...s, bpm: b }));
   }, []);
   const setBeatsPerBar = useCallback((n: number) => {
+    settings.current.beatsPerBar = n;
     sched.current?.setBeatsPerBar(n);
     setState((s) => ({ ...s, beatsPerBar: n }));
   }, []);
   const setAccent = useCallback((a: boolean) => {
+    settings.current.accent = a;
     sched.current?.setAccent(a);
     setState((s) => ({ ...s, accent: a }));
   }, []);

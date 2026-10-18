@@ -116,9 +116,20 @@ export function PianoKeyboard({
     el.scrollLeft = k.whiteIndex * whiteKeyWidth - el.clientWidth / 2 + whiteKeyWidth / 2;
   }, [focusMidi, keys, whiteKeyWidth]);
 
+  // Latest handlers via refs, so a parent passing inline callbacks doesn't re-run the listener
+  // effect (whose cleanup releases held notes) on every render.
+  const startRef = useRef(start);
+  const endRef = useRef(end);
+  useEffect(() => {
+    startRef.current = start;
+    endRef.current = end;
+  });
+
   // Computer keyboard input.
   useEffect(() => {
     if (!computerKeyboard) return;
+    const start = (m: number, src: "keyboard") => startRef.current(m, src);
+    const end = (m: number) => endRef.current(m);
     const held = new Map<string, number>();
     const isTyping = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName));
     const onDown = (e: KeyboardEvent) => {
@@ -154,11 +165,17 @@ export function PianoKeyboard({
       window.removeEventListener("blur", onBlur);
       onBlur();
     };
-  }, [computerKeyboard, baseC, low, high, start, end]);
+  }, [computerKeyboard, baseC, low, high]);
 
   const pointerDown = (midi: number) => (e: React.PointerEvent) => {
     e.preventDefault();
-    (e.currentTarget as HTMLElement).releasePointerCapture?.(e.pointerId);
+    // Release implicit touch capture so dragging across keys (glissando) fires pointerenter.
+    const el = e.currentTarget as HTMLElement;
+    try {
+      if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    } catch {
+      /* synthetic events have no active pointer */
+    }
     pointerNotes.current.set(e.pointerId, midi);
     start(midi, "pointer");
   };

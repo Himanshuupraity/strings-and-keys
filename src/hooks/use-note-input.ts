@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useMic } from "./use-mic";
 import { useMidi } from "./use-midi";
 import { usePrefs } from "./use-prefs";
@@ -17,7 +17,9 @@ export type NoteSource = "virtual" | "midi" | "mic";
 export function useNoteInput(onNote: (midi: number, source: NoteSource, detail?: { note?: DetectedNote; velocity?: number }) => void) {
   const [prefs] = usePrefs();
   const cb = useRef(onNote);
-  cb.current = onNote;
+  useEffect(() => {
+    cb.current = onNote;
+  });
   const lastMic = useRef<{ midi: number | null; silentFrames: number }>({ midi: null, silentFrames: 0 });
 
   const midi = useMidi((e) => {

@@ -1,0 +1,320 @@
+// Melody Masters — OPTIONAL remote database (PostgreSQL).
+// The app works without any database (local-first browser storage). This schema is only used when
+// DATABASE_URL is set. See docs/persistence.md.
+//
+// Rows that originate on a student's device keep the device-generated id, scoped by userId with a
+// composite primary key, so one user can never overwrite another user's rows.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Instrument {
+  guitar
+  piano
+}
+
+enum Track {
+  theory
+  guitar
+  piano
+}
+
+enum LessonStatus {
+  not_started
+  in_progress
+  completed
+  mastered
+}
+
+enum AttemptKind {
+  quiz
+  exercise
+}
+
+// ---------------------------------------------------------------- Accounts
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  /// scrypt hash (null for Google-only accounts)
+  passwordHash String?
+  googleId     String?  @unique
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions        Session[]
+  preferences     UserPreferences?
+  instruments     InstrumentProfile[]
+  lessons         LessonCompletion[]
+  practice        PracticeSession[]
+  attempts        AssessmentAttempt[]
+  skills          SkillMastery[]
+  savedSongs      SavedSong[]
+  songProgress    SongProgress[]
+  savedVideos     SavedVideo[]
+  chordDrills     ChordDrillResult[]
+  transpositions  Transposition[]
+  coachMessages   CoachMessage[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  /// SHA-256 of the random session token; the raw token only lives in the httpOnly cookie.
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserPreferences {
+  userId    String   @id
+  /// Mirrors PrefsSchema (instrument mode, theme, label mode, tonic, keyboard size…)
+  prefs     Json?
+  /// Mirrors ProfileSchema (onboarding answers, placement)
+  profile   Json?
+  /// Mirrors GoalsSchema
+  goals     Json?
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model InstrumentProfile {
+  id             String     @id @default(cuid())
+  userId         String
+  instrument     Instrument
+  placementLevel Int        @default(0)
+  startedAt      DateTime   @default(now())
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, instrument])
+}
+
+// ---------------------------------------------------------------- Curriculum catalogue (seeded)
+
+model Course {
+  track       Track    @id
+  title       String
+  description String
+  levels      Int[]
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id            String         @id
+  track         Track
+  level         Int
+  order         Int
+  title         String
+  summary       String
+  minutes       Int
+  skills        String[]
+  prerequisites String[]
+  topics        String[]
+  passScore     Float
+  course        Course         @relation(fields: [track], references: [track])
+  exercises     Exercise[]
+  quizQuestions QuizQuestion[]
+
+  @@index([track, level, order])
+}
+
+model Exercise {
+  /// "<lessonId>:<stepId>"
+  id           String  @id
+  lessonId     String
+  stepId       String
+  title        String
+  type         String
+  mastery      Boolean @default(false)
+  passAccuracy Float?
+  spec         Json
+  lesson       Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model QuizQuestion {
+  /// "<lessonId>:<questionId>"
+  id          String   @id
+  lessonId    String
+  position    Int
+  question    String
+  options     String[]
+  answer      Int
+  explanation String
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+// ---------------------------------------------------------------- Student progress
+
+/// lessonId is intentionally not a foreign key: progress from a newer app version must still
+/// upload even if the catalogue hasn't been re-seeded yet.
+model LessonCompletion {
+  userId       String
+  lessonId     String
+  track        Track
+  status       LessonStatus @default(not_started)
+  stepsDone    String[]
+  quizBest     Float?
+  quizAttempts Int          @default(0)
+  exerciseBest Json
+  startedAt    DateTime?
+  completedAt  DateTime?
+  masteredAt   DateTime?
+  updatedAt    DateTime
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, lessonId])
+}
+
+model PracticeSession {
+  userId      String
+  id          String
+  instrument  Instrument
+  activity    String
+  lessonId    String?
+  startedAt   DateTime
+  endedAt     DateTime
+  durationSec Int
+  notes       String?
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, id])
+  @@index([userId, startedAt])
+}
+
+/// Quiz attempts and measured exercise results.
+model AssessmentAttempt {
+  userId           String
+  id               String
+  kind             AttemptKind
+  date             DateTime
+  lessonId         String?
+  exerciseId       String?
+  /// "guitar" | "piano" | "theory"
+  instrument       String?
+  skill            String?
+  /// virtual | midi | mic | self | tap
+  input            String?
+  correct          Float
+  total            Float
+  accuracy         Float?
+  timingErrorMs    Float?
+  measured         Boolean     @default(false)
+  wrongQuestionIds String[]
+  details          String?
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, id])
+  @@index([userId, date])
+}
+
+model SkillMastery {
+  userId        String
+  skill         String
+  track         Track
+  /// 0..1 rolling measured accuracy
+  level         Float
+  evidenceCount Int      @default(0)
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skill])
+}
+
+/// User-provided songs (chords entered by the student). Stored as JSON to stay format-agnostic.
+model SavedSong {
+  userId    String
+  key       String
+  data      Json
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, key])
+}
+
+model SongProgress {
+  userId            String
+  songId            String
+  instrument        Instrument
+  saved             Boolean    @default(false)
+  sectionsPracticed String[]
+  bestTempo         Float?
+  minutes           Float      @default(0)
+  lastPracticed     DateTime?
+  user              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, songId, instrument])
+}
+
+model SavedVideo {
+  userId    String
+  videoId   String
+  favorite  Boolean  @default(false)
+  watched   Boolean  @default(false)
+  updatedAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+}
+
+model ChordDrillResult {
+  userId            String
+  id                String
+  date              DateTime
+  chordA            String
+  chordB            String
+  durationSec       Float
+  transitions       Int
+  /// "self" | "audio"
+  mode              String
+  confirmedByAudio  Int?
+  confirmedManually Int?
+  cleanRate         Float?
+  untimed           Boolean?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, id])
+  @@index([userId, date])
+}
+
+model Transposition {
+  userId      String
+  id          String
+  date        DateTime
+  progression String[]
+  originalKey String
+  capo        Int
+  shapes      String[]
+  label       String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, id])
+}
+
+model CoachMessage {
+  userId  String
+  id      String
+  role    String
+  content String
+  date    DateTime
+  /// "llm" | "rules" | "measured"
+  source  String?
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, id])
+  @@index([userId, date])
+}

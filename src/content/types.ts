@@ -31,7 +31,7 @@ export type Visual =
   | { type: "keyboard"; low?: number; high?: number; highlight?: (number | string)[]; fingers?: Record<string, number>; showLabels?: boolean; caption?: string }
   | { type: "fretboard"; highlight?: { string: number; fret: number; label?: string }[]; highlightPitchClasses?: number[]; frets?: number; caption?: string }
   | { type: "chord-diagram"; chords: string[]; caption?: string }
-  | { type: "staff"; clef: "treble" | "bass"; notes: { note: string; duration?: "w" | "h" | "q" | "8" }[]; caption?: string }
+  | { type: "staff"; clef: "treble" | "bass"; notes: { note: string; duration?: "w" | "h" | "q" | "8"; label?: string }[]; timeSignature?: [number, number]; caption?: string }
   | { type: "tab"; lines: string[]; caption?: string }
   | { type: "image-svg"; svg: "guitar-parts" | "piano-parts" | "posture-guitar" | "posture-piano" | "hand-fingers" | "sound-wave"; caption?: string };
 

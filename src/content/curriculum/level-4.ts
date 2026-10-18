@@ -1,3 +1,575 @@
 import type { Lesson } from "../types";
+import { chordMidi } from "@/lib/music/chords";
+import { notesOfPitchClass } from "@/lib/music/keyboard";
+import { scaleMidi } from "@/lib/music/scales";
+import { explain, lesson, listen, practice, q, selfCheck, show } from "./advanced-builders";
 
-export const LEVEL_4: Lesson[] = [];
+/**
+ * Level 4 — Piano & keyboard fundamentals (track: piano).
+ * Convention: middle C = C4 = MIDI 60.
+ */
+const C_POSITION = ["C4", "D4", "E4", "F4", "G4"];
+
+export const LEVEL_4: Lesson[] = [
+  lesson({
+    id: "p4-parts",
+    track: "piano",
+    level: 4,
+    order: 1,
+    title: "Piano parts & keyboard words",
+    summary: "Keys, octaves, pedals and the difference between a piano and a digital keyboard.",
+    minutes: 8,
+    skills: ["piano-terminology"],
+    prerequisites: ["l0-piano-setup", "l1-musical-alphabet"],
+    topics: ["piano-basics", "piano-beginner"],
+    glossary: [
+      { term: "Acoustic piano", meaning: "A piano where felt hammers hit real metal strings." },
+      { term: "Digital piano / keyboard", meaning: "An electronic instrument that plays recorded or synthesised piano sounds." },
+      { term: "Weighted keys", meaning: "Keys that feel heavy like a real piano. Many cheaper keyboards have light, unweighted keys." },
+      { term: "Pedal", meaning: "A foot lever that changes how the notes sound. The right one (sustain) keeps notes ringing." },
+    ],
+    steps: [
+      explain(
+        "what-is-a-key",
+        "The keyboard: white keys and black keys",
+        "Every key plays one note. Keys on the LEFT are low (deep) and keys on the RIGHT are high (bright). A full piano has 88 keys: 52 white and 36 black. Smaller keyboards have 49 or 61 keys — they are simply the middle part of the full piano.",
+        { hinglish: "Left side ke keys low (bhaari) awaaz dete hain, right side ke keys high (patli) awaaz.", visual: { type: "image-svg", svg: "piano-parts", caption: "Parts of a piano" } },
+      ),
+      listen("low-vs-high", "Low on the left, high on the right", "Listen to a low C, then middle C, then a high C. Same letter name, three different heights.", { type: "notes", notes: ["C2", "C4", "C6"], step: 0.8, instrument: "piano" }),
+      explain(
+        "acoustic-digital",
+        "Acoustic piano vs digital keyboard",
+        "An acoustic piano makes sound with hammers and strings, so it never needs electricity. A digital piano or keyboard makes sound electronically, has a volume knob and headphones, and can connect to a computer with MIDI. Everything you learn here works on both.",
+      ),
+      explain(
+        "pedals",
+        "The pedals",
+        "Most pianos have two or three pedals. The right pedal is the SUSTAIN pedal: while it is pressed, notes keep ringing after you lift your fingers. The left pedal (soft) makes the sound quieter. Many keyboards come with one plug-in sustain pedal. You'll learn to use it later in this level.",
+      ),
+      practice("try-range", "Explore the range", "Play the lowest C and the highest C you can see on the virtual keyboard. Then play middle C (the C with the small dot).", {
+        type: "play-sequence",
+        instrument: "piano",
+        notes: ["C4"],
+        prompt: "Play middle C — the C nearest the middle of the keyboard, marked with a dot.",
+      }),
+    ],
+    quiz: [
+      q("q1", "Which side of the keyboard plays the low (deep) notes?", ["Left", "Right", "Both sides are the same"], 0, "Pitch goes up from left to right. The left side is low."),
+      q("q2", "How many keys does a full-size piano have?", ["61", "76", "88"], 2, "A full piano has 88 keys: 52 white and 36 black."),
+      q("q3", "What does the right (sustain) pedal do?", ["Makes notes louder", "Keeps notes ringing after you let go", "Changes the instrument sound"], 1, "The sustain pedal lifts the dampers so strings keep vibrating."),
+      q("q4", "Is a 61-key keyboard a different instrument from a piano?", ["Yes, the notes are different", "No, it's the middle 61 keys of the same layout", "Only black keys are different"], 1, "Smaller keyboards use exactly the same pattern of keys — just fewer of them."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-posture",
+    track: "piano",
+    level: 4,
+    order: 2,
+    title: "Posture & hand position",
+    summary: "Sit at the right height and keep relaxed, curved fingers.",
+    minutes: 7,
+    skills: ["piano-posture"],
+    prerequisites: ["p4-parts"],
+    topics: ["piano-basics", "piano-beginner"],
+    glossary: [{ term: "Hand position", meaning: "The shape of your hand on the keys: curved fingers, loose wrist, like holding a small ball." }],
+    steps: [
+      explain(
+        "bench",
+        "Sitting at the piano",
+        "Sit on the front half of the bench, facing middle C. Your forearms should be roughly level with the keys — not reaching up, not dropping down. Feet flat on the floor (the right foot near the sustain pedal). Sit far enough back that your elbows can move freely in front of your body.",
+        { visual: { type: "image-svg", svg: "posture-piano", caption: "Good piano posture" }, hinglish: "Bench ke aage wale hisse par baitho, kandhe dheele, aur kalai (wrist) keys ke level par." },
+      ),
+      explain(
+        "curved",
+        "Curved fingers — the 'bubble' shape",
+        "Imagine holding a small ball or bubble under your palm. Your fingers curve naturally, and you play with the pads near the fingertips. Your thumb plays on its side. Keep the wrist level and loose: a stiff wrist makes playing tiring and uneven.",
+      ),
+      selfCheck("posture-check", "Posture check (self-assessment)", "The app can't see you, so check yourself honestly. Look in a mirror or take a photo.", [
+        "My forearms are about level with the keys.",
+        "My shoulders are relaxed, not lifted.",
+        "My fingers are curved and I play on the fingertip pads.",
+        "My wrists are loose and level — not collapsed or pointing up.",
+        "I can stop if anything hurts. Playing should never be painful.",
+      ]),
+      practice("relaxed-c", "Relaxed five notes", "With a relaxed curved hand, play C–D–E–F–G slowly, one finger per key.", {
+        type: "play-sequence",
+        instrument: "piano",
+        notes: C_POSITION,
+        fingers: [1, 2, 3, 4, 5],
+        prompt: "Play C D E F G using right-hand fingers 1–5.",
+      }),
+    ],
+    quiz: [
+      q("q1", "Where should your forearms be?", ["Well above the keys", "About level with the keys", "Well below the keys"], 1, "Level forearms let the weight of your arm help your fingers without strain."),
+      q("q2", "Which part of the finger plays the key?", ["Flat finger pad near the knuckle", "The pad near the fingertip", "The fingernail"], 1, "Curved fingers play on the pads near the tips; the thumb plays on its side."),
+      q("q3", "What should you do if your wrist hurts while practising?", ["Push through it", "Stop, rest and check your posture", "Play louder"], 1, "Pain is a signal to stop. Rest, check your posture, and practise in short sessions."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-finger-numbers",
+    track: "piano",
+    level: 4,
+    order: 3,
+    title: "Finger numbers 1–5 (both hands)",
+    summary: "Thumbs are 1, little fingers are 5 — on both hands.",
+    minutes: 8,
+    skills: ["finger-numbers"],
+    prerequisites: ["p4-posture"],
+    topics: ["piano-basics", "finger-exercises"],
+    glossary: [{ term: "Finger number", meaning: "A number written above or below a note telling you which finger to use." }],
+    steps: [
+      explain(
+        "numbers",
+        "Numbering your fingers",
+        "Pianists number fingers the same on both hands: thumb = 1, index = 2, middle = 3, ring = 4, little finger = 5. Because your hands are mirror images, right-hand 1 is on the left side of the hand and left-hand 1 is on the right side.",
+        { visual: { type: "image-svg", svg: "hand-fingers", caption: "Finger numbers 1–5 on both hands" }, hinglish: "Angootha (thumb) hamesha 1 hai, choti ungli hamesha 5 — dono haathon mein." },
+      ),
+      show("rh-c", "Right hand in C position", "Right-hand thumb on middle C. Each finger rests on the next white key: 1 = C, 2 = D, 3 = E, 4 = F, 5 = G.", {
+        type: "keyboard",
+        low: 48,
+        high: 72,
+        highlight: C_POSITION,
+        caption: "Right hand C position: fingers 1–5 on C D E F G",
+      }),
+      practice("rh-numbers", "Play by finger number (right hand)", "Play fingers 1-3-5-3-1 in C position: that's C–E–G–E–C.", {
+        type: "play-sequence",
+        instrument: "piano",
+        notes: ["C4", "E4", "G4", "E4", "C4"],
+        fingers: [1, 3, 5, 3, 1],
+        prompt: "Right hand: fingers 1, 3, 5, 3, 1.",
+      }, { mastery: true, passAccuracy: 0.8 }),
+      practice("lh-numbers", "Play by finger number (left hand)", "Left-hand little finger (5) on the C below middle C (C3). Play 5-4-3-2-1: C3–D3–E3–F3–G3.", {
+        type: "play-sequence",
+        instrument: "piano",
+        notes: ["C3", "D3", "E3", "F3", "G3"],
+        fingers: [5, 4, 3, 2, 1],
+        prompt: "Left hand: fingers 5, 4, 3, 2, 1 starting on C3.",
+      }),
+    ],
+    quiz: [
+      q("q1", "Which finger is number 1?", ["Little finger", "Thumb", "Index finger"], 1, "The thumb is 1 on both hands."),
+      q("q2", "Which finger is 3?", ["Middle finger", "Ring finger", "Index finger"], 0, "1 thumb, 2 index, 3 middle, 4 ring, 5 little."),
+      q("q3", "In left-hand C position starting on C3, which finger plays C3?", ["1", "3", "5"], 2, "In the left hand the little finger (5) plays the lowest note of the position."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-black-key-groups",
+    track: "piano",
+    level: 4,
+    order: 4,
+    title: "Groups of two and three black keys",
+    summary: "The black-key pattern is your map of the keyboard.",
+    minutes: 7,
+    skills: ["keyboard-geography"],
+    prerequisites: ["p4-finger-numbers"],
+    topics: ["piano-basics", "notes"],
+    steps: [
+      explain(
+        "pattern",
+        "The repeating pattern",
+        "Look at the black keys: they come in groups of TWO, then THREE, then two, then three… This pattern repeats all the way along the keyboard. It's how pianists find notes without counting from the end.",
+        { visual: { type: "keyboard", low: 48, high: 71, highlight: [49, 51, 61, 63], caption: "Groups of two black keys (C#/Db and D#/Eb)" }, hinglish: "Kaali keys 2 aur 3 ke group mein aati hain — yahi pattern poore keyboard par repeat hota hai." },
+      ),
+      show("threes", "Groups of three", "The three-black-key groups are F#/Gb, G#/Ab and A#/Bb.", {
+        type: "keyboard",
+        low: 48,
+        high: 71,
+        highlight: [54, 56, 58, 66, 68, 70],
+        caption: "Groups of three black keys",
+      }),
+      practice("find-twos", "Find a group of two", "Play the two black keys in the group of two above middle C: C#4 then D#4.", {
+        type: "play-sequence",
+        instrument: "piano",
+        notes: ["C#4", "D#4"],
+        prompt: "Play the group of two black keys just above middle C.",
+      }),
+      practice("find-threes", "Find a group of three", "Play the three black keys in the group of three above middle C: F#4, G#4, A#4.", {
+        type: "play-sequence",
+        instrument: "piano",
+        notes: ["F#4", "G#4", "A#4"],
+        prompt: "Play the group of three black keys above middle C, left to right.",
+      }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Black keys are grouped in…", ["Twos and threes", "Threes and fours", "They are evenly spaced"], 0, "Twos and threes alternate across the whole keyboard."),
+      q("q2", "Why is the black-key pattern useful?", ["It shows which keys are louder", "It lets you find any note quickly", "It shows the tempo"], 1, "Every white note has a fixed place relative to the black-key groups."),
+      q("q3", "How many black keys are in one octave?", ["4", "5", "7"], 1, "One octave has 5 black keys: a group of two plus a group of three."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-middle-c",
+    track: "piano",
+    level: 4,
+    order: 5,
+    title: "Finding middle C",
+    summary: "C sits just left of every group of two black keys. Middle C is the one in the centre.",
+    minutes: 8,
+    skills: ["find-middle-c", "find-c"],
+    prerequisites: ["p4-black-key-groups"],
+    topics: ["piano-basics", "notes"],
+    glossary: [{ term: "Middle C", meaning: "The C closest to the middle of the piano. In this app it's called C4 (MIDI note 60)." }],
+    steps: [
+      explain(
+        "c-rule",
+        "The C rule",
+        "Every C is the white key immediately to the LEFT of a group of two black keys. Middle C is the C nearest the centre of the keyboard — usually right in front of the brand name. In this app it is called C4 and marked with a small dot. (Some keyboard makers call it C3 — it's the same key, just a different naming convention.)",
+        { visual: { type: "keyboard", low: 48, high: 72, highlight: ["C4"], caption: "Middle C (C4)" }, hinglish: "Do kaali keys ke group ke theek left mein jo safed key hai — wahi C hai." },
+      ),
+      listen("hear-c", "Hear middle C", "This is middle C. It's a comfortable, medium pitch — great for singing along.", { type: "notes", notes: ["C4"], step: 1, instrument: "piano" }),
+      practice("find-every-c", "Find every C", "Click every C on the keyboard, from lowest to highest.", { type: "find-all", instrument: "piano", pitchClass: 0, prompt: "Find every C — remember: left of the two black keys." }, { mastery: true, passAccuracy: 0.8 }),
+      practice("play-middle-c", "Play middle C on your instrument", "Play middle C on the virtual piano, a MIDI keyboard, or a real piano with the microphone.", { type: "mic-note", instrument: "piano", note: "C4", prompt: "Find middle C and play it once, clearly." }, { mastery: true }),
+    ],
+    quiz: [
+      q("q1", "Where is every C?", ["Right of three black keys", "Left of a group of two black keys", "Between two groups"], 1, "C is always just left of a group of two black keys."),
+      q("q2", "What does this app call middle C?", ["C3", "C4", "C5"], 1, "We use scientific pitch notation: middle C = C4 = MIDI 60."),
+      q("q3", "How many Cs are on an 88-key piano?", ["7", "8", "12"], 1, "From C1 to C8 there are eight Cs."),
+      q("q4", "Your keyboard manual says middle C is 'C3'. Is that a different key?", ["Yes", "No, just a different naming convention"], 1, "Some makers number octaves differently. The physical key in the middle is the same."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-white-keys",
+    track: "piano",
+    level: 4,
+    order: 6,
+    title: "Naming every white key",
+    summary: "C D E F G A B — then it starts again.",
+    minutes: 10,
+    skills: ["white-key-names"],
+    prerequisites: ["p4-middle-c"],
+    topics: ["notes", "piano-basics"],
+    steps: [
+      explain(
+        "landmarks",
+        "Landmarks: C, F and the black keys",
+        "Around the group of TWO black keys you have C, D and E (C on the left, D in the middle, E on the right). Around the group of THREE black keys you have F, G, A and B (F on the left, B on the right). After B comes C again.",
+        { visual: { type: "keyboard", low: 60, high: 71, highlight: ["C4", "D4", "E4", "F4", "G4", "A4", "B4"], showLabels: true, caption: "C D E around two black keys; F G A B around three" } },
+      ),
+      listen("alphabet", "Hear the musical alphabet", "Middle C up to the next C: C D E F G A B C.", { type: "notes", notes: scaleMidi("C", "major"), step: 0.45, instrument: "piano" }),
+      practice("name-white", "Name the key", "A key will light up. Choose its name.", { type: "name-note", prompt: "What is the name of the highlighted key?", on: "keyboard", notes: ["D4", "F4", "A4", "E4", "B4", "G4", "C5", "F3"] }, { mastery: true, passAccuracy: 0.85 }),
+      practice("find-fs", "Find every F", "F is the white key just left of the group of three black keys.", { type: "find-all", instrument: "piano", pitchClass: 5, prompt: "Click every F." }),
+    ],
+    quiz: [
+      q("q1", "Which note is between the two black keys of the group of two?", ["C", "D", "E"], 1, "D sits in the middle of the two-black-key group."),
+      q("q2", "Which white key is just left of the group of three black keys?", ["F", "G", "B"], 0, "F starts the group of three."),
+      q("q3", "What note comes after B?", ["A", "H", "C"], 2, "The musical alphabet repeats: …A, B, C, D…"),
+      q("q4", "How many different white-key letter names are there?", ["5", "7", "12"], 1, "Seven letters: A B C D E F G."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-sharps-flats",
+    track: "piano",
+    level: 4,
+    order: 7,
+    title: "Sharps & flats on the keyboard",
+    summary: "Black keys have two names: C# is the same key as Db.",
+    minutes: 9,
+    skills: ["sharps-flats-keyboard"],
+    prerequisites: ["p4-white-keys"],
+    topics: ["notes"],
+    glossary: [
+      { term: "Sharp (♯)", meaning: "One key higher (to the right)." },
+      { term: "Flat (♭)", meaning: "One key lower (to the left)." },
+      { term: "Enharmonic", meaning: "Two names for the same key, like C♯ and D♭." },
+    ],
+    steps: [
+      explain(
+        "sharp-flat",
+        "Sharp means up, flat means down",
+        "A sharp (♯) raises a note to the very next key on the right. A flat (♭) lowers it to the very next key on the left. The black key between C and D can be called C♯ (C raised) or D♭ (D lowered). Both names are correct — which one you use depends on the key of the music.",
+        { visual: { type: "keyboard", low: 60, high: 64, highlight: ["C#4"], caption: "C♯ = D♭" }, hinglish: "Sharp = ek key upar (right), flat = ek key neeche (left)." },
+      ),
+      explain(
+        "white-sharps",
+        "Not every sharp is a black key",
+        "Between E and F, and between B and C, there is NO black key. So E♯ is the same key as F, and C♭ is the same key as B. You'll rarely see these, but they exist in some keys.",
+      ),
+      practice("play-sharps", "Play the sharps", "Play F♯4, then C♯4, then B♭4.", { type: "play-sequence", instrument: "piano", notes: ["F#4", "C#4", "Bb4"], prompt: "Play F♯, C♯, then B♭ (all near middle C)." }, { mastery: true }),
+      practice("name-black", "Name the black key", "Choose a correct name for each highlighted black key.", { type: "name-note", prompt: "Name the highlighted black key (either sharp or flat name is correct).", on: "keyboard", notes: ["C#4", "Eb4", "F#4", "Ab4", "Bb4"] }),
+    ],
+    quiz: [
+      q("q1", "C♯ and D♭ are…", ["Different keys", "The same key with two names", "Both white keys"], 1, "They're enharmonic: one key, two names."),
+      q("q2", "Which key is E♯?", ["F", "E", "F♯"], 0, "There's no black key between E and F, so E raised by one key lands on F."),
+      q("q3", "B♭ is one key to the ___ of B.", ["left", "right"], 0, "Flat = one key lower = to the left."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-octaves",
+    track: "piano",
+    level: 4,
+    order: 8,
+    title: "Octaves & repeating patterns",
+    summary: "Same letter, higher or lower: an octave is 12 keys away.",
+    minutes: 8,
+    skills: ["octaves-keyboard"],
+    prerequisites: ["p4-sharps-flats"],
+    topics: ["notes", "theory-basics"],
+    steps: [
+      explain("octave", "What is an octave?", "From one C to the next C is an octave: 8 white keys counting both Cs, or 12 keys counting black and white. Notes an octave apart sound like the 'same' note, higher or lower. The number after the letter tells you which octave: C3, C4 (middle C), C5…", {
+        visual: { type: "keyboard", low: 48, high: 72, highlight: ["C3", "C4", "C5"], caption: "C3, C4 and C5 — octaves" },
+      }),
+      listen("octave-sound", "Hear octaves", "C4 then C5, played separately and then together. Notice how well they blend.", { type: "compare", a: ["C4", "C5"], b: ["C3", "C4"], labelA: "C4 → C5", labelB: "C3 → C4" }),
+      practice("octave-jumps", "Play in octaves", "Play G3, G4, G5 — the same note in three octaves.", { type: "play-sequence", instrument: "piano", notes: ["G3", "G4", "G5"], prompt: "Play G in three octaves, low to high." }, { mastery: true }),
+      practice("find-every-a", "Find every A", "A is between the second and third black keys of the group of three.", { type: "find-all", instrument: "piano", pitchClass: 9, prompt: "Click every A." }),
+    ],
+    quiz: [
+      q("q1", "How many keys (black and white) from C4 up to C5?", ["8", "12", "7"], 1, "An octave spans 12 semitones."),
+      q("q2", "Which is higher: E3 or E5?", ["E3", "E5"], 1, "A bigger octave number means higher."),
+      q("q3", "Notes an octave apart have…", ["The same letter name", "Different letter names", "No name"], 0, "Octaves share their letter name."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-right-hand",
+    track: "piano",
+    level: 4,
+    order: 9,
+    title: "Playing with the right hand",
+    summary: "Right-hand C position, steps and skips.",
+    minutes: 10,
+    skills: ["right-hand-c-position"],
+    prerequisites: ["p4-octaves"],
+    topics: ["piano-beginner", "finger-exercises"],
+    glossary: [
+      { term: "Step", meaning: "Moving to the very next white key (like C to D)." },
+      { term: "Skip", meaning: "Jumping over one white key (like C to E)." },
+    ],
+    steps: [
+      explain("rh-position", "Right-hand C position", "Thumb (1) on middle C, then each finger on the next white key: 2 on D, 3 on E, 4 on F, 5 on G. Keep the hand still — just your fingers move.", { visual: { type: "keyboard", low: 55, high: 72, highlight: C_POSITION, caption: "RH C position" } }),
+      practice("rh-steps", "Steps up and down", "Play C D E F G F E D C with fingers 1 2 3 4 5 4 3 2 1.", { type: "play-sequence", instrument: "piano", notes: ["C4", "D4", "E4", "F4", "G4", "F4", "E4", "D4", "C4"], fingers: [1, 2, 3, 4, 5, 4, 3, 2, 1], prompt: "Steps up and down in C position." }, { mastery: true }),
+      practice("rh-skips", "Skips", "Skips jump over one key: C E G E C (fingers 1 3 5 3 1), then D F (2 4).", { type: "play-sequence", instrument: "piano", notes: ["C4", "E4", "G4", "E4", "C4", "D4", "F4"], fingers: [1, 3, 5, 3, 1, 2, 4], prompt: "Play the skips." }),
+      listen("ode", "A tune with steps", "Ode to Joy (Beethoven, public domain) uses only steps in C position. Listen first.", { type: "notes", notes: ["E4", "E4", "F4", "G4", "G4", "F4", "E4", "D4", "C4", "C4", "D4", "E4", "E4", "D4", "D4"], step: 0.42, instrument: "piano" }),
+      practice("ode-play", "Play Ode to Joy (first line)", "Right hand in C position. Start on E with finger 3.", { type: "play-sequence", instrument: "piano", notes: ["E4", "E4", "F4", "G4", "G4", "F4", "E4", "D4", "C4", "C4", "D4", "E4", "E4", "D4", "D4"], fingers: [3, 3, 4, 5, 5, 4, 3, 2, 1, 1, 2, 3, 3, 2, 2], prompt: "Play the first line of Ode to Joy." }, { mastery: true, passAccuracy: 0.75 }),
+    ],
+    quiz: [
+      q("q1", "In right-hand C position, which finger plays E?", ["2", "3", "4"], 1, "1=C, 2=D, 3=E, 4=F, 5=G."),
+      q("q2", "C to E is a…", ["Step", "Skip", "Octave"], 1, "It jumps over D, so it's a skip."),
+      q("q3", "Ode to Joy's first line moves mostly by…", ["Steps", "Octave leaps", "Black keys"], 0, "It moves almost entirely by steps."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-left-hand",
+    track: "piano",
+    level: 4,
+    order: 10,
+    title: "Playing with the left hand",
+    summary: "Left-hand C position below middle C.",
+    minutes: 10,
+    skills: ["left-hand-c-position"],
+    prerequisites: ["p4-right-hand"],
+    topics: ["piano-beginner", "finger-exercises"],
+    steps: [
+      explain("lh-position", "Left-hand C position", "Place your left little finger (5) on C3, the C below middle C. Then 4 on D3, 3 on E3, 2 on F3 and thumb (1) on G3. The left hand usually plays the lower notes and the bass.", { visual: { type: "keyboard", low: 43, high: 62, highlight: ["C3", "D3", "E3", "F3", "G3"], caption: "LH C position (C3–G3)" } }),
+      practice("lh-steps", "Left-hand steps", "Play C D E F G F E D C with fingers 5 4 3 2 1 2 3 4 5.", { type: "play-sequence", instrument: "piano", notes: ["C3", "D3", "E3", "F3", "G3", "F3", "E3", "D3", "C3"], fingers: [5, 4, 3, 2, 1, 2, 3, 4, 5], prompt: "Left-hand steps in C position." }, { mastery: true }),
+      practice("lh-bass", "Bass notes", "A simple bass line: C3, G3, F3, G3, C3 (fingers 5, 1, 2, 1, 5).", { type: "play-sequence", instrument: "piano", notes: ["C3", "G3", "F3", "G3", "C3"], fingers: [5, 1, 2, 1, 5], prompt: "Play the bass line." }),
+      selfCheck("lh-relax", "Left-hand check", "The left hand is often weaker at first. That's normal!", ["My left fingers stay curved.", "My left thumb isn't hanging off the keyboard.", "I practised slowly and evenly."]),
+    ],
+    quiz: [
+      q("q1", "In left-hand C position, which finger plays C3?", ["1", "5", "3"], 1, "Left-hand finger 5 (little finger) is on the lowest note C."),
+      q("q2", "Which finger plays G3 in left-hand C position?", ["1 (thumb)", "5", "4"], 0, "The thumb is on G, the highest note of the position."),
+      q("q3", "The left hand usually plays…", ["Higher melody notes", "Lower bass notes", "Only black keys"], 1, "The left hand usually covers the bass and accompaniment."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-reading-clefs",
+    track: "piano",
+    level: 4,
+    order: 11,
+    title: "Reading treble & bass clef on the piano",
+    summary: "Right hand reads treble clef, left hand reads bass clef — they meet at middle C.",
+    minutes: 12,
+    skills: ["read-treble", "read-bass"],
+    prerequisites: ["p4-left-hand", "l1-treble-bass-clef"],
+    topics: ["reading-music", "notes"],
+    glossary: [
+      { term: "Grand staff", meaning: "Treble and bass staffs joined together — piano music uses it." },
+      { term: "Ledger line", meaning: "A short extra line for notes above or below the staff, like middle C." },
+    ],
+    steps: [
+      explain("grand-staff", "The grand staff", "Piano music uses two staffs together. The top staff (treble clef) is mostly for the right hand; the bottom staff (bass clef) is mostly for the left hand. Middle C sits on a little ledger line exactly between them.", {}),
+      show("treble-c-position", "Treble clef: right-hand C position", "Middle C (ledger line below), D (below the bottom line), E (bottom line), F (first space), G (second line).", { type: "staff", clef: "treble", notes: C_POSITION.map((note) => ({ note, duration: "q" as const })) }),
+      show("bass-c-position", "Bass clef: left-hand C position", "C3 (second space), D3 (middle line), E3 (third space), F3 (fourth line), G3 (top space).", { type: "staff", clef: "bass", notes: ["C3", "D3", "E3", "F3", "G3"].map((note) => ({ note, duration: "q" as const })) }),
+      practice("read-treble", "Read treble notes", "Name each note on the treble staff.", { type: "name-note", prompt: "Name the treble-clef note.", on: "staff-treble", notes: ["C4", "E4", "G4", "D4", "F4", "A4", "B4", "C5"] }, { mastery: true, passAccuracy: 0.75 }),
+      practice("read-bass", "Read bass notes", "Name each note on the bass staff.", { type: "name-note", prompt: "Name the bass-clef note.", on: "staff-bass", notes: ["C3", "G3", "E3", "F3", "D3", "A2", "B2", "G2"] }, { mastery: true, passAccuracy: 0.75 }),
+    ],
+    quiz: [
+      q("q1", "Which hand usually reads the bass clef?", ["Right", "Left"], 1, "The bass clef is the lower staff, mostly for the left hand."),
+      q("q2", "Where is middle C on the grand staff?", ["On the top line of treble clef", "On a ledger line between the staffs", "In the bass clef's bottom space"], 1, "Middle C sits on a ledger line between the two staffs."),
+      q("q3", "In treble clef, which note sits on the bottom line?", ["E4", "F4", "C4"], 0, "Treble lines from the bottom: E G B D F."),
+      q("q4", "In bass clef, which note sits on the bottom line?", ["G2", "A2", "E2"], 0, "Bass lines from the bottom: G B D F A."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-note-reading",
+    track: "piano",
+    level: 4,
+    order: 12,
+    title: "Basic note reading: play what you see",
+    summary: "Read short phrases from the staff and play them.",
+    minutes: 10,
+    skills: ["sight-reading-basic"],
+    prerequisites: ["p4-reading-clefs"],
+    topics: ["reading-music"],
+    steps: [
+      explain("intervals-on-staff", "Reading by direction", "You don't need to name every note. Look at the DIRECTION: notes going up the staff go right on the keyboard. A note from a line to the next space is a step; from a line to the next line is a skip.", {}),
+      show("phrase", "A short phrase", "Read this phrase. It starts on E4 (bottom line).", { type: "staff", clef: "treble", notes: [{ note: "E4" }, { note: "F4" }, { note: "G4" }, { note: "E4" }, { note: "D4" }, { note: "C4", duration: "h" }] }),
+      practice("play-phrase", "Play the phrase", "Play the phrase you just read: E F G E D C.", { type: "play-sequence", instrument: "piano", notes: ["E4", "F4", "G4", "E4", "D4", "C4"], fingers: [3, 4, 5, 3, 2, 1], prompt: "Play the phrase from the staff." }, { mastery: true }),
+      practice("read-mixed", "Mixed reading", "Name these notes, then play them on the keyboard if you like.", { type: "name-note", prompt: "Name the note.", on: "staff-treble", notes: ["G4", "C4", "F4", "D4", "E4", "A4"] }),
+    ],
+    quiz: [
+      q("q1", "If the next note is higher on the staff, you move…", ["Left on the keyboard", "Right on the keyboard"], 1, "Higher on the staff = higher pitch = to the right."),
+      q("q2", "Line to the next space is a…", ["Step", "Skip"], 0, "Line-to-space (or space-to-line) is a step."),
+      q("q3", "Line to the next line is a…", ["Step", "Skip"], 1, "Line-to-line skips over the space between."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-simple-melodies",
+    track: "piano",
+    level: 4,
+    order: 13,
+    title: "Simple melodies (public domain)",
+    summary: "Mary Had a Little Lamb, Twinkle Twinkle and Jingle Bells — right hand.",
+    minutes: 12,
+    skills: ["simple-melodies"],
+    prerequisites: ["p4-note-reading"],
+    topics: ["songs", "piano-beginner"],
+    steps: [
+      listen("mary", "Mary Had a Little Lamb", "Traditional, public domain. Listen first.", { type: "notes", notes: ["E4", "D4", "C4", "D4", "E4", "E4", "E4", "D4", "D4", "D4", "E4", "G4", "G4"], step: 0.4, instrument: "piano" }),
+      practice("mary-play", "Play Mary Had a Little Lamb", "Right hand C position; E is finger 3.", { type: "play-sequence", instrument: "piano", notes: ["E4", "D4", "C4", "D4", "E4", "E4", "E4", "D4", "D4", "D4", "E4", "G4", "G4"], fingers: [3, 2, 1, 2, 3, 3, 3, 2, 2, 2, 3, 5, 5], prompt: "Play Mary Had a Little Lamb." }, { mastery: true, passAccuracy: 0.75 }),
+      listen("twinkle", "Twinkle Twinkle Little Star", "Traditional melody (public domain). It needs one stretch to A.", { type: "notes", notes: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"], step: 0.4, instrument: "piano" }),
+      practice("twinkle-play", "Play Twinkle Twinkle", "Start with thumb on C. For A, stretch finger 5 up (or shift your hand one key).", { type: "play-sequence", instrument: "piano", notes: ["C4", "C4", "G4", "G4", "A4", "A4", "G4", "F4", "F4", "E4", "E4", "D4", "D4", "C4"], fingers: [1, 1, 4, 4, 5, 5, 4, 3, 3, 2, 2, 1, 1, 1], prompt: "Play the first line of Twinkle Twinkle." }, { mastery: true, passAccuracy: 0.75 }),
+      practice("jingle", "Jingle Bells (chorus start)", "Traditional (public domain): E E E, E E E, E G C D E.", { type: "play-sequence", instrument: "piano", notes: ["E4", "E4", "E4", "E4", "E4", "E4", "E4", "G4", "C4", "D4", "E4"], fingers: [3, 3, 3, 3, 3, 3, 3, 5, 1, 2, 3], prompt: "Play the start of Jingle Bells." }),
+    ],
+    quiz: [
+      q("q1", "Mary Had a Little Lamb starts on which note (in C position)?", ["C", "E", "G"], 1, "It starts E–D–C."),
+      q("q2", "Twinkle Twinkle's highest note in this version is…", ["G", "A", "B"], 1, "\"Lit-tle star\" reaches up to A."),
+      q("q3", "Why use public-domain songs?", ["They're always easier", "They're free to use and share legally", "They have no rhythm"], 1, "Public-domain melodies can be taught and shared without copyright problems."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-finger-independence",
+    track: "piano",
+    level: 4,
+    order: 14,
+    title: "Finger independence",
+    summary: "Five-finger patterns that make weak fingers (4 and 5) stronger.",
+    minutes: 8,
+    skills: ["finger-independence-piano"],
+    prerequisites: ["p4-simple-melodies"],
+    topics: ["finger-exercises"],
+    steps: [
+      explain("why", "Why fingers 4 and 5 feel weak", "Your ring finger (4) shares tendons with its neighbours, so it naturally wants to move with them. Slow, even exercises teach each finger to move on its own. Short daily practice beats long sessions.", { hinglish: "Ring finger (4) kamzor lagti hai — yeh normal hai. Roz thodi der dheere practice karo." }),
+      practice("pattern-1", "Pattern 1-3-2-4-3-5", "Right hand C position: C E D F E G.", { type: "play-sequence", instrument: "piano", notes: ["C4", "E4", "D4", "F4", "E4", "G4"], fingers: [1, 3, 2, 4, 3, 5], prompt: "Play 1-3-2-4-3-5." }, { mastery: true }),
+      practice("pattern-2", "Pattern 5-4-5-3-5-2-5-1", "Keep finger 5 on G and alternate.", { type: "play-sequence", instrument: "piano", notes: ["G4", "F4", "G4", "E4", "G4", "D4", "G4", "C4"], fingers: [5, 4, 5, 3, 5, 2, 5, 1], prompt: "Play 5-4-5-3-5-2-5-1." }),
+      selfCheck("even", "Evenness check", "Listen to yourself (or record on your phone).", ["Every note was the same loudness.", "My other fingers stayed relaxed and close to the keys.", "I practised slowly before trying faster."]),
+    ],
+    quiz: [
+      q("q1", "Which finger usually feels weakest at first?", ["Thumb (1)", "Ring finger (4)", "Index (2)"], 1, "Finger 4 shares tendons with 3 and 5, so independence takes practice."),
+      q("q2", "Best way to build finger independence?", ["Very fast for one hour", "Slow, even, short daily sessions", "Only with the left hand"], 1, "Slow and regular practice builds control without strain."),
+      q("q3", "While one finger plays, the others should…", ["Lift high in the air", "Stay relaxed near the keys", "Press other keys"], 1, "Resting close to the keys saves movement and keeps control."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-rhythm",
+    track: "piano",
+    level: 4,
+    order: 15,
+    title: "Rhythm & timing at the piano",
+    summary: "Count out loud and play quarter, half and whole notes in time.",
+    minutes: 10,
+    skills: ["rhythm-basic-piano", "timing"],
+    prerequisites: ["p4-finger-independence", "l1-note-durations"],
+    topics: ["rhythm"],
+    steps: [
+      explain("count", "Counting out loud", "Say '1 2 3 4' steadily. A quarter note lasts one count, a half note two counts, a whole note four counts. Hold the key down for the whole value — don't let go early!", {
+        visual: { type: "staff", clef: "treble", notes: [{ note: "C4", duration: "q" }, { note: "C4", duration: "q" }, { note: "E4", duration: "h" }, { note: "G4", duration: "w" }] },
+      }),
+      listen("demo", "Hear it with a click", "Quarter, quarter, half, then a whole note, at 80 BPM.", { type: "rhythm", pattern: [0, 1, 2, 4], bpm: 80, beatsPerBar: 4 }),
+      practice("tap", "Tap the rhythm", "Tap (or press a key) on each note start: quarter, quarter, half | whole.", { type: "tap-rhythm", prompt: "Tap: 1, 2, 3 (hold 4) | 1 (hold 2 3 4)", pattern: [0, 1, 2, 4], bpm: 70, beatsPerBar: 4, bars: 2 }, { mastery: true, passAccuracy: 0.75 }),
+      practice("tap-2", "Steady quarters", "Tap every beat for two bars — even and steady.", { type: "tap-rhythm", prompt: "Tap every beat.", pattern: [0, 1, 2, 3, 4, 5, 6, 7], bpm: 80, beatsPerBar: 4, bars: 2 }),
+    ],
+    quiz: [
+      q("q1", "How many counts does a half note last in 4/4?", ["1", "2", "4"], 1, "A half note = 2 beats."),
+      q("q2", "A whole note in 4/4 lasts…", ["One beat", "The whole bar (4 beats)", "Half a beat"], 1, "A whole note fills a 4/4 bar."),
+      q("q3", "Why count out loud?", ["It keeps your timing steady", "It makes notes louder", "It's only for singers"], 0, "Counting keeps the pulse steady and shows you exactly when to release keys."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-sustain-pedal",
+    track: "piano",
+    level: 4,
+    order: 16,
+    title: "Introduction to the sustain pedal",
+    summary: "Press, play, lift-and-press: a first look at legato pedalling.",
+    minutes: 8,
+    skills: ["sustain-pedal"],
+    prerequisites: ["p4-rhythm"],
+    topics: ["piano-technique"],
+    glossary: [
+      { term: "Sustain pedal", meaning: "The right pedal. Keeps notes ringing after you release the keys." },
+      { term: "Legato pedalling", meaning: "Lifting the pedal just as you play a new chord, then pressing again, so sounds connect without blurring." },
+    ],
+    steps: [
+      explain("what", "What the pedal does", "When you press the sustain pedal, every note you play keeps ringing, even after your fingers leave the keys. Pressing it too long blurs different chords together into a muddy sound. So we change the pedal when the harmony changes.", {}),
+      listen("with-without", "With and without pedal", "First: C then F chords played short. Then the same chords connected — that's what the pedal helps you do.", { type: "chords", chords: ["C", "F", "G", "C"], beatsEach: 2, bpm: 70, instrument: "piano" }),
+      explain("technique", "Legato pedalling step by step", "1) Play the C chord. 2) Press the pedal. 3) Play the next chord (F) and AT THE SAME MOMENT lift the pedal. 4) Press it down again right after. Think 'play – up – down'. Keep your heel on the floor and move from the ankle.", {}),
+      selfCheck("pedal-check", "Pedal self-check", "The app can't see or hear your pedal reliably — check yourself.", [
+        "My heel stays on the floor; I move from the ankle.",
+        "When I change chords I lift and press the pedal again.",
+        "There's no muddy blur between chords.",
+        "If my keyboard has no pedal, I understand the idea and will try it later.",
+      ]),
+      practice("chords-for-pedal", "Play the chord progression", "Play C, then F, then G, then C chords (three notes each, held together). Use the pedal if you have one.", { type: "play-chord", instrument: "piano", chord: "C", prompt: "Play a C major chord: C E G together." }),
+    ],
+    quiz: [
+      q("q1", "Which pedal is the sustain pedal?", ["Left", "Middle", "Right"], 2, "The sustain (damper) pedal is on the right."),
+      q("q2", "When should you change (lift and re-press) the pedal?", ["Never", "When the chord changes", "Every note"], 1, "Change the pedal when the harmony changes to avoid blurring."),
+      q("q3", "Holding the pedal down through C, F and G chords will sound…", ["Clean", "Muddy and blurred"], 1, "Different chords ringing together blur into a muddy sound."),
+    ],
+  }),
+
+  lesson({
+    id: "p4-two-hands",
+    track: "piano",
+    level: 4,
+    order: 17,
+    title: "Two-hand coordination",
+    summary: "Hold a bass note with the left hand while the right hand plays a melody.",
+    minutes: 12,
+    skills: ["two-hand-coordination"],
+    prerequisites: ["p4-sustain-pedal"],
+    topics: ["piano-beginner", "piano-technique"],
+    steps: [
+      explain("one-at-a-time", "Hands separately first", "Always learn each hand on its own first, slowly. When both feel easy, put them together at an even slower speed. It's normal for your brain to find this hard at first!", { hinglish: "Pehle har haath alag se, phir dono saath — bahut dheere." }),
+      listen("demo", "Hear both hands", "The left hand plays C3 (whole notes) while the right hand plays C D E F G.", { type: "notes", notes: ["C4", "D4", "E4", "F4", "G4"], step: 0.6, instrument: "piano" }),
+      practice("rh", "Right hand alone", "C D E F G (fingers 1–5).", { type: "play-sequence", instrument: "piano", notes: C_POSITION, fingers: [1, 2, 3, 4, 5], prompt: "Right hand: C D E F G." }),
+      practice("together", "Hands together: contrary motion", "Left hand in C position on C3, right hand in C position on C4. Take turns: LH C3, then RH C4, LH D3, then RH D4… Each hand plays the same note names, an octave apart.", { type: "play-sequence", instrument: "piano", notes: ["C3", "C4", "D3", "D4", "E3", "E4", "F3", "F4", "G3", "G4"], prompt: "Alternate LH and RH: C3, C4, D3, D4, E3, E4, F3, F4, G3, G4." }, { mastery: true, passAccuracy: 0.8 }),
+      practice("bass-chord", "Left hand chord", "Play a C chord low with the left hand (C3 E3 G3) — fingers 5, 3, 1.", { type: "play-chord", instrument: "piano", chord: "C", prompt: "Left hand: C3 E3 G3 together." }),
+      selfCheck("coord", "Coordination check", "Be honest:", ["I learnt each hand separately first.", "I played together slowly enough to avoid stopping.", "My hands stayed relaxed."]),
+    ],
+    quiz: [
+      q("q1", "Best way to start a two-hand piece?", ["Hands together at full speed", "Each hand alone, then together slowly"], 1, "Separate practice then slow combination builds coordination."),
+      q("q2", "In a simple piece, the left hand often plays…", ["The bass or chords", "The highest melody"], 0, "The left hand supports with bass notes and chords."),
+      q("q3", "C3–E3–G3 played together is which chord?", ["C major", "A minor", "G major"], 0, "C–E–G is C major."),
+    ],
+  }),
+];
+
+/** Exported for tests: musical data this level relies on. */
+export const LEVEL_4_FACTS = {
+  everyC: notesOfPitchClass(0, 21, 108),
+  cMajorTriad: chordMidi("C", 3),
+};
