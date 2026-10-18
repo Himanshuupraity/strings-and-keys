@@ -8,7 +8,7 @@ export const LINK_BUTTON = "inline-flex h-12 w-full items-center justify-center 
 import type { CatalogueSong } from "@/content/songs/types";
 
 export function catalogueEditorHref(s: Pick<CatalogueSong, "id" | "title" | "artist">) {
-  return `/songs/custom?new=1&from=${encodeURIComponent(s.id)}&title=${encodeURIComponent(s.title)}&artist=${encodeURIComponent(s.artist)}`;
+  return `/songs/sheet?new=1&from=${encodeURIComponent(s.id)}&title=${encodeURIComponent(s.title)}&artist=${encodeURIComponent(s.artist)}`;
 }
 
 /** A popular (copyrighted) song: links only, no chords or lyrics. */
@@ -58,7 +58,7 @@ export function CatalogueView({ song }: { song: CatalogueSong }) {
             <ExternalLink className="h-4 w-4 text-muted" />
           </a>
           <Link href={catalogueEditorHref(song)} className={LINK_BUTTON}>
-            <PlusCircle className="h-5 w-5" /> Add this song with my own chords
+            <PlusCircle className="h-5 w-5" /> Add lyrics &amp; chords and sing along
           </Link>
         </CardBody>
       </Card>

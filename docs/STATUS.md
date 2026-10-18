@@ -61,6 +61,7 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 **Song Lab (Bollywood first)**
 - 29 Bollywood chord charts, each cross-checked against 2+ independent chord sources (listed on the page). Chords only, with capo help, strumming, chord diagrams, piano accompaniment, looping and slow play-along.
 - A searchable list of 165 Bollywood/Hindi songs (singers, film, year and composer checked against a source page), with Listen, Find chords and Add chords buttons, a decade filter and search by song, film, singer or composer.
+- Song sheets: paste lyrics + chords (chords-over-lyrics or ChordPro), then sing along. Chords are shown above the words; follow-my-voice moves line by line from your sung phrases and pauses (on-device, no speech recognition); auto-scroll and manual/pedal navigation; transpose, capo and chord diagrams; an optional YouTube video beside the sheet. Saved to the learner's profile.
 - 5 original Hindi-style practice pieces with melodies; public-domain English classics in a separate tab; a custom song editor.
 
 **Video Hub**
@@ -88,6 +89,7 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - **Sync is whole-profile.** Each sync uploads the learner's full progress bundle (capped at 2 MB, far more than years of practice history). Deleting a record on one device doesn't delete it on another that still has it, so a merge can bring it back.
 - **Rename in Supabase mode.** You can't rename a learner from the app; use Switch learner and create a new name, or edit the row in Supabase.
 - **Bollywood chord charts are chords only, with approximate timing.** Lyrics and melodies are copyrighted. Chord sources are fan transcriptions; disputed sections were removed (Khairiyat chorus, Kabira verse, Pehla Nasha verse) and caveats are shown on the song page (Dil Diyan Gallan, Tum Se Hi, Zara Sa, Phir Le Aya Dil).
-- **Songs in the 165-song list have no chords.** Use Find chords, then Add chords.
+- **Songs in the 165-song list have no chords or lyrics.** Use Find chords, then paste lyrics + chords into a song sheet. The app never ships copyrighted lyrics; sheets contain only what you paste, for your own practice.
+- **Follow-my-voice follows phrasing, not words.** It moves on after each sung line and pause. Long held notes or loud strumming can make it early or late; arrows, a tap or a page-turner pedal correct it.
 - **Videos** were verified on 2026-10-18 and may later be removed by their owners. Each one still has a "Watch on YouTube" fallback link.
 - **Audio quality.** Piano and guitar sounds are synthesised with Tone.js (FM synth and Karplus-Strong pluck) rather than sampled, so they work offline with no downloads.

@@ -35,11 +35,11 @@ test("a chord chart page shows its sources and suggested capo", async ({ page })
   await expect(page.getByText(/capo on fret 1/).first()).toBeVisible();
 });
 
-test("catalogue songs can be added with your own chords (editor pre-filled)", async ({ page }) => {
+test("catalogue songs open the lyrics + chords editor, pre-filled", async ({ page }) => {
   await seedPrefs(page);
   await page.goto("/songs");
   await page.getByRole("textbox", { name: "Search songs" }).fill("Chaudhvin");
   await page.getByRole("link", { name: /Add chords for Chaudhvin Ka Chand/ }).click();
-  await expect(page).toHaveURL(/\/songs\/custom\?new=1/);
-  await expect(page.locator('input[value="Chaudhvin Ka Chand"]')).toBeVisible();
+  await expect(page).toHaveURL(/\/songs\/sheet\?new=1/);
+  await expect(page.getByLabel("Title")).toHaveValue("Chaudhvin Ka Chand");
 });

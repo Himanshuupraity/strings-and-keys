@@ -72,7 +72,7 @@ export function SongsBrowser() {
         eyebrow="Song Lab"
         title="Play the songs you love"
         description="Bollywood and Hindi songs with chords, capo help, strumming and slow play-along — plus Hindi-style practice pieces with melodies you can play note by note."
-        actions={<Link href="/songs/custom?new=1" className={cn(LINK_BUTTON, "h-10 w-auto px-4 text-sm")}><PlusCircle className="h-4 w-4" /> Add your own song</Link>}
+        actions={<Link href="/songs/sheet?new=1" className={cn(LINK_BUTTON, "h-10 w-auto px-4 text-sm")} data-testid="paste-song"><PlusCircle className="h-4 w-4" /> Paste a song (lyrics + chords)</Link>}
       />
 
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -158,14 +158,14 @@ export function SongsBrowser() {
         mine.length ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {mine.map((s) => (
-              <Link key={s.id} href={`/songs/custom?id=${s.id}`} className="group">
+              <Link key={s.id} href={s.sheet ? `/songs/sheet?id=${s.id}` : `/songs/custom?id=${s.id}`} className="group">
                 <Card className="h-full p-4 transition-colors group-hover:border-border-strong">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold">{s.title}</p>
                       <p className="text-sm text-muted">{s.artist || "Unknown artist"}</p>
                     </div>
-                    <Badge tone="piano">User-provided</Badge>
+                    <Badge tone="piano">{s.sheet ? "Lyrics + chords" : "User-provided"}</Badge>
                   </div>
                   <p className="mt-3 truncate font-mono text-xs text-muted">{songChords({ sections: s.sections }).join(" · ")}</p>
                 </Card>
@@ -173,7 +173,7 @@ export function SongsBrowser() {
             ))}
           </div>
         ) : (
-          <EmptyState icon={<Music2 className="h-8 w-8" />} title={custom.loading ? "Loading…" : "No songs yet"} description="Add any Hindi song with chords from a source you trust, and get looping, slow practice and the capo helper." action={<Link href="/songs/custom?new=1" className="text-accent hover:underline">Add your first song</Link>} />
+          <EmptyState icon={<Music2 className="h-8 w-8" />} title={custom.loading ? "Loading…" : "No songs yet"} description="Paste any song's lyrics with chords, then sing along while the sheet follows your voice." action={<Link href="/songs/sheet?new=1" className="text-accent hover:underline">Paste your first song</Link>} />
         )
       ) : (
         <div className="space-y-8">

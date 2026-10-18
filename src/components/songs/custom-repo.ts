@@ -24,6 +24,10 @@ export const CustomSongSchema = z.object({
     .max(12),
   /** Catalogue id this was created from, if any. */
   fromCatalogue: z.string().optional(),
+  /** Pasted lyrics + chords (song sheet). The student's own copy for personal practice. */
+  sheet: z.string().max(30000).optional(),
+  /** Optional YouTube link to play the song beside the sheet. */
+  youtube: z.string().max(300).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

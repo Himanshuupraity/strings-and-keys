@@ -298,6 +298,15 @@ export function SongWorkspace({ song }: { song: Song }) {
             </CardBody>
           </Card>
           {song.source === "chord-chart" && (
+            <Link href={`/songs/sheet?new=1&chart=${song.id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent-soft p-4 hover:border-accent" data-testid="sing-along">
+              <span>
+                <span className="block font-semibold text-accent">Sing along with lyrics</span>
+                <span className="text-sm text-muted">Paste the lyrics under these chords, and the sheet scrolls as you sing.</span>
+              </span>
+              <span className="shrink-0 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-accent-fg">Add lyrics</span>
+            </Link>
+          )}
+          {song.source === "chord-chart" && (
             <Callout tone="info" title="About this chord chart">
               <p>
                 Chords only — no lyrics or melody (those are copyrighted). The chord order was cross-checked against {song.sources?.length ?? 0} independent chord sources; it isn&apos;t an official transcription.

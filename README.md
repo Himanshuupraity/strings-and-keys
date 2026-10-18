@@ -43,6 +43,7 @@ To run the Playwright browsers for the first time: `npx playwright install chrom
 | `/guitar-lab` | Fretboard, chord and scale explorers, capo simulator, Easy Chord Transposer, exercises |
 | `/tuner` | Microphone guitar tuner with cents needle and adjustable A4 |
 | `/practice/*` | Metronome, chord trainer, scale trainer, rhythm trainer, ear training, note detector, practice timer, **1-Minute Chord Change drill** |
+| `/songs/sheet` | **Song sheets:** paste any song's lyrics with chords, then sing along. Chords appear above the words, the sheet follows your voice (or auto-scrolls), and the song's YouTube video plays alongside |
 | `/songs` | Bollywood chord charts (29 songs), a searchable list of 165 Hindi songs, Hindi-style practice pieces, your own charts, and a small English classics tab |
 | `/videos` | Curated, verified YouTube lessons with search, filters, favourites and watched state |
 | `/ai-coach` | Listening teacher (explain → demo → listen → feedback → adapt) and chat |

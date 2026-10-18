@@ -1,0 +1,109 @@
+import { describe, expect, it } from "vitest";
+import { chordLinePositions, guessKey, lyricSegments, parseSheet, sheetChords, sheetSections, transposeSheet, uniqueChords, youtubeId } from "./parse";
+import { advanceOn, firstStop, nextStop, PhraseFollower } from "./follow";
+
+// Original test text written for these tests (not from any song).
+const OVER = `{title: Practice Song}
+[Verse]
+Am          F
+Morning tea and open windows
+C              G
+Every day a little brighter
+
+Chorus:
+F       G        Am
+Sing it slowly, sing it softly
+Am | F | C | G |`;
+
+describe("parseSheet", () => {
+  it("reads chords-over-lyrics with positions, sections and chord-only lines", () => {
+    const s = parseSheet(OVER);
+    expect(s.title).toBe("Practice Song");
+    const kinds = s.lines.map((l) => l.kind);
+    expect(kinds).toEqual(["section", "lyric", "lyric", "blank", "section", "lyric", "chords"]);
+    const l1 = s.lines[1] as Extract<(typeof s.lines)[number], { kind: "lyric" }>;
+    expect(l1.text).toBe("Morning tea and open windows");
+    expect(l1.chords).toEqual([{ chord: "Am", at: 0 }, { chord: "F", at: 12 }]);
+    expect(lyricSegments(l1)).toEqual([{ chord: "Am", text: "Morning tea " }, { chord: "F", text: "and open windows" }]);
+    expect(s.lines[6]).toEqual({ kind: "chords", chords: ["Am", "F", "C", "G"] });
+    expect(sheetChords(s.lines)).toEqual(["Am", "F", "C", "G", "F", "G", "Am", "Am", "F", "C", "G"]);
+    expect(uniqueChords(s.lines)).toEqual(["Am", "F", "C", "G"]);
+  });
+
+  it("reads ChordPro inline chords and section directives", () => {
+    const s = parseSheet("{start_of_chorus}\n[G]Little [D]steps, [Em]little [C]light\n{end_of_chorus}");
+    expect(s.lines[0]).toEqual({ kind: "section", name: "Chorus" });
+    const l = s.lines[1] as Extract<(typeof s.lines)[number], { kind: "lyric" }>;
+    expect(l.text).toBe("Little steps, little light");
+    expect(l.chords.map((c) => c.chord)).toEqual(["G", "D", "Em", "C"]);
+    expect(l.chords[1].at).toBe(7);
+  });
+
+  it("does not mistake normal words for chords", () => {
+    expect(chordLinePositions("A day to remember")).toBeNull();
+    expect(chordLinePositions("Am  F  C  G")).not.toBeNull();
+    expect(chordLinePositions("(Am)  F/C  x2")).toEqual([{ chord: "Am", at: 1 }, { chord: "F/C", at: 6 }]);
+    expect(parseSheet("Em is my favourite chord").lines[0].kind).toBe("lyric");
+  });
+
+  it("keeps lyrics without chords and handles Hindi / Devanagari text", () => {
+    const s = parseSheet("G       D\nचलो चलें हम\nplain line");
+    expect(s.lines[0]).toMatchObject({ kind: "lyric", text: "चलो चलें हम" });
+    expect(s.lines[1]).toMatchObject({ kind: "lyric", text: "plain line", chords: [] });
+  });
+
+  it("transposes, guesses key and builds practice sections", () => {
+    const s = parseSheet(OVER);
+    expect(guessKey(s.lines)).toBe("Am");
+    const up = transposeSheet(s.lines, 2, "Bm");
+    expect(uniqueChords(up)).toEqual(["Bm", "G", "D", "A"]);
+    expect(sheetSections(s.lines).map((x) => x.name)).toEqual(["Verse", "Chorus"]);
+  });
+
+  it("extracts YouTube ids", () => {
+    expect(youtubeId("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10")).toBe("dQw4w9WgXcQ");
+    expect(youtubeId("https://youtu.be/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
+    expect(youtubeId("https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe("dQw4w9WgXcQ");
+    expect(youtubeId("https://example.com/watch?v=dQw4w9WgXcQ")).toBeNull();
+  });
+});
+
+describe("follow my voice", () => {
+  const frames = (follower: PhraseFollower, from: number, to: number, level: number, pitched = true) => {
+    const evs: string[] = [];
+    for (let t = from; t < to; t += 20) {
+      const e = follower.push(level, pitched, t);
+      if (e) evs.push(e);
+    }
+    return evs;
+  };
+
+  it("calibrates on room noise, then detects sung phrases and pauses", () => {
+    const f = new PhraseFollower();
+    expect(frames(f, 0, 1300, 0.004)).toEqual(["calibrated"]);
+    expect(frames(f, 1300, 3300, 0.08)).toEqual(["phrase-start"]); // 2 s of singing
+    expect(frames(f, 3300, 4300, 0.004)).toEqual(["phrase-end"]); // pause
+  });
+
+  it("ignores short noises and unpitched quiet sounds", () => {
+    const f = new PhraseFollower();
+    frames(f, 0, 1300, 0.004);
+    expect(frames(f, 1300, 1500, 0.08)).toEqual(["phrase-start"]);
+    expect(frames(f, 1500, 2600, 0.004)).toEqual([]); // 200 ms phrase is too short to count
+    expect(frames(f, 2600, 4000, 0.02, false)).toEqual([]); // unpitched, below 2x threshold
+  });
+
+  it("moves line by line, skipping blanks and sections; instrumental lines wait for the voice", () => {
+    const s = parseSheet(OVER).lines;
+    let cur = firstStop(s);
+    expect(cur).toBe(1);
+    cur = advanceOn(s, cur, "phrase-end");
+    expect(cur).toBe(2);
+    cur = advanceOn(s, cur, "phrase-end");
+    expect(cur).toBe(5); // skipped blank + "Chorus:"
+    cur = advanceOn(s, cur, "phrase-end");
+    expect(cur).toBe(6); // instrumental chord line
+    expect(advanceOn(s, cur, "phrase-end")).toBe(6); // humming over chords doesn't skip it
+    expect(nextStop(s, 6)).toBe(6); // end of song
+  });
+});
