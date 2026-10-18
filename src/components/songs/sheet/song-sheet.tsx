@@ -48,6 +48,8 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
   const [sensitivity, setSensitivity] = useState(DEFAULT_FOLLOWER.sensitivity);
   const [current, setCurrent] = useState(() => firstStop(parsed.lines));
   const [voiceState, setVoiceState] = useState<"calibrating" | "ready" | "singing">("calibrating");
+  const [threshold, setThreshold] = useState(0);
+  const [noPause, setNoPause] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const log = usePracticeLog(`Song sheet: ${title}`);
@@ -105,15 +107,28 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
   useEffect(() => {
     currentRef.current = current;
   }, [current]);
-  useEffect(() => follower.current.setOptions({ sensitivity }), [sensitivity]);
+  useEffect(() => {
+    follower.current.setOptions({ sensitivity });
+    if (follower.current.isCalibrated) setThreshold(follower.current.threshold);
+  }, [sensitivity]);
   const mic = useMic({
     a4: prefs.a4,
     mode: "pitch",
+    // Voice processing: boosts quiet voices and cancels the video playing from this page.
+    voice: true,
     onPitch: (f) => {
-      const ev = follower.current.push(f.level, f.frequency !== null, performance.now());
-      if (ev === "calibrated") setVoiceState("ready");
-      if (ev === "phrase-start") setVoiceState("singing");
+      const now = performance.now();
+      const ev = follower.current.push(f.level, f.clarity, now);
+      if (ev === "calibrated") {
+        setVoiceState("ready");
+        setThreshold(follower.current.threshold);
+      }
+      if (ev === "phrase-start") {
+        setVoiceState("singing");
+        setNoPause(false);
+      }
       if (ev === "phrase-end") setVoiceState("ready");
+      if (follower.current.phraseLength(now) > 12000) setNoPause(true);
       if (ev === "phrase-start" || ev === "phrase-end") {
         const next = advanceOn(parsed.lines, currentRef.current, ev);
         if (next !== currentRef.current) go(next);
@@ -123,6 +138,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
   const startVoice = () => {
     follower.current = new PhraseFollower({ ...DEFAULT_FOLLOWER, sensitivity });
     setVoiceState("calibrating");
+    setNoPause(false);
     void mic.start();
   };
 
@@ -168,13 +184,19 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                     <span className={cn("font-medium", voiceState === "singing" ? "text-success" : "text-muted")}>
                       {voiceState === "calibrating" ? "Stay quiet for a second — measuring the room…" : voiceState === "singing" ? "Singing — keep going" : "Ready — start singing the highlighted line"}
                     </span>
-                    <span className="h-2 w-28 overflow-hidden rounded-full bg-surface-3" aria-hidden>
-                      <span className={cn("block h-full rounded-full transition-[width]", voiceState === "singing" ? "bg-success" : "bg-accent")} style={{ width: `${Math.min(100, level * 600)}%` }} />
+                    <span className="relative h-2.5 w-40 overflow-hidden rounded-full bg-surface-3" aria-hidden title="Your voice level; the white line is how loud it needs to be">
+                      <span className={cn("block h-full rounded-full transition-[width] duration-75", voiceState === "singing" ? "bg-success" : level > threshold && threshold > 0 ? "bg-accent" : "bg-subtle")} style={{ width: `${meter(level)}%` }} />
+                      {threshold > 0 && <span className="absolute inset-y-0 w-0.5 bg-text" style={{ left: `${meter(threshold)}%` }} />}
                     </span>
                   </div>
                 )}
+                {noPause && (
+                  <Callout tone="warn" title="I can't hear any pauses">
+                    Is the video or other music playing out loud? Use headphones, turn the volume down, or lower the sensitivity.
+                  </Callout>
+                )}
                 <p className="text-xs text-muted">
-                  Each time you finish a line and pause, the sheet moves on. It listens to your phrasing, not the words, and audio never leaves your device. Loud strumming can confuse it — use the arrows, a tap or a page-turner pedal to correct.
+                  Sing (or say) the highlighted line, then pause briefly — the sheet moves to the next line. The bar shows your voice; it needs to pass the white line. Headphones work best when the video is playing.
                 </p>
                 <Slider label="Voice sensitivity" min={1.5} max={6} step={0.5} value={7.5 - sensitivity} onChange={(v) => setSensitivity(7.5 - v)} format={(v) => (v < 3 ? "Low" : v < 4.5 ? "Medium" : "High")} />
               </div>
@@ -290,6 +312,12 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
       </aside>
     </div>
   );
+}
+
+/** Level → meter percentage on a dB scale (−60 dB … 0 dB), so quiet voices still move the bar. */
+function meter(level: number) {
+  if (level <= 0) return 0;
+  return Math.max(0, Math.min(100, ((20 * Math.log10(level) + 60) / 60) * 100));
 }
 
 function safeNotes(c: string) {

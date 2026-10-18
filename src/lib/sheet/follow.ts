@@ -7,26 +7,31 @@ import { isStop, type SheetLine } from "./parse";
  * soon as you start singing again.
  */
 export interface FollowerOptions {
-  /** How far above the measured room noise counts as singing (multiplier). */
+  /** How far above the measured room noise counts as voice (multiplier). */
   sensitivity: number;
-  /** Shortest sung phrase that counts (ms) — ignores coughs and clicks. */
+  /** Shortest phrase that counts (ms) — ignores coughs and clicks. */
   minPhraseMs: number;
   /** Silence after a phrase before moving on (ms). */
   gapMs: number;
   /** Time spent measuring room noise at the start (ms). */
   calibrateMs: number;
+  /** Dips shorter than this between syllables don't break a phrase (ms). */
+  bridgeMs: number;
 }
 
-export const DEFAULT_FOLLOWER: FollowerOptions = { sensitivity: 3, minPhraseMs: 450, gapMs: 650, calibrateMs: 1200 };
+export const DEFAULT_FOLLOWER: FollowerOptions = { sensitivity: 2.5, minPhraseMs: 400, gapMs: 600, calibrateMs: 1000, bridgeMs: 250 };
 
 export type PhraseEvent = "calibrated" | "phrase-start" | "phrase-end";
 
+/** Lowest threshold, so a very quiet room doesn't make breathing count as singing. */
+const MIN_THRESHOLD = 0.006;
+
 export class PhraseFollower {
+  private calibration: number[] = [];
   private noise = 0;
-  private noiseSamples = 0;
   private startedAt: number | null = null;
   private voicedSince: number | null = null;
-  private lastVoiced = 0;
+  private lastVoiced = -Infinity;
   private inPhrase = false;
   private calibrated = false;
 
@@ -37,7 +42,7 @@ export class PhraseFollower {
   }
 
   get threshold() {
-    return Math.max(0.012, this.noise * this.opts.sensitivity);
+    return Math.max(MIN_THRESHOLD, this.noise * this.opts.sensitivity);
   }
 
   get isCalibrated() {
@@ -48,40 +53,48 @@ export class PhraseFollower {
     return this.inPhrase;
   }
 
+  /** How long the current phrase has lasted (ms); a very long one usually means music in the room. */
+  phraseLength(now: number) {
+    return this.inPhrase && this.voicedSince !== null ? now - this.voicedSince : 0;
+  }
+
   /**
-   * Feed one analysis frame. `level` is RMS 0..1; `pitched` is true when a clear pitch was found
-   * (voice or instrument), which helps reject broadband noise.
+   * Feed one analysis frame. `level` is RMS 0..1; `clarity` (0..1) is how pitched the sound is —
+   * sung and spoken vowels are fairly pitched; fans and traffic are not.
    */
-  push(level: number, pitched: boolean, now: number): PhraseEvent | null {
+  push(level: number, clarity: number, now: number): PhraseEvent | null {
     if (this.startedAt === null) this.startedAt = now;
     if (!this.calibrated) {
-      this.noise = (this.noise * this.noiseSamples + level) / (this.noiseSamples + 1);
-      this.noiseSamples++;
+      this.calibration.push(level);
       if (now - this.startedAt >= this.opts.calibrateMs) {
+        // A low percentile, so starting to sing during calibration doesn't inflate the noise floor.
+        const sorted = [...this.calibration].sort((a, b) => a - b);
+        this.noise = Math.min(0.04, sorted[Math.floor(sorted.length * 0.3)] ?? 0);
         this.calibrated = true;
         return "calibrated";
       }
       return null;
     }
-    const voiced = level > this.threshold && (pitched || level > this.threshold * 2);
+    const t = this.threshold;
+    const voiced = level > t && (clarity > 0.45 || level > t * 1.6);
     if (voiced) {
+      // Bridge the short dips between syllables: only a real gap restarts the phrase timer.
+      if (this.voicedSince === null || now - this.lastVoiced > this.opts.bridgeMs) this.voicedSince = now;
       this.lastVoiced = now;
-      if (this.voicedSince === null) this.voicedSince = now;
-      if (!this.inPhrase && now - this.voicedSince >= 120) {
+      if (!this.inPhrase && now - this.voicedSince >= 150) {
         this.inPhrase = true;
         return "phrase-start";
       }
       return null;
     }
-    // Slowly adapt to room noise while quiet.
-    if (!this.inPhrase && level < this.threshold) this.noise = this.noise * 0.995 + level * 0.005;
+    // Slowly follow changes in room noise while quiet.
+    if (!this.inPhrase && level < t) this.noise = Math.min(0.04, this.noise * 0.995 + level * 0.005);
     if (this.inPhrase && now - this.lastVoiced >= this.opts.gapMs) {
       const length = this.lastVoiced - (this.voicedSince ?? this.lastVoiced);
       this.inPhrase = false;
       this.voicedSince = null;
       return length >= this.opts.minPhraseMs ? "phrase-end" : null;
     }
-    if (!this.inPhrase) this.voicedSince = null;
     return null;
   }
 }

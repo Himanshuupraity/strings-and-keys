@@ -84,7 +84,7 @@ describe("follow my voice", () => {
   const frames = (follower: PhraseFollower, from: number, to: number, level: number, pitched = true) => {
     const evs: string[] = [];
     for (let t = from; t < to; t += 20) {
-      const e = follower.push(level, pitched, t);
+      const e = follower.push(level, pitched ? 0.9 : 0.1, t);
       if (e) evs.push(e);
     }
     return evs;
@@ -97,12 +97,38 @@ describe("follow my voice", () => {
     expect(frames(f, 3300, 4300, 0.004)).toEqual(["phrase-end"]); // pause
   });
 
+  it("follows normal speech/singing with short dips between syllables (the reported bug)", () => {
+    const f = new PhraseFollower();
+    frames(f, 0, 1100, 0.004);
+    const evs: string[] = [];
+    // 1.6 s of syllables: 140 ms voice, 80 ms dip — the dips must NOT break the phrase.
+    for (let t = 1100; t < 2700; t += 20) {
+      const inSyllable = (t - 1100) % 220 < 140;
+      const e = f.push(inSyllable ? 0.05 : 0.003, inSyllable ? 0.6 : 0.1, t);
+      if (e) evs.push(e);
+    }
+    expect(evs).toEqual(["phrase-start"]);
+    expect(frames(f, 2700, 3600, 0.003, false)).toEqual(["phrase-end"]);
+  });
+
+  it("measures room noise robustly even if you start singing during calibration", () => {
+    const f = new PhraseFollower();
+    for (let t = 0; t < 1000; t += 20) f.push(t < 600 ? 0.004 : 0.08, 0.9, t);
+    expect(f.threshold).toBeLessThan(0.02);
+  });
+
+  it("accepts spoken (less pitched) words when loud enough", () => {
+    const f = new PhraseFollower();
+    frames(f, 0, 1100, 0.004);
+    expect(frames(f, 1100, 2400, 0.05, false)).toEqual(["phrase-start"]);
+  });
+
   it("ignores short noises and unpitched quiet sounds", () => {
     const f = new PhraseFollower();
     frames(f, 0, 1300, 0.004);
     expect(frames(f, 1300, 1500, 0.08)).toEqual(["phrase-start"]);
     expect(frames(f, 1500, 2600, 0.004)).toEqual([]); // 200 ms phrase is too short to count
-    expect(frames(f, 2600, 4000, 0.02, false)).toEqual([]); // unpitched, below 2x threshold
+    expect(frames(f, 2600, 4000, 0.012, false)).toEqual([]); // unpitched and only just above the noise
   });
 
   it("moves line by line, skipping blanks and sections; instrumental lines wait for the voice", () => {

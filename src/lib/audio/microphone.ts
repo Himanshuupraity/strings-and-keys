@@ -58,6 +58,12 @@ export interface ChromaFrame {
 }
 
 export interface MicOptions {
+  /**
+   * Voice mode: use the browser's voice processing (auto-gain boosts quiet voices, echo
+   * cancellation removes sound this page plays — e.g. a YouTube video — noise suppression).
+   * Off by default because tuning needs the raw, unprocessed signal.
+   */
+  voice?: boolean;
   a4?: number;
   minFrequency?: number;
   maxFrequency?: number;
@@ -81,7 +87,7 @@ export class MicListener {
   private opts: Required<MicOptions>;
 
   constructor(opts: MicOptions = {}) {
-    this.opts = { a4: 440, minFrequency: 60, maxFrequency: 1400, minClarity: 0.9, minLevel: 0.01, fftSize: 4096, ...opts };
+    this.opts = { a4: 440, minFrequency: 60, maxFrequency: 1400, minClarity: 0.9, minLevel: 0.01, fftSize: 4096, voice: false, ...opts };
   }
 
   get active() {
@@ -98,7 +104,9 @@ export class MicListener {
     if (!micSupported()) throw new MicError("unsupported", "This browser doesn't support microphone input.");
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        audio: this.opts.voice
+          ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          : { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
     } catch (e) {
       const d = describeMicError(e);

@@ -22,7 +22,7 @@ export const micRegistry = {
  * Microphone lifecycle: permission is requested only when `start()` is called (from a button),
  * tracks are stopped on `stop()` and on unmount.
  */
-export function useMic(opts: { a4?: number; mode?: "pitch" | "chroma" | "both"; onPitch?: (f: PitchFrame) => void; onChroma?: (f: ChromaFrame) => void } = {}) {
+export function useMic(opts: { a4?: number; mode?: "pitch" | "chroma" | "both"; voice?: boolean; onPitch?: (f: PitchFrame) => void; onChroma?: (f: ChromaFrame) => void } = {}) {
   const listener = useRef<MicListener | null>(null);
   const [status, setStatus] = useState<MicStatus>("idle");
   const [error, setError] = useState<{ kind: MicErrorKind; message: string } | null>(null);
@@ -48,7 +48,7 @@ export function useMic(opts: { a4?: number; mode?: "pitch" | "chroma" | "both"; 
     if (listener.current?.active) return;
     setStatus("starting");
     setError(null);
-    const l = new MicListener({ a4: cbs.current.a4 ?? 440 });
+    const l = new MicListener({ a4: cbs.current.a4 ?? 440, voice: cbs.current.voice ?? false });
     try {
       await l.start();
     } catch (e) {
