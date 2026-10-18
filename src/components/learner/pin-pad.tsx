@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Delete, Lock } from "lucide-react";
 import { Button, cn } from "@/components/ui";
@@ -26,6 +27,7 @@ export function PinPad({
   cancelLabel?: string;
   busy?: boolean;
 }) {
+  const t = useT();
   const [pin, setPin] = useState("");
   const [first, setFirst] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,7 @@ export function PinPad({
     if (mode === "set" && first !== value) {
       setFirst(null);
       setPin("");
-      setError("The PINs didn't match. Try again.");
+      setError(t("pin.mismatch"));
       return;
     }
     setWorking(true);
@@ -73,7 +75,7 @@ export function PinPad({
   };
   const back = () => setPin((p) => p.slice(0, -1));
 
-  const heading = mode === "set" ? (first === null ? title : "Enter it again to confirm") : title;
+  const heading = mode === "set" ? (first === null ? title : t("pin.confirm")) : title;
 
   return (
     <div className="space-y-4" data-testid="pin-pad">
@@ -117,15 +119,15 @@ export function PinPad({
 
       <div className="mx-auto grid max-w-[16rem] grid-cols-3 gap-2">
         {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-          <button key={d} type="button" onClick={() => type(d)} disabled={working || busy} className="h-14 rounded-2xl bg-surface-2 text-xl font-semibold transition-colors hover:bg-surface-3 active:bg-accent-soft disabled:opacity-50" aria-label={`Digit ${d}`}>
+          <button key={d} type="button" onClick={() => type(d)} disabled={working || busy} className="h-14 rounded-2xl bg-surface-2 text-xl font-semibold transition-colors hover:bg-surface-3 active:bg-accent-soft disabled:opacity-50" aria-label={t("pin.digit", { d })}>
             {d}
           </button>
         ))}
         <span />
-        <button type="button" onClick={() => type("0")} disabled={working || busy} className="h-14 rounded-2xl bg-surface-2 text-xl font-semibold transition-colors hover:bg-surface-3 active:bg-accent-soft disabled:opacity-50" aria-label="Digit 0">
+        <button type="button" onClick={() => type("0")} disabled={working || busy} className="h-14 rounded-2xl bg-surface-2 text-xl font-semibold transition-colors hover:bg-surface-3 active:bg-accent-soft disabled:opacity-50" aria-label={t("pin.digit", { d: 0 })}>
           0
         </button>
-        <button type="button" onClick={back} disabled={working || busy || !pin} className="flex h-14 items-center justify-center rounded-2xl text-muted hover:bg-surface-2 disabled:opacity-30" aria-label="Delete last digit">
+        <button type="button" onClick={back} disabled={working || busy || !pin} className="flex h-14 items-center justify-center rounded-2xl text-muted hover:bg-surface-2 disabled:opacity-30" aria-label={t("pin.deleteDigit")}>
           <Delete className="h-5 w-5" />
         </button>
       </div>

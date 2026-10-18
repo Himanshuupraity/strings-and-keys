@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { useState } from "react";
 import { Info } from "lucide-react";
 import { PageHeader } from "@/components/ui";
@@ -8,13 +9,14 @@ import { CoachChat } from "@/components/coach/coach-chat";
 import type { LastExercise } from "@/lib/coach/schema";
 
 export default function AICoachPage() {
+  const t = useT();
   const [lastExercise, setLastExercise] = useState<LastExercise | undefined>();
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Coach"
-        title="Your patient practice teacher"
+        eyebrow={t("nav./ai-coach")}
+        title={t("coach.title")}
         description="I explain, play an example, listen while you try, and tell you exactly what happened — then we adjust the next step together."
       />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">

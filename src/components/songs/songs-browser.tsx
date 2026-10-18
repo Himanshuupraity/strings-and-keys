@@ -6,6 +6,7 @@ import { BookmarkCheck, Clock, Music2, PlayCircle, PlusCircle, Search } from "lu
 import { Badge, Card, EmptyState, Input, PageHeader, Segmented, Select, cn } from "@/components/ui";
 import { useData } from "@/hooks/use-data";
 import { usePrefs } from "@/hooks/use-prefs";
+import { useT } from "@/lib/i18n";
 import { songRepo } from "@/lib/storage/repositories";
 import { BUILT_IN_SONGS, CATALOGUE_SONGS } from "@/content/songs";
 import { songChords } from "@/content/songs/parse";
@@ -32,6 +33,7 @@ function Difficulty({ n }: { n: number }) {
 const isHindi = (s: Song) => s.genre === "bollywood" || s.genre === "bollywood-style";
 
 export function SongsBrowser() {
+  const t = useT();
   const [prefs] = usePrefs();
   const [tab, setTab] = useState<Tab>("hindi");
   const [q, setQ] = useState("");
@@ -72,10 +74,10 @@ export function SongsBrowser() {
   return (
     <div>
       <PageHeader
-        eyebrow="Song Lab"
-        title="Play the songs you love"
-        description="Bollywood and Hindi songs with chords, capo help, strumming and slow play-along — plus Hindi-style practice pieces with melodies you can play note by note."
-        actions={<Link href="/songs/sheet?new=1" className={cn(LINK_BUTTON, "h-10 w-auto px-4 text-sm")} data-testid="paste-song"><PlusCircle className="h-4 w-4" /> Paste a song (lyrics + chords)</Link>}
+        eyebrow={t("songs.eyebrow")}
+        title={t("songs.title")}
+        description={t("songs.description")}
+        actions={<Link href="/songs/sheet?new=1" className={cn(LINK_BUTTON, "h-10 w-auto px-4 text-sm")} data-testid="paste-song"><PlusCircle className="h-4 w-4" /> {t("songs.paste")}</Link>}
       />
 
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -85,23 +87,23 @@ export function SongsBrowser() {
             value={tab}
             onChange={setTab}
             options={[
-              { value: "hindi", label: "Hindi & Bollywood", testId: "tab-hindi" },
-              { value: "mine", label: `My songs${custom.data.length ? ` (${custom.data.length})` : ""}` },
-              { value: "english", label: "English & classics", testId: "tab-english" },
+              { value: "hindi", label: t("songs.tabHindi"), testId: "tab-hindi" },
+              { value: "mine", label: `${t("songs.tabMine")}${custom.data.length ? ` (${custom.data.length})` : ""}` },
+              { value: "english", label: t("songs.tabEnglish"), testId: "tab-english" },
             ]}
           />
         </div>
         <div className="flex gap-2">
           <div className="relative flex-1 lg:w-64">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-            <Input aria-label="Search songs" placeholder="Search songs or films" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
+            <Input aria-label="Search songs" placeholder={t("songs.search")} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
           </div>
           {tab !== "mine" && (
             <Select aria-label="Maximum difficulty" value={maxDiff} onChange={(e) => setMaxDiff(Number(e.target.value))}>
-              <option value={5}>Any level</option>
-              <option value={1}>Easiest only</option>
-              <option value={2}>Up to level 2</option>
-              <option value={3}>Up to level 3</option>
+              <option value={5}>{t("songs.anyLevel")}</option>
+              <option value={1}>{t("songs.easiest")}</option>
+              <option value={2}>{t("songs.upTo2")}</option>
+              <option value={3}>{t("songs.upTo3")}</option>
             </Select>
           )}
         </div>
@@ -117,7 +119,7 @@ export function SongsBrowser() {
               onClick={() => { setDecade(d); setShown(40); }}
               className={cn("rounded-full border px-3 py-1 text-sm", decade === d ? "border-accent bg-accent-soft text-accent" : "border-border text-muted hover:bg-surface-2")}
             >
-              {d === null ? "All years" : `${d}s`}
+              {d === null ? t("songs.allYears") : `${d}s`}
             </button>
           ))}
         </div>
@@ -128,23 +130,23 @@ export function SongsBrowser() {
           {!q && decade === null && <ReadyToLearn instrument={prefs.instrument} />}
           {charts.length > 0 && (
             <section>
-              <h2 className="font-semibold">Bollywood songs</h2>
-              <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">Chord charts of real songs, cross-checked against several chord sources. Chords only — play along with the original recording.</p>
+              <h2 className="font-semibold">{t("songs.bollywoodSongs")}</h2>
+              <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">{t("songs.bollywoodSongsHint")}</p>
               {grid(charts)}
             </section>
           )}
           {hindiPieces.length > 0 && (
             <section>
-              <h2 className="font-semibold">Hindi-style practice pieces</h2>
-              <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">Original tunes in Bollywood styles, with a melody you can play and get note-by-note feedback on.</p>
+              <h2 className="font-semibold">{t("songs.practicePieces")}</h2>
+              <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">{t("songs.practicePiecesHint")}</p>
               {grid(hindiPieces)}
             </section>
           )}
           <section>
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
-                <h2 className="font-semibold">All Bollywood songs <span className="font-normal text-muted">({moreHindi.length})</span></h2>
-                <p className="mt-1 max-w-3xl text-sm text-muted">Listen to the official audio, find the chords online, then add them to practise with all the tools.</p>
+                <h2 className="font-semibold">{t("songs.allBollywood")} <span className="font-normal text-muted">({moreHindi.length})</span></h2>
+                <p className="mt-1 max-w-3xl text-sm text-muted">{t("songs.allBollywoodHint")}</p>
               </div>
             </div>
             <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface" data-testid="catalogue-list">
@@ -152,11 +154,11 @@ export function SongsBrowser() {
             </ul>
             {moreHindi.length > shown && (
               <button type="button" onClick={() => setShown((n) => n + 40)} className="mt-3 w-full rounded-xl border border-border py-2.5 text-sm font-medium hover:bg-surface-2">
-                Show more ({moreHindi.length - shown} left)
+                {t("songs.showMore", { n: moreHindi.length - shown })}
               </button>
             )}
           </section>
-          {!charts.length && !hindiPieces.length && !moreHindi.length && <EmptyState title="No songs match" description="Try a different search or difficulty." />}
+          {!charts.length && !hindiPieces.length && !moreHindi.length && <EmptyState title={t("songs.noMatch")} description={t("songs.noMatchHint")} />}
         </div>
       ) : tab === "mine" ? (
         mine.length ? (
@@ -184,7 +186,7 @@ export function SongsBrowser() {
           <section>
             <h2 className="font-semibold">Classic tunes</h2>
             <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">Simple public-domain melodies — handy for practising reading and finger patterns.</p>
-            {english.length ? grid(english) : <EmptyState title="No songs match" description="Try a different search or difficulty." />}
+            {english.length ? grid(english) : <EmptyState title={t("songs.noMatch")} description={t("songs.noMatchHint")} />}
           </section>
         </div>
       )}
@@ -224,6 +226,7 @@ function SongCard({ song, saved, minutes, status }: { song: Song; saved: boolean
 }
 
 function CatalogueRowItem({ song }: { song: CatalogueSong }) {
+  const t = useT();
   return (
     <li className="flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:gap-4 sm:px-4">
       <Link href={`/songs/${song.id}`} className="min-w-0 flex-1 hover:underline-offset-2">
@@ -235,13 +238,13 @@ function CatalogueRowItem({ song }: { song: CatalogueSong }) {
       </Link>
       <div className="flex shrink-0 gap-1.5">
         <a href={song.officialAudioSearch} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-surface-2" aria-label={`Listen to ${song.title} (YouTube search)`}>
-          <PlayCircle className="h-3.5 w-3.5 text-danger" /> Listen
+          <PlayCircle className="h-3.5 w-3.5 text-danger" /> {t("songs.listen")}
         </a>
         <a href={song.chordSearch} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-xs font-medium hover:bg-surface-2" aria-label={`Find chords for ${song.title} (web search)`}>
-          <Search className="h-3.5 w-3.5 text-guitar" /> Find chords
+          <Search className="h-3.5 w-3.5 text-guitar" /> {t("songs.findChords")}
         </a>
         <Link href={catalogueEditorHref(song)} className="inline-flex h-8 items-center gap-1 rounded-lg bg-accent px-2.5 text-xs font-medium text-accent-fg hover:bg-accent-hover" aria-label={`Add chords for ${song.title}`}>
-          <PlusCircle className="h-3.5 w-3.5" /> Add chords
+          <PlusCircle className="h-3.5 w-3.5" /> {t("songs.addChords")}
         </Link>
       </div>
     </li>

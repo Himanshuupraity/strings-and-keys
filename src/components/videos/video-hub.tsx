@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { useMemo, useState } from "react";
 import { CheckCircle2, Circle, ExternalLink, Heart, Play, Search, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Badge, Button, Card, EmptyState, Input, PageHeader, Select, Switch, cn } from "@/components/ui";
@@ -27,6 +28,7 @@ import { recommendVideos } from "./recommend";
 type InstrumentFilter = "all" | "guitar" | "piano";
 
 export function VideoHub() {
+  const t = useT();
   const [prefs] = usePrefs();
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<VideoCategory | "all">("all");
@@ -97,8 +99,8 @@ export function VideoHub() {
   return (
     <div>
       <PageHeader
-        eyebrow="Video Hub"
-        title="Learn from great teachers"
+        eyebrow={t("nav./videos")}
+        title={t("videos.title")}
         description={`${VIDEOS.length} hand-picked free lessons from YouTube creators, organised by instrument, level and topic.`}
       />
 

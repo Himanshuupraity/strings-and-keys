@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -22,6 +23,7 @@ const TRACKS: { track: Track; label: string; tone: "theory" | "guitar" | "piano"
 ];
 
 export function ProgressView() {
+  const t = useT();
   const [prefs] = usePrefs();
   const { data, loading } = useLearnerData();
   const quizzes = useData(() => quizRepo.list(), ["quizAttempts"], []);
@@ -54,7 +56,7 @@ export function ProgressView() {
 
   return (
     <div>
-      <PageHeader eyebrow="Progress" title="Your progress" description="Lesson completion and demonstrated proficiency are tracked separately — and separately for guitar, piano and shared theory." />
+      <PageHeader eyebrow={t("eyebrow.progress")} title={t("progress.title")} description="Lesson completion and demonstrated proficiency are tracked separately — and separately for guitar, piano and shared theory." />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {TRACKS.map((t) => {

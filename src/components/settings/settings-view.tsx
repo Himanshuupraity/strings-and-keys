@@ -2,9 +2,11 @@
 
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { Download, HardDrive, Laptop, Mic, Moon, Music, Piano, ShieldCheck, Sun, Target, Trash2, Upload, User } from "lucide-react";
+import { Download, HardDrive, Languages, Laptop, Mic, Moon, Music, Piano, ShieldCheck, Sun, Target, Trash2, Upload, User } from "lucide-react";
 import { Button, Callout, Card, CardBody, CardHeader, Field, PageHeader, Segmented, Select, Slider, Switch } from "@/components/ui";
 import { useHydrated, usePrefs } from "@/hooks/use-prefs";
+import { useT } from "@/lib/i18n";
+import { LanguageSwitch } from "@/components/layout/language-switch";
 import { PianoSoundSetting } from "./piano-sound-setting";
 import { ReminderSetting } from "./reminder-setting";
 import { useData } from "@/hooks/use-data";
@@ -27,6 +29,7 @@ function Section({ id, icon, title, description, children }: { id?: string; icon
 }
 
 export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
+  const t = useT();
   const [prefs, setPrefs] = usePrefs();
   const goals = useData(() => goalsRepo.get(), ["goals"], DEFAULT_GOALS);
   const hydrated = useHydrated();
@@ -61,32 +64,36 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
 
   return (
     <div>
-      <PageHeader eyebrow="Settings" title="Settings" description="Preferences are saved on this device automatically." />
+      <PageHeader eyebrow={t("settings.eyebrow")} title={t("settings.title")} description={t("settings.description")} />
       <div className="grid gap-6 lg:grid-cols-2">
-        <Section icon={<User className="h-5 w-5" />} title="Profile">
-          <Field label="Instrument mode">
+        <Section icon={<Languages className="h-5 w-5" />} title={t("settings.languageTitle")} description={t("settings.languageHint")}>
+          <LanguageSwitch />
+        </Section>
+
+        <Section icon={<User className="h-5 w-5" />} title={t("settings.profile")}>
+          <Field label={t("settings.instrumentMode")}>
             <Segmented<Prefs["instrument"]> label="Instrument" value={prefs.instrument} onChange={(instrument) => setPrefs({ instrument })} options={[{ value: "guitar", label: "Guitar" }, { value: "piano", label: "Piano / keyboard" }]} />
           </Field>
-          <Switch checked={prefs.hinglish} onChange={(hinglish) => setPrefs({ hinglish })} label="Show Hinglish explanations" description="Adds Roman-script Hindi-English explanations where lessons provide them." />
+          <Switch checked={prefs.hinglish} onChange={(hinglish) => setPrefs({ hinglish })} label={t("settings.hinglish")} description={t("settings.hinglishHint")} />
           <Switch checked={!prefs.onboarded} onChange={(v) => setPrefs({ onboarded: !v })} label="Show onboarding prompt again" />
         </Section>
 
-        <Section icon={prefs.theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />} title="Appearance">
-          <Field label="Theme" hint="“System” follows your device's light/dark setting.">
+        <Section icon={prefs.theme === "dark" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />} title={t("settings.appearance")}>
+          <Field label={t("settings.theme")} hint={t("settings.themeHint")}>
             <Segmented<Prefs["theme"]>
               label="Theme"
               value={prefs.theme}
               onChange={(theme) => setPrefs({ theme })}
               options={[
-                { value: "light", label: "Light", icon: <Sun className="h-4 w-4" />, testId: "theme-light" },
-                { value: "dark", label: "Dark", icon: <Moon className="h-4 w-4" />, testId: "theme-dark" },
-                { value: "system", label: "System", icon: <Laptop className="h-4 w-4" />, testId: "theme-system" },
+                { value: "light", label: t("settings.light"), icon: <Sun className="h-4 w-4" />, testId: "theme-light" },
+                { value: "dark", label: t("settings.dark"), icon: <Moon className="h-4 w-4" />, testId: "theme-dark" },
+                { value: "system", label: t("settings.system"), icon: <Laptop className="h-4 w-4" />, testId: "theme-system" },
               ]}
             />
           </Field>
         </Section>
 
-        <Section icon={<Music className="h-5 w-5" />} title="Note names: Western & Sargam" description="Used on the keyboard, fretboard, tuner, scales and lessons.">
+        <Section icon={<Music className="h-5 w-5" />} title={t("settings.noteNames")} description="Used on the keyboard, fretboard, tuner, scales and lessons.">
           <Field label="Label style">
             <Segmented<Prefs["labelMode"]> label="Label style" value={prefs.labelMode} onChange={(labelMode) => setPrefs({ labelMode })} options={[{ value: "western", label: "Western", testId: "label-western" }, { value: "sargam", label: "Sargam", testId: "label-sargam" }, { value: "both", label: "Both", testId: "label-both" }]} />
           </Field>
@@ -109,7 +116,7 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
           </Field>
         </Section>
 
-        <Section icon={<Piano className="h-5 w-5" />} title="Instruments & audio">
+        <Section icon={<Piano className="h-5 w-5" />} title={t("settings.instruments")}>
           <Field label="Virtual piano size">
             <Segmented<KeyboardSize> label="Keyboard size" value={prefs.keyboardSize} onChange={(keyboardSize) => setPrefs({ keyboardSize: keyboardSize as 49 | 61 | 88 })} options={SELECTABLE_SIZES.map((s) => ({ value: s, label: KEYBOARD_PRESETS[s].label }))} />
           </Field>
@@ -123,14 +130,14 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
         <PianoSoundSetting />
         <ReminderSetting />
 
-        <Section id="goals" icon={<Target className="h-5 w-5" />} title="Practice goals">
+        <Section id="goals" icon={<Target className="h-5 w-5" />} title={t("settings.goals")}>
           <Slider label="Daily practice" min={5} max={60} step={5} value={goals.data.dailyMinutes} onChange={(dailyMinutes) => saveGoals({ dailyMinutes })} format={(v) => `${v} min`} />
           <Slider label="Practice days per week" min={1} max={7} value={goals.data.weeklyPracticeDays} onChange={(weeklyPracticeDays) => saveGoals({ weeklyPracticeDays })} />
           <Slider label="Chord-change drills per week" min={0} max={20} value={goals.data.weeklyChordDrills} onChange={(weeklyChordDrills) => saveGoals({ weeklyChordDrills })} />
           <p className="text-xs text-muted">For beginners, 10–30 minutes a day is plenty. Sessions over 30 minutes include a short break. Stop if anything hurts.</p>
         </Section>
 
-        <Section icon={<HardDrive className="h-5 w-5" />} title="Your data" description="Your progress is saved on this device.">
+        <Section icon={<HardDrive className="h-5 w-5" />} title={t("settings.data")} description={t("profile.description")}>
           <p className="text-sm text-muted">
             Storage in use: <strong className="text-text">{env.storage === "indexedDB" ? "this browser (IndexedDB)" : env.storage === "localStorage" ? "this browser (localStorage)" : env.storage === "memory" ? "temporary memory only — storage is blocked" : env.storage}</strong>. Clearing your browser data erases it, so download a backup now and then.
           </p>
@@ -168,7 +175,7 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
 
         {accountPanel}
 
-        <Section icon={<ShieldCheck className="h-5 w-5" />} title="Privacy, microphone & browser support">
+        <Section icon={<ShieldCheck className="h-5 w-5" />} title={t("settings.privacy")}>
           <ul className="space-y-2 text-sm text-muted">
             <li className="flex gap-2"><Mic className="mt-0.5 h-4 w-4 shrink-0" />The microphone is used only after you press a “Listen” button, a red indicator shows while it&apos;s on, and audio is analysed on your device. Nothing is recorded or uploaded.</li>
             <li>The coach runs entirely in your browser — your questions are never sent anywhere.</li>

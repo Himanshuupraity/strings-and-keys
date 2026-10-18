@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronLeft, ChevronRight, Crosshair, Hand, Info, KeyboardMusic, Music2, Piano, SlidersHorizontal, ZoomIn } from "lucide-react";
 import { Badge, Button, Callout, Card, CardBody, CardHeader, PageHeader, Segmented, Select, Slider, Switch, cn } from "@/components/ui";
@@ -33,6 +34,7 @@ function useNarrow() {
 }
 
 export function PianoLab() {
+  const t = useT();
   const [prefs, setPrefs] = usePrefs();
   const narrow = useNarrow();
   const preset = KEYBOARD_PRESETS[prefs.keyboardSize];
@@ -110,8 +112,8 @@ export function PianoLab() {
   return (
     <PianoLabContext.Provider value={ctx}>
       <PageHeader
-        eyebrow="Piano Lab"
-        title="Interactive piano"
+        eyebrow={t("nav./piano-lab")}
+        title={t("pianoLab.title")}
         description="Play with your mouse, fingers, computer keyboard or a MIDI keyboard. Every key makes real sound and shows its name."
         actions={
           <>

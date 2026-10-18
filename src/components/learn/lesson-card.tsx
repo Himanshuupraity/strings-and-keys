@@ -1,5 +1,6 @@
 "use client";
 
+import { lessonText, useLang, useT } from "@/lib/i18n";
 import Link from "next/link";
 import { CheckCircle2, Circle, Clock, Lock, PlayCircle, RotateCcw, Star } from "lucide-react";
 import { getLesson } from "@/content/curriculum";
@@ -27,7 +28,10 @@ export function StatusBadge({ status }: { status: LessonView["status"] }) {
 }
 
 export function LessonCard({ view, highlight }: { view: LessonView; highlight?: boolean }) {
+  const t = useT();
+  const lang = useLang();
   const { lesson, status, unlocked, missing } = view;
+  const text = lessonText(lesson, lang);
   const done = status === "completed" || status === "mastered";
   const cta = !unlocked ? null : done ? { label: "Review", icon: RotateCcw } : status === "in-progress" ? { label: "Continue", icon: PlayCircle } : { label: "Start", icon: PlayCircle };
 
@@ -40,8 +44,8 @@ export function LessonCard({ view, highlight }: { view: LessonView; highlight?: 
           <Clock className="h-3 w-3" aria-hidden /> {lesson.minutes} min
         </span>
       </div>
-      <h4 className="mt-2.5 font-semibold leading-snug">{lesson.title}</h4>
-      <p className="mt-1 line-clamp-2 text-sm text-muted">{lesson.summary}</p>
+      <h4 className="mt-2.5 font-semibold leading-snug">{text.title}</h4>
+      <p className="mt-1 line-clamp-2 text-sm text-muted">{text.summary}</p>
       {view.quizBest !== null && <p className="mt-2 text-xs text-muted">Best quiz score: {Math.round(view.quizBest * 100)}%</p>}
       {!unlocked && missing.length > 0 && (
         <p className="mt-2 text-xs text-muted">
@@ -78,11 +82,11 @@ export function LessonCard({ view, highlight }: { view: LessonView; highlight?: 
   );
 
   return unlocked ? (
-    <Link href={`/lesson/${lesson.id}`} className={cls} data-testid={`lesson-card-${lesson.id}`} aria-label={`${lesson.title} — ${STATUS[status].label}`}>
+    <Link href={`/lesson/${lesson.id}`} className={cls} data-testid={`lesson-card-${lesson.id}`} aria-label={`${text.title} — ${STATUS[status].label}`}>
       {body}
     </Link>
   ) : (
-    <div className={cls} data-testid={`lesson-card-${lesson.id}`} aria-label={`${lesson.title} — locked`}>
+    <div className={cls} data-testid={`lesson-card-${lesson.id}`} aria-label={`${text.title} — ${t("lesson.lockedLabel")}`}>
       {body}
     </div>
   );

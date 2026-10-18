@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dumbbell, Gauge, Grip, Layers, Music2, Waves } from "lucide-react";
 import { PageHeader, Segmented } from "@/components/ui";
@@ -24,6 +25,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]["value"];
 
 export function GuitarLab() {
+  const t = useT();
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -45,8 +47,8 @@ export function GuitarLab() {
   return (
     <div>
       <PageHeader
-        eyebrow="Guitar Lab"
-        title="Your practice fretboard"
+        eyebrow={t("nav./guitar-lab")}
+        title={t("guitarLab.title")}
         description="Explore notes, chords and scales, simulate a capo, transpose songs into easy shapes and practise with instant feedback."
         actions={<MetronomeWidget />}
       />

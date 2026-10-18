@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CalendarClock, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
@@ -36,6 +37,7 @@ function resolve(items: RevisionItem[]): Resolved[] {
 }
 
 export function RevisionSession() {
+  const t = useT();
   const hydrated = useHydrated();
   const [prefs] = usePrefs();
   const { data: all, loading } = useData(() => revisionRepo.all(), ["revision"], [] as RevisionItem[]);
@@ -70,7 +72,7 @@ export function RevisionSession() {
 
   if (!hydrated || loading) return <Skeleton className="h-80" />;
 
-  const header = <PageHeader eyebrow="Revision" title="Revise your mistakes" description="Questions and exercises you missed come back after a day, then less and less often as you get them right." />;
+  const header = <PageHeader eyebrow={t("eyebrow.revision")} title={t("revise.heading")} description="Questions and exercises you missed come back after a day, then less and less often as you get them right." />;
 
   // Session finished
   if (queueIds && pos >= queue.length && queue.length > 0) {

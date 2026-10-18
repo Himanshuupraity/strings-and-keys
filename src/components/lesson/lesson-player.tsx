@@ -13,6 +13,7 @@ import { LESSONS, getLesson } from "@/content/curriculum";
 import { Badge, Button, Callout, Card, ProgressBar, Skeleton, cn } from "@/components/ui";
 import { useData } from "@/hooks/use-data";
 import { useHydrated, usePrefs } from "@/hooks/use-prefs";
+import { lessonText, useLang, useT } from "@/lib/i18n";
 import { usePracticeLog } from "@/hooks/use-practice-log";
 import { exerciseRepo, profileRepo, progressRepo } from "@/lib/storage/repositories";
 import { isDone, isUnlocked, MASTERY_EXPLANATION, masteryStepIds, nextLesson } from "@/lib/progress/engine";
@@ -62,6 +63,8 @@ function hintForExplain(step: LessonStep, lesson: Lesson): string | null {
 }
 
 export function LessonPlayer({ lessonId }: { lessonId: string }) {
+  const t = useT();
+  const lang = useLang();
   const lesson = getLesson(lessonId)!;
   const [prefs] = usePrefs();
   const hydrated = useHydrated();
@@ -182,8 +185,8 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           </Badge>
         )}
       </div>
-      <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{lesson.title}</h1>
-      <p className="max-w-2xl text-muted">{lesson.summary}</p>
+      <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{lessonText(lesson, lang).title}</h1>
+      <p className="max-w-2xl text-muted">{lessonText(lesson, lang).summary}</p>
       {unlocked && <ProgressBar value={completion} tone={lesson.track === "theory" ? "theory" : lesson.track} label="Lesson progress" className="max-w-md" />}
     </div>
   );
@@ -196,7 +199,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           <div className="flex items-start gap-3">
             <Lock className="mt-1 h-5 w-5 text-muted" />
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold">This lesson is locked</h2>
+              <h2 className="text-lg font-semibold">{t("lesson.locked")}</h2>
               <p className="text-sm text-muted">Finish these lessons first (complete their steps and pass their quizzes). Already know this material? Take the placement quiz to skip ahead.</p>
               <ul className="space-y-2">
                 {lesson.prerequisites.map((id) => {
@@ -288,7 +291,8 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
     const stepInstrument = isExercise ? resolveInstrument("instrument" in step.exercise ? step.exercise.instrument : undefined, lesson, prefs.instrument) : instrument;
     const audio = "audio" in step && step.audio ? step.audio : isExercise ? exampleForExercise(step.exercise) : null;
     const altText = step.hinglish ?? hintForExplain(step, lesson);
-    const showHinglish = prefs.hinglish && step.hinglish;
+    // Hindi interface shows the Hinglish explanation by default when a step has one.
+    const showHinglish = (prefs.hinglish || lang === "hi") && step.hinglish;
     const done = stepsDone.includes(step.id);
     const best = progress?.exerciseBest[step.id];
 
@@ -299,7 +303,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             <meta.icon className="h-3 w-3" /> {meta.label}
           </Badge>
           <span className="text-xs text-subtle">
-            Step {view.index + 1} of {lesson.steps.length}
+            {t("lesson.step", { n: view.index + 1, total: lesson.steps.length })}
           </span>
           {isExercise && step.mastery && (
             <Badge tone="success" title="Passing this measured exercise counts as demonstrated proficiency">
@@ -325,7 +329,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           {audio && <PlayExample audio={audio} instrument={stepInstrument} onPlay={log.ping} />}
           {altText && !showHinglish && (
             <Button variant="ghost" onClick={() => setExplainAgain((e) => !e)} aria-pressed={explainAgain}>
-              <RotateCcw className="h-4 w-4" /> {explainAgain ? "Hide explanation" : "Explain again"}
+              <RotateCcw className="h-4 w-4" /> {explainAgain ? t("common.close") : t("lesson.explainAgain")}
             </Button>
           )}
         </div>
@@ -345,7 +349,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
         {step.kind === "self-check" && (
           <div className="mt-6 space-y-3 border-t border-border pt-6">
             <Badge tone="warn">
-              <ListChecks className="h-3 w-3" /> Self-assessment — not measured
+              <ListChecks className="h-3 w-3" /> {t("lesson.selfCheck")}
             </Badge>
             <ul className="space-y-2">
               {step.checklist.map((c, k) => {
@@ -377,10 +381,10 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
 
         <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-5">
           <Button variant="ghost" onClick={() => go({ kind: "step", index: Math.max(0, view.index - 1) })} disabled={view.index === 0}>
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="h-4 w-4" /> {t("lesson.back")}
           </Button>
           <Button onClick={() => void advance(view.index)} variant={(isExercise || step.kind === "self-check") && !done ? "secondary" : "primary"} data-testid="lesson-next">
-            {(isExercise || step.kind === "self-check") && !done ? "Skip for now" : view.index === lesson.steps.length - 1 ? (lesson.quiz.length ? "Go to quiz" : "Finish") : "Next"}
+            {(isExercise || step.kind === "self-check") && !done ? t("lesson.skip") : view.index === lesson.steps.length - 1 ? (lesson.quiz.length ? t("lesson.goToQuiz") : t("lesson.finish")) : t("lesson.next")}
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -411,7 +415,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
         />
         <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-5">
           <Button variant="ghost" onClick={() => go({ kind: "step", index: lesson.steps.length - 1 })}>
-            <ArrowLeft className="h-4 w-4" /> Back to steps
+            <ArrowLeft className="h-4 w-4" /> {t("lesson.back")} to steps
           </Button>
           <Button onClick={() => go({ kind: "done" })} data-testid="lesson-finish">
             Lesson summary <ArrowRight className="h-4 w-4" />

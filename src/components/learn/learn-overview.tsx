@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, BookOpen, ClipboardCheck, Guitar, Music2, Piano, Sparkles } from "lucide-react";
@@ -21,6 +22,7 @@ const TRACK_META: Record<Track, { icon: typeof Guitar; tone: "guitar" | "piano" 
 };
 
 export function LearnOverview() {
+  const t = useT();
   const [prefs] = usePrefs();
   const { progress, placement, profile, loading } = useLearningData();
   const [scope, setScope] = useState<"path" | "all">("path");
@@ -34,8 +36,8 @@ export function LearnOverview() {
   return (
     <div>
       <PageHeader
-        eyebrow="Curriculum"
-        title="Your learning path"
+        eyebrow={t("learn.eyebrow")}
+        title={t("learn.title")}
         description="Short, structured lessons from absolute zero to advanced. Shared music theory counts for both guitar and piano; each instrument's progress is tracked separately."
         actions={
           <Link href="/learn/diagnostic">

@@ -9,6 +9,7 @@ import { RecorderPanel } from "@/components/recordings/recorder-panel";
 import { RecordingsList } from "@/components/recordings/recordings-list";
 import { useMic } from "@/hooks/use-mic";
 import { usePrefs } from "@/hooks/use-prefs";
+import { useT } from "@/lib/i18n";
 import { usePracticeLog } from "@/hooks/use-practice-log";
 import { chordNoteNames } from "@/lib/music/chords";
 import { transposeKey } from "@/lib/music/transpose";
@@ -22,6 +23,7 @@ const LAYOUT_KEY = "mm:sheet-layout";
 
 /** Lyrics + chords sheet with follow-my-voice, auto-scroll and manual navigation. */
 export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPasteLyrics, findLyricsHref, sheetId }: { title: string; artist?: string; sheet: string; youtube?: string; onLineChange?: () => void; onPasteLyrics?: (text: string) => Promise<void>; findLyricsHref?: string; sheetId?: string }) {
+  const t = useT();
   const [prefs] = usePrefs();
   const parsed = useMemo(() => parseSheet(sheet), [sheet]);
   const baseKey = useMemo(() => guessKey(parsed.lines), [parsed]);
@@ -171,9 +173,9 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                   if (m !== "voice" && mic.listening) mic.stop();
                 }}
                 options={[
-                  { value: "voice", label: "Follow my voice", icon: <Mic className="h-3.5 w-3.5" />, testId: "mode-voice" },
-                  { value: "auto", label: "Auto-scroll", icon: <Timer className="h-3.5 w-3.5" />, testId: "mode-auto" },
-                  { value: "manual", label: "Manual", icon: <Hand className="h-3.5 w-3.5" />, testId: "mode-manual" },
+                  { value: "voice", label: t("sheet.followVoice"), icon: <Mic className="h-3.5 w-3.5" />, testId: "mode-voice" },
+                  { value: "auto", label: t("sheet.autoScroll"), icon: <Timer className="h-3.5 w-3.5" />, testId: "mode-auto" },
+                  { value: "manual", label: t("sheet.manual"), icon: <Hand className="h-3.5 w-3.5" />, testId: "mode-manual" },
                 ]}
               />
               <div className="ml-auto flex items-center gap-1">
@@ -188,11 +190,11 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
 
             {mode === "voice" && (
               <div className="space-y-2">
-                <MicButton status={mic.status} error={mic.error} onStart={startVoice} onStop={mic.stop} label="Start following my voice" showPrivacy={false} />
+                <MicButton status={mic.status} error={mic.error} onStart={startVoice} onStop={mic.stop} label={t("sheet.startVoice")} showPrivacy={false} />
                 {mic.listening && (
                   <div className="flex flex-wrap items-center gap-3 text-sm" role="status" aria-live="polite" data-testid="voice-status">
                     <span className={cn("font-medium", voiceState === "singing" ? "text-success" : "text-muted")}>
-                      {voiceState === "calibrating" ? "Stay quiet for a second — measuring the room…" : voiceState === "singing" ? "Singing — keep going" : "Ready — start singing the highlighted line"}
+                      {voiceState === "calibrating" ? t("sheet.calibrating") : voiceState === "singing" ? t("sheet.singing") : t("sheet.ready")}
                     </span>
                     {dbInfo && (
                       <span className="tabular-nums text-xs text-muted" data-testid="voice-db">
@@ -211,21 +213,21 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                   </Callout>
                 )}
                 <p className="text-xs text-muted">
-                  <span className="sm:hidden">Sing a line, pause briefly — it moves on.</span>
+                  <span className="sm:hidden">{t("sheet.shortHelp")}</span>
                   <span className="hidden sm:inline">Sing (or say) the highlighted line, then pause briefly — the sheet moves to the next line. The bar shows your voice; it needs to pass the white line. Headphones work best when the video is playing.</span>
                 </p>
-                <Slider className={cn(showSettings ? "block" : "hidden", "sm:block")} label="Voice sensitivity" min={1.5} max={6} step={0.5} value={7.5 - sensitivity} onChange={(v) => setSensitivity(7.5 - v)} format={(v) => (v < 3 ? "Low" : v < 4.5 ? "Medium" : "High")} />
+                <Slider className={cn(showSettings ? "block" : "hidden", "sm:block")} label={t("sheet.voiceSensitivity")} min={1.5} max={6} step={0.5} value={7.5 - sensitivity} onChange={(v) => setSensitivity(7.5 - v)} format={(v) => (v < 3 ? "Low" : v < 4.5 ? "Medium" : "High")} />
               </div>
             )}
             {mode === "auto" && (
               <div className="flex flex-wrap items-end gap-3">
                 <Button size="sm" onClick={() => setAutoRunning((r) => !r)} data-testid="auto-toggle">
-                  {autoRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />} {autoRunning ? "Pause" : "Start"}
+                  {autoRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />} {autoRunning ? t("sheet.pause") : t("sheet.start")}
                 </Button>
-                <Slider className="min-w-48 flex-1" label="Seconds per line" min={2} max={12} step={0.5} value={secondsPerLine} onChange={setSecondsPerLine} format={(v) => `${v}s`} />
+                <Slider className="min-w-48 flex-1" label={t("sheet.secondsPerLine")} min={2} max={12} step={0.5} value={secondsPerLine} onChange={setSecondsPerLine} format={(v) => `${v}s`} />
               </div>
             )}
-            {mode === "manual" && <p className="text-xs text-muted">Tap a line, use the arrow keys / space bar, or a Bluetooth page-turner pedal.</p>}
+            {mode === "manual" && <p className="text-xs text-muted">{t("sheet.manualHelp")}</p>}
 
             <RecorderPanel compact sheetId={sheetId} songTitle={title} className="border-t border-border pt-3" />
             <button
@@ -235,19 +237,19 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
               className="flex min-h-10 w-full items-center justify-between border-t border-border pt-3 text-sm font-medium text-muted sm:hidden"
               data-testid="sheet-settings-toggle"
             >
-              Sheet settings · {soundingKey}{capo ? ` · capo ${capo}` : ""}
+              {t("sheet.settings")} · {soundingKey}{capo ? ` · capo ${capo}` : ""}
               <ChevronDown className={cn("h-4 w-4 transition-transform", showSettings && "rotate-180")} />
             </button>
             <div className={cn(showSettings ? "flex" : "hidden", "flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3 text-sm sm:flex")}>
               <div className="flex items-center gap-1">
-                <span className="text-muted">Transpose</span>
+                <span className="text-muted">{t("sheet.transpose")}</span>
                 <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Transpose down" onClick={() => setTranspose((t) => t - 1)}><Minus className="h-3.5 w-3.5" /></Button>
                 <span className="w-16 text-center tabular-nums">{transpose > 0 ? `+${transpose}` : transpose} · {soundingKey}</span>
                 <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Transpose up" onClick={() => setTranspose((t) => t + 1)}><Plus className="h-3.5 w-3.5" /></Button>
               </div>
               {prefs.instrument === "guitar" && (
                 <div className="flex items-center gap-1">
-                  <span className="text-muted">Capo</span>
+                  <span className="text-muted">{t("sheet.capo")}</span>
                   <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Capo down" onClick={() => setCapo((c) => Math.max(0, c - 1))}><Minus className="h-3.5 w-3.5" /></Button>
                   <span className="w-6 text-center tabular-nums">{capo}</span>
                   <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Capo up" onClick={() => setCapo((c) => Math.min(9, c + 1))}><Plus className="h-3.5 w-3.5" /></Button>
@@ -264,8 +266,8 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                 value={layout}
                 onChange={setLayout}
                 options={[
-                  { value: "sheet", label: "Chord sheet", testId: "layout-sheet" },
-                  { value: "flow", label: "Flowing", testId: "layout-flow" },
+                  { value: "sheet", label: t("sheet.chordSheet"), testId: "layout-sheet" },
+                  { value: "flow", label: t("sheet.flowing"), testId: "layout-flow" },
                 ]}
               />
               {capo > 0 && <Badge tone="guitar">Showing shapes for capo {capo} · sounds in {soundingKey}</Badge>}
@@ -328,7 +330,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
         )}
         <Card>
           <CardBody className="pt-4">
-            <p className="mb-3 text-sm font-semibold">Chords in this song {capo > 0 && <span className="font-normal text-muted">(capo {capo})</span>}</p>
+            <p className="mb-3 text-sm font-semibold">{t("sheet.chordsInSong")} {capo > 0 && <span className="font-normal text-muted">(capo {capo})</span>}</p>
             {prefs.instrument === "guitar" ? (
               <div className="flex flex-wrap gap-2">
                 {chords.map((c) => (
@@ -365,6 +367,7 @@ function safeNotes(c: string) {
 
 /** Shown inside the sheet when it has chords but no words yet: paste the lyrics right here. */
 function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise<void>; findHref?: string }) {
+  const t = useT();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const save = async (t: string) => {
@@ -378,7 +381,7 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
   };
   return (
     <div className="mb-8 rounded-2xl border-2 border-dashed border-accent/50 bg-accent-soft/40 p-4 sm:p-5" data-testid="inline-paste">
-      <p className="font-semibold">No lyrics yet — add them here</p>
+      <p className="font-semibold">{t("sheet.noLyrics")}</p>
       <ol className="mt-1 list-inside list-decimal text-sm text-muted">
         <li>Open a lyrics-with-chords page for this song{findHref ? " (button below)" : ""} and copy it.</li>
         <li>Press “Paste from clipboard” — or paste into the box — and the lyrics appear with chords above the words.</li>
@@ -404,7 +407,7 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
             }
           }}
         >
-          Paste from clipboard
+          {t("sheet.pasteClipboard")}
         </Button>
       </div>
       <textarea
@@ -425,7 +428,7 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
       />
       {text.trim() && (
         <Button size="sm" className="mt-2" onClick={() => void save(text)} loading={busy}>
-          Add these lyrics
+          {t("sheet.addLyrics")}
         </Button>
       )}
     </div>

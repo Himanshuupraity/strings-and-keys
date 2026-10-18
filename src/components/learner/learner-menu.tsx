@@ -1,5 +1,6 @@
 "use client";
 
+import { translate, useT, type MessageKey } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 import { Cloud, CloudOff, HardDrive, Loader2, Lock, LogOut, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -9,25 +10,26 @@ import { initials } from "@/lib/learner/names";
 import { pushNow, switchLearner } from "@/lib/learner/sync";
 import type { SyncStatus } from "@/lib/learner/store";
 
-export function syncLabel(s: SyncStatus): { text: string; icon: typeof Cloud; tone: string } {
+export function syncLabel(s: SyncStatus, t: (k: MessageKey) => string = (k) => translate("en", k)): { text: string; icon: typeof Cloud; tone: string } {
   switch (s.state) {
     case "local-only":
-      return { text: "Saved on this device", icon: HardDrive, tone: "text-muted" };
+      return { text: t("sync.local"), icon: HardDrive, tone: "text-muted" };
     case "saving":
-      return { text: "Saving…", icon: Loader2, tone: "text-muted" };
+      return { text: t("sync.saving"), icon: Loader2, tone: "text-muted" };
     case "offline":
-      return { text: "Offline — will sync later", icon: CloudOff, tone: "text-warn" };
+      return { text: t("sync.offline"), icon: CloudOff, tone: "text-warn" };
     case "error":
-      return { text: s.message ?? "Sync problem", icon: AlertTriangle, tone: "text-danger" };
+      return { text: s.message ?? t("sync.error"), icon: AlertTriangle, tone: "text-danger" };
     case "locked":
-      return { text: "PIN needed to sync — see Settings", icon: Lock, tone: "text-warn" };
+      return { text: t("sync.locked"), icon: Lock, tone: "text-warn" };
     default:
-      return { text: s.lastSyncedAt ? "Synced to your profile" : "Synced", icon: Cloud, tone: "text-success" };
+      return { text: t("sync.synced"), icon: Cloud, tone: "text-success" };
   }
 }
 
 /** Header chip with the learner's name, sync status and "Switch learner". */
 export function LearnerMenu() {
+  const t = useT();
   const { learner, status } = useLearner();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -45,7 +47,7 @@ export function LearnerMenu() {
   }, [open]);
 
   if (!learner) return null;
-  const s = syncLabel(status);
+  const s = syncLabel(status, t);
   const Icon = s.icon;
 
   return (
@@ -79,10 +81,10 @@ export function LearnerMenu() {
               className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm hover:bg-surface-2"
               onClick={async () => {
                 await pushNow();
-                toast.success("Progress saved to your profile");
+                toast.success(t("sync.savedToast"));
               }}
             >
-              <RefreshCw className="h-4 w-4" /> Sync now
+              <RefreshCw className="h-4 w-4" /> {t("sync.syncNow")}
             </button>
           )}
           <button
@@ -96,7 +98,7 @@ export function LearnerMenu() {
               if (!r.ok) toast.error(r.message);
             }}
           >
-            <LogOut className="h-4 w-4" /> Switch learner
+            <LogOut className="h-4 w-4" /> {t("sync.switchLearner")}
           </button>
         </div>
       )}

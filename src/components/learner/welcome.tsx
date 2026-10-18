@@ -3,16 +3,17 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, CloudOff, Loader2, Lock, UserRound } from "lucide-react";
 import { Button, Callout, Input, cn } from "@/components/ui";
-import { BRAND, } from "@/config/brand";
+import { BRAND } from "@/config/brand";
+import { useLang, useT } from "@/lib/i18n";
 import { LearnerNameSchema, initials } from "@/lib/learner/names";
 import { createLearner, fetchLearners, PinRequiredError, selectLearner, type LearnerSummary } from "@/lib/learner/sync";
 import { changePin, getToken, unlockLearner } from "@/lib/learner/pin-client";
 import { loadLearner, patchLearner } from "@/lib/learner/store";
 import { PinPad } from "./pin-pad";
 
-function lastActive(iso: string): string {
+function lastActive(iso: string, lang: "en" | "hi" = "en"): string {
   const diff = Date.now() - new Date(iso).getTime();
-  const rtf = new Intl.RelativeTimeFormat(undefined, { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(lang === "hi" ? "hi" : undefined, { numeric: "auto" });
   const mins = Math.round(diff / 60000);
   if (mins < 60) return rtf.format(-Math.max(mins, 0), "minute");
   const hours = Math.round(mins / 60);
@@ -25,6 +26,8 @@ function lastActive(iso: string): string {
  * to continue with their saved progress.
  */
 export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "existing") => void; className?: string }) {
+  const t = useT();
+  const lang = useLang();
   const [list, setList] = useState<{ loading: boolean; enabled: boolean; pinSupported: boolean; learners: LearnerSummary[]; error?: string }>({ loading: true, enabled: false, pinSupported: false, learners: [] });
   /** Profile waiting for its PIN before it can be opened. */
   const [unlock, setUnlock] = useState<LearnerSummary | null>(null);
@@ -58,7 +61,7 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
       if (e instanceof PinRequiredError) {
         setConfirm(null);
         setUnlock(e.learner);
-      } else setError(e instanceof Error ? e.message : "Couldn't load that profile.");
+      } else setError(e instanceof Error ? e.message : t("welcome.couldntLoad"));
       setBusy(null);
     }
   };
@@ -76,7 +79,7 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
     e.preventDefault();
     const parsed = LearnerNameSchema.safeParse(name);
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Please enter your name.");
+      setError(lang === "hi" ? t("welcome.enterName") : parsed.error.issues[0]?.message ?? t("welcome.enterName"));
       return;
     }
     setBusy("new");
@@ -95,7 +98,7 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
       }
       onReady?.("new");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't save your name.");
+      setError(err instanceof Error ? err.message : t("welcome.couldntSave"));
       setBusy(null);
     }
   };
@@ -103,7 +106,7 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
   if (unlock) {
     return (
       <div className={cn("w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-card sm:p-8", className)} data-testid="welcome-card">
-        <PinPad title={`Enter ${unlock.name}'s PIN`} subtitle="This profile is protected." onSubmit={submitPin} onCancel={() => setUnlock(null)} cancelLabel="Back" />
+        <PinPad title={t("welcome.enterPinFor", { name: unlock.name })} subtitle={t("welcome.protected")} onSubmit={submitPin} onCancel={() => setUnlock(null)} cancelLabel={t("common.back")} />
       </div>
     );
   }
@@ -117,8 +120,8 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
       <div className={cn("w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-card sm:p-8", className)} data-testid="welcome-card">
         <PinPad
           mode="set"
-          title="Protect your profile with a PIN?"
-          subtitle="Optional. Anyone opening this site would need it to see or change your progress."
+          title={t("welcome.protectTitle")}
+          subtitle={t("welcome.protectBody")}
           onSubmit={async (pin) => {
             const me = loadLearner();
             if (!me?.id) return finish();
@@ -128,7 +131,7 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
             finish();
           }}
           onCancel={finish}
-          cancelLabel="Skip for now"
+          cancelLabel={t("welcome.skipForNow")}
         />
       </div>
     );
@@ -139,28 +142,28 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
       <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-soft text-accent">
         <UserRound className="h-6 w-6" aria-hidden />
       </div>
-      <h2 className="font-display text-3xl tracking-tight">What&apos;s your name?</h2>
+      <h2 className="font-display text-3xl tracking-tight">{t("welcome.title")}</h2>
       <p className="mt-1.5 text-sm text-muted">
-        {list.enabled ? "Your progress is saved under your name, so you can continue on any device." : "Your progress will be saved under your name on this device."}
+        {list.enabled ? t("welcome.subtitleSync") : t("welcome.subtitleLocal")}
       </p>
 
       {confirm ? (
         <div className="mt-5 space-y-3" role="alert">
           <p className="text-sm">
-            Someone named <strong>{confirm.name}</strong> is already learning with {BRAND.name}. Is that you?
+            {t("welcome.isThatYou", { name: confirm.name, brand: BRAND.name })}
           </p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => void pick(confirm)} loading={busy === confirm.id} data-testid="confirm-existing">
-              Yes, continue my progress
+              {t("welcome.yesContinue")}
             </Button>
             <Button variant="ghost" onClick={() => { setConfirm(null); setName(""); }}>
-              No, use another name
+              {t("welcome.noOther")}
             </Button>
           </div>
         </div>
       ) : (
         <form onSubmit={submit} className="mt-5 space-y-3" noValidate>
-          <label htmlFor="learner-name" className="sr-only">Your name</label>
+          <label htmlFor="learner-name" className="sr-only">{t("welcome.nameLabel")}</label>
           <Input
             id="learner-name"
             autoFocus
@@ -168,14 +171,14 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
             value={name}
             maxLength={40}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Asha"
+            placeholder={t("welcome.placeholder")}
             aria-invalid={!!error}
             aria-describedby={error ? "learner-name-error" : undefined}
             className="h-12 text-base"
             data-testid="learner-name"
           />
           <Button type="submit" size="lg" className="w-full" loading={busy === "new"} disabled={!!busy && busy !== "new"} data-testid="learner-continue">
-            Continue <ArrowRight className="h-4 w-4" />
+            {t("welcome.continue")} <ArrowRight className="h-4 w-4" />
           </Button>
         </form>
       )}
@@ -188,11 +191,11 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
 
       {list.loading ? (
         <p className="mt-6 flex items-center gap-2 text-sm text-muted">
-          <Loader2 className="h-4 w-4 animate-spin" /> Looking for saved learners…
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("welcome.lookingUp")}
         </p>
       ) : list.learners.length > 0 && !confirm ? (
         <div className="mt-7">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">Already learning? Pick your name</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">{t("welcome.pickName")}</p>
           <ul className="scrollbar-thin max-h-64 space-y-1.5 overflow-y-auto" data-testid="learner-list">
             {list.learners.map((l) => (
               <li key={l.id}>
@@ -208,9 +211,9 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 truncate font-medium">
                       {l.name}
-                      {l.hasPin && <Lock className="h-3.5 w-3.5 shrink-0 text-muted" aria-label="PIN protected" />}
+                      {l.hasPin && <Lock className="h-3.5 w-3.5 shrink-0 text-muted" aria-label={t("welcome.pinProtected")} />}
                     </span>
-                    <span className="block text-xs text-muted">Last active {lastActive(l.updatedAt)}</span>
+                    <span className="block text-xs text-muted">{t("welcome.lastActive", { when: lastActive(l.updatedAt, lang) })}</span>
                   </span>
                   {busy === l.id ? <Loader2 className="h-4 w-4 animate-spin text-muted" /> : <ArrowRight className="h-4 w-4 text-subtle" />}
                 </button>
@@ -222,7 +225,7 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
 
       {list.error && (
         <Callout tone="warn" className="mt-5" icon={<CloudOff className="h-4 w-4" />}>
-          {list.error} You can still continue — progress is saved on this device.
+          {list.error} {t("welcome.offlineNote")}
         </Callout>
       )}
     </div>

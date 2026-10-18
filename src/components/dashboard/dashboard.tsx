@@ -7,6 +7,7 @@ import { Badge, Button, Callout, Card, CardBody, CardHeader, EmptyState, Progres
 import { InstrumentToggle } from "@/components/layout/instrument-toggle";
 import { usePrefs, useHydrated } from "@/hooks/use-prefs";
 import { useLearner } from "@/hooks/use-learner";
+import { lessonText, useLang, useT, type MessageKey } from "@/lib/i18n";
 import { LESSONS, getLesson, lessonsForInstrument } from "@/content/curriculum";
 import { RevisionCard } from "./revision-card";
 import { NextSongCard } from "./next-song-card";
@@ -26,9 +27,9 @@ function withinDays(iso: string, days: number) {
   return Date.now() - new Date(iso).getTime() < days * 864e5;
 }
 
-function greeting() {
+function greeting(t: ReturnType<typeof useT>) {
   const h = new Date().getHours();
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  return h < 12 ? t("dash.greeting.morning") : h < 17 ? t("dash.greeting.afternoon") : t("dash.greeting.evening");
 }
 
 function planLink(kind: string, instrument: "guitar" | "piano", nextId?: string) {
@@ -49,6 +50,8 @@ function planLink(kind: string, instrument: "guitar" | "piano", nextId?: string)
 }
 
 export function Dashboard() {
+  const t = useT();
+  const lang = useLang();
   const [prefs] = usePrefs();
   const hydrated = useHydrated();
   const { data, loading } = useLearnerData();
@@ -85,18 +88,18 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Prominent instrument toggle */}
-      <section aria-label="Instrument mode" className="hidden flex-col items-start gap-3 rounded-2xl sm:flex border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <section aria-label={t("shell.instrumentMode")} className="hidden flex-col items-start gap-3 rounded-2xl sm:flex border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-subtle">Instrument mode</p>
-          <p className="text-sm text-muted">Lessons, tools and recommendations follow this choice. Progress is kept separately for each.</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-subtle">{t("shell.instrumentMode")}</p>
+          <p className="text-sm text-muted">{t("dash.instrumentHint")}</p>
         </div>
         <InstrumentToggle size="lg" className="w-full sm:w-auto" />
       </section>
 
       {hydrated && !prefs.onboarded && (
-        <Callout tone="info" icon={<Sparkles className="h-5 w-5 text-piano" />} title="New here? Let's set up your learning plan">
-          Answer a few quick questions (2 minutes) and we&apos;ll build a beginner plan around your time and music taste.{" "}
-          <Link href="/onboarding" className="font-medium text-piano underline underline-offset-2">Start onboarding</Link>
+        <Callout tone="info" icon={<Sparkles className="h-5 w-5 text-piano" />} title={t("dash.newHereTitle")}>
+          {t("dash.newHereBody")}{" "}
+          <Link href="/onboarding" className="font-medium text-piano underline underline-offset-2">{t("dash.startOnboarding")}</Link>
         </Callout>
       )}
 
@@ -106,19 +109,19 @@ export function Dashboard() {
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
-            {greeting()}
+            {greeting(t)}
             {learnerName ? `, ${learnerName}` : ""}.
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-muted">
             <InstrumentIcon className={cn("h-4 w-4", instrument === "guitar" ? "text-guitar" : "text-piano")} aria-hidden />
-            {instrument === "guitar" ? "Guitar" : "Piano"} · Level {level}: {LEVEL_NAMES[level]}
-            <Badge tone={tone}>{done.length}/{lessons.length} lessons</Badge>
+            {instrument === "guitar" ? t("shell.guitar") : t("shell.piano")} · {t("dash.level", { n: level, name: LEVEL_NAMES[level] })}
+            <Badge tone={tone}>{t("dash.lessonsCount", { done: done.length, total: lessons.length })}</Badge>
           </p>
         </div>
         <div className="grid grid-cols-3 gap-3 sm:flex">
-          <Stat icon={<Flame className="h-4 w-4" />} label="Streak" value={loading ? "–" : `${streak} day${streak === 1 ? "" : "s"}`} />
-          <Stat icon={<Clock className="h-4 w-4" />} label={`${instrument === "guitar" ? "Guitar" : "Piano"} time`} value={loading ? "–" : `${totalMinutes(instrSessions)} min`} />
-          <Stat icon={<CalendarCheck className="h-4 w-4" />} label="Today" value={loading ? "–" : `${todayMin}/${data.goals.dailyMinutes} min`} />
+          <Stat icon={<Flame className="h-4 w-4" />} label={t("dash.streak")} value={loading ? "–" : t(streak === 1 ? "dash.day" : "dash.days", { n: streak })} />
+          <Stat icon={<Clock className="h-4 w-4" />} label={instrument === "guitar" ? t("dash.guitarTime") : t("dash.pianoTime")} value={loading ? "–" : t("common.min", { n: totalMinutes(instrSessions) })} />
+          <Stat icon={<CalendarCheck className="h-4 w-4" />} label={t("dash.today")} value={loading ? "–" : t("common.min", { n: `${todayMin}/${data.goals.dailyMinutes}` })} />
         </div>
       </section>
 
@@ -126,44 +129,44 @@ export function Dashboard() {
         {/* Continue learning */}
         <Card className="overflow-hidden lg:col-span-2">
           <div className={cn("h-1.5", instrument === "guitar" ? "bg-guitar" : "bg-piano")} />
-          <CardHeader icon={<PlayCircle className="h-5 w-5" />} title={inProgress ? "Continue learning" : "Recommended next lesson"} description={continueLesson ? `Level ${continueLesson.level} · ${LEVEL_NAMES[continueLesson.level]} · ~${continueLesson.minutes} min` : undefined} />
+          <CardHeader icon={<PlayCircle className="h-5 w-5" />} title={inProgress ? t("dash.continueLearning") : t("dash.recommended")} description={continueLesson ? t("dash.lessonMeta", { level: continueLesson.level, levelName: LEVEL_NAMES[continueLesson.level], min: continueLesson.minutes }) : undefined} />
           <CardBody>
             {loading ? (
               <Skeleton className="h-20" />
             ) : continueLesson ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xl font-semibold">{continueLesson.title}</p>
-                  <p className="mt-1 text-sm text-muted">{continueLesson.summary}</p>
+                  <p className="text-xl font-semibold">{lessonText(continueLesson, lang).title}</p>
+                  <p className="mt-1 text-sm text-muted">{lessonText(continueLesson, lang).summary}</p>
                   {inProgress && (
                     <div className="mt-3 max-w-sm">
-                      <ProgressBar value={inProgress.stepsDone.length / Math.max(1, continueLesson.steps.length)} tone={tone} label="Lesson progress" />
-                      <p className="mt-1 text-xs text-muted">{inProgress.stepsDone.length} of {continueLesson.steps.length} steps</p>
+                      <ProgressBar value={inProgress.stepsDone.length / Math.max(1, continueLesson.steps.length)} tone={tone} label={t("dash.continueLearning")} />
+                      <p className="mt-1 text-xs text-muted">{t("dash.stepsOf", { done: inProgress.stepsDone.length, total: continueLesson.steps.length })}</p>
                     </div>
                   )}
                   {next && inProgress && next.id !== continueLesson.id && (
                     <p className="mt-3 text-sm text-muted">
-                      Up next: <Link className="font-medium text-text underline-offset-2 hover:underline" href={`/lesson/${next.id}`}>{next.title}</Link>
+                      {t("dash.upNext")} <Link className="font-medium text-text underline-offset-2 hover:underline" href={`/lesson/${next.id}`}>{lessonText(next, lang).title}</Link>
                     </p>
                   )}
                 </div>
                 <Link href={`/lesson/${continueLesson.id}`} className="shrink-0">
                   <Button size="lg">
-                    {inProgress ? "Continue" : "Start lesson"} <ArrowRight className="h-4 w-4" />
+                    {inProgress ? t("dash.continue") : t("dash.startLesson")} <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
               </div>
             ) : LESSONS.length === 0 ? (
               <EmptyState icon={<BookOpen className="h-8 w-8" />} title="Lessons are loading" description="The curriculum couldn't be found." />
             ) : (
-              <EmptyState icon={<Trophy className="h-8 w-8" />} title="You've completed every unlocked lesson!" description="Revise earlier lessons, practise songs, or switch instruments." action={<Link href="/learn"><Button variant="secondary">Browse curriculum</Button></Link>} />
+              <EmptyState icon={<Trophy className="h-8 w-8" />} title={t("dash.allDoneTitle")} description={t("dash.allDoneBody")} action={<Link href="/learn"><Button variant="secondary">{t("dash.browseCurriculum")}</Button></Link>} />
             )}
           </CardBody>
         </Card>
 
         {/* Today's plan */}
         <Card>
-          <CardHeader icon={<Target className="h-5 w-5" />} title="Today's practice plan" description={`${data.goals.dailyMinutes} minutes · short focused blocks`} action={<Link href="/settings#goals" className="text-xs text-muted hover:text-text">Edit</Link>} />
+          <CardHeader icon={<Target className="h-5 w-5" />} title={t("dash.planTitle")} description={t("dash.planMeta", { min: data.goals.dailyMinutes })} action={<Link href="/settings#goals" className="text-xs text-muted hover:text-text">{t("common.edit")}</Link>} />
           <CardBody>
             <ol className="space-y-1.5">
               {plan.map((b, i) => {
@@ -171,8 +174,8 @@ export function Dashboard() {
                 const inner = (
                   <>
                     <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold", b.kind === "break" ? "bg-success-soft text-success" : "bg-surface-2 text-muted")}>{i + 1}</span>
-                    <span className="flex-1 text-sm">{b.label}</span>
-                    <span className="text-xs tabular-nums text-muted">{b.minutes} min</span>
+                    <span className="flex-1 text-sm">{t(`dash.plan.${b.kind}` as MessageKey)}</span>
+                    <span className="text-xs tabular-nums text-muted">{t("common.min", { n: b.minutes })}</span>
                   </>
                 );
                 return (
@@ -186,7 +189,7 @@ export function Dashboard() {
                 );
               })}
             </ol>
-            <p className="mt-3 text-xs text-muted">Stop and rest if your hands, wrists or fingertips hurt. Little and often beats long sessions.</p>
+            <p className="mt-3 text-xs text-muted">{t("dash.painNote")}</p>
           </CardBody>
         </Card>
       </div>
@@ -195,29 +198,29 @@ export function Dashboard() {
         <Card className="lg:col-span-2">
           <CardHeader
             icon={<TrendingUp className="h-5 w-5" />}
-            title="This week"
-            description={empty ? "Your real practice will appear here." : `${Math.round(weekTotal)} minutes in the last 7 days`}
+            title={t("dash.thisWeek")}
+            description={empty ? t("dash.weekEmpty") : t("dash.weekMeta", { min: Math.round(weekTotal) })}
             action={empty ? <SourceTag source="sample" /> : <SourceTag source="measured" />}
           />
           <CardBody>
             <WeeklyChart data={empty ? SAMPLE_WEEK : week} />
-            {empty && <p className="mt-2 text-xs text-muted">Sample data shown for illustration — it is not your progress. Practise in any lesson, lab or tool and time is logged automatically.</p>}
+            {empty && <p className="mt-2 text-xs text-muted">{t("dash.sampleNote")}</p>}
           </CardBody>
         </Card>
 
         <Card>
-          <CardHeader icon={<Award className="h-5 w-5" />} title="Skills" description="Mastered = passed measured exercises" />
+          <CardHeader icon={<Award className="h-5 w-5" />} title={t("dash.skills")} description={t("dash.skillsHint")} />
           <CardBody className="space-y-4">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">Mastered</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">{t("dash.mastered")}</p>
               {skillsMastered.length ? (
                 <div className="flex flex-wrap gap-1.5">{skillsMastered.map((s) => <Badge key={s} tone="success">{s}</Badge>)}</div>
               ) : (
-                <p className="text-sm text-muted">None yet — finish a lesson&apos;s measured exercises to master its skills.</p>
+                <p className="text-sm text-muted">{t("dash.masteredNone")}</p>
               )}
             </div>
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">To improve</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-subtle">{t("dash.toImprove")}</p>
               {weak.length ? (
                 <ul className="space-y-1.5">
                   {weak.slice(0, 4).map((w) => (
@@ -228,7 +231,7 @@ export function Dashboard() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted">Nothing flagged. Skills show up here when measured accuracy stays under 70%.</p>
+                <p className="text-sm text-muted">{t("dash.toImproveNone")}</p>
               )}
             </div>
           </CardBody>
@@ -237,7 +240,7 @@ export function Dashboard() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardHeader icon={<Clock className="h-5 w-5" />} title="Recent practice" action={<Link href="/practice/timer" className="text-xs text-muted hover:text-text">Timer</Link>} />
+          <CardHeader icon={<Clock className="h-5 w-5" />} title={t("dash.recentPractice")} action={<Link href="/practice/timer" className="text-xs text-muted hover:text-text">{t("dash.timer")}</Link>} />
           <CardBody>
             {data.sessions.length ? (
               <ul className="divide-y divide-border">
@@ -252,35 +255,35 @@ export function Dashboard() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted">No sessions yet. Time is logged automatically while you practise.</p>
+              <p className="text-sm text-muted">{t("dash.noSessions")}</p>
             )}
           </CardBody>
         </Card>
 
         {instrument === "guitar" ? (
           <Card>
-            <CardHeader icon={<Guitar className="h-5 w-5" />} title="1-minute chord changes" action={<Link href="/practice/chord-drill" className="text-xs text-muted hover:text-text">Drill</Link>} />
+            <CardHeader icon={<Guitar className="h-5 w-5" />} title={t("dash.chordChanges")} action={<Link href="/practice/chord-drill" className="text-xs text-muted hover:text-text">{t("dash.drill")}</Link>} />
             <CardBody className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span>This week</span>
-                <span className="tabular-nums text-muted">{drillsThisWeek}/{data.goals.weeklyChordDrills} drills</span>
+                <span>{t("dash.thisWeek")}</span>
+                <span className="tabular-nums text-muted">{t("dash.drillsWeek", { done: drillsThisWeek, goal: data.goals.weeklyChordDrills })}</span>
               </div>
-              <ProgressBar value={drillsThisWeek / Math.max(1, data.goals.weeklyChordDrills)} tone="guitar" label="Weekly chord drill goal" />
+              <ProgressBar value={drillsThisWeek / Math.max(1, data.goals.weeklyChordDrills)} tone="guitar" label={t("dash.chordChanges")} />
               {bestDrill ? (
                 <p className="text-sm">
-                  Best: <strong>{bestDrill.transitions}</strong> changes on {bestDrill.pair.join("–")} <SourceTag source={bestDrill.mode === "self" ? "self-reported" : "measured"} />
+                  {t("dash.drillBest")} <strong>{bestDrill.transitions}</strong> {t("dash.drillBestOn")} {bestDrill.pair.join("–")} <SourceTag source={bestDrill.mode === "self" ? "self-reported" : "measured"} />
                 </p>
               ) : (
-                <p className="text-sm text-muted">Try Em–Am first: two easy shapes, one minute.</p>
+                <p className="text-sm text-muted">{t("dash.drillTry")}</p>
               )}
             </CardBody>
           </Card>
         ) : (
           <Card>
-            <CardHeader icon={<Piano className="h-5 w-5" />} title="Keyboard practice" action={<Link href="/piano-lab" className="text-xs text-muted hover:text-text">Piano Lab</Link>} />
+            <CardHeader icon={<Piano className="h-5 w-5" />} title={t("dash.keyboardPractice")} action={<Link href="/piano-lab" className="text-xs text-muted hover:text-text">{t("nav./piano-lab")}</Link>} />
             <CardBody className="space-y-2 text-sm">
-              <p>Measured piano exercises: <strong>{data.exercises.filter((e) => e.instrument === "piano" && e.measured).length}</strong></p>
-              <p className="text-muted">Connect a MIDI keyboard in the Piano Lab for the most reliable note and timing feedback.</p>
+              <p>{t("dash.measuredPiano")} <strong>{data.exercises.filter((e) => e.instrument === "piano" && e.measured).length}</strong></p>
+              <p className="text-muted">{t("dash.midiTip")}</p>
             </CardBody>
           </Card>
         )}
@@ -289,7 +292,7 @@ export function Dashboard() {
       </div>
 
       <Card>
-        <CardHeader icon={<Trophy className="h-5 w-5" />} title="Achievements & milestones" description={`${ach.filter((a) => a.earned).length} of ${ach.length} earned`} action={<Link href="/progress" className="text-xs text-muted hover:text-text">All progress</Link>} />
+        <CardHeader icon={<Trophy className="h-5 w-5" />} title={t("dash.achievements")} description={t("dash.earned", { n: ach.filter((a) => a.earned).length, total: ach.length })} action={<Link href="/progress" className="text-xs text-muted hover:text-text">{t("dash.allProgress")}</Link>} />
         <CardBody>
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {ach.map((a) => (

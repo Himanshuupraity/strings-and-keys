@@ -5,12 +5,14 @@ import { RotateCcw } from "lucide-react";
 import { Card, CardBody } from "@/components/ui";
 import { useData } from "@/hooks/use-data";
 import { useHydrated } from "@/hooks/use-prefs";
+import { useT } from "@/lib/i18n";
 import { revisionRepo } from "@/lib/revision/repo";
 import { isDue, localDay } from "@/lib/revision/schedule";
 import type { RevisionItem } from "@/lib/storage/schemas";
 
 /** Dashboard nudge: how many mistakes are due for revision today. Renders nothing when none are due. */
 export function RevisionCard() {
+  const t = useT();
   const hydrated = useHydrated();
   const { data } = useData(() => revisionRepo.all(), ["revision"], [] as RevisionItem[]);
   if (!hydrated) return null;
@@ -23,11 +25,11 @@ export function RevisionCard() {
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent"><RotateCcw className="h-5 w-5" /></span>
           <div>
-            <p className="font-semibold">{due} {due === 1 ? "item" : "items"} to revise today</p>
-            <p className="text-sm text-muted">Quick review of things you missed — a few minutes.</p>
+            <p className="font-semibold">{due === 1 ? t("dash.revisionOne") : t("dash.revisionTitle", { n: due })}</p>
+            <p className="text-sm text-muted">{t("dash.revisionBody")}</p>
           </div>
         </div>
-        <Link href="/revise" className="inline-flex h-11 shrink-0 items-center rounded-xl bg-accent px-4 text-sm font-medium text-accent-fg hover:bg-accent-hover">Start</Link>
+        <Link href="/revise" className="inline-flex h-11 shrink-0 items-center rounded-xl bg-accent px-4 text-sm font-medium text-accent-fg hover:bg-accent-hover">{t("common.start")}</Link>
       </CardBody>
     </Card>
   );

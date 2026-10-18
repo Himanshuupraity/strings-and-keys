@@ -17,10 +17,11 @@ export function Providers({ children }: { children: ReactNode }) {
     const apply = () => root.classList.toggle("dark", prefs.theme === "dark" || (prefs.theme === "system" && mq.matches));
     apply();
     root.dataset.instrument = prefs.instrument;
+    root.lang = prefs.uiLanguage === "hi" ? "hi" : "en";
     if (prefs.theme !== "system") return;
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
-  }, [prefs.theme, prefs.instrument]);
+  }, [prefs.theme, prefs.instrument, prefs.uiLanguage]);
 
   useEffect(() => setMasterVolume(prefs.volume), [prefs.volume]);
 

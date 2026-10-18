@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/lib/i18n";
 import { useState } from "react";
 import { Cloud, KeyRound, Lock, LogOut, RefreshCw, Unlock } from "lucide-react";
 import { toast } from "sonner";
@@ -14,14 +15,15 @@ import { syncLabel } from "./learner-menu";
 
 /** Settings card: who is learning on this device and whether progress syncs to Supabase. */
 export function ProfileSyncPanel() {
+  const t = useT();
   const { learner, status } = useLearner();
   const [dialog, setDialog] = useState<null | "set" | "unlock">(null);
   if (!learner) return null;
   const id = learner.id;
-  const s = syncLabel(status);
+  const s = syncLabel(status, t);
   return (
     <Card id="profile" className="scroll-mt-24">
-      <CardHeader icon={<Cloud className="h-5 w-5" />} title="Your profile & sync" description="Your progress is saved under your name." />
+      <CardHeader icon={<Cloud className="h-5 w-5" />} title={t("profile.title")} description={t("profile.description")} />
       <CardBody className="space-y-4">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-guitar to-piano font-semibold text-white" aria-hidden>
@@ -35,18 +37,18 @@ export function ProfileSyncPanel() {
           </div>
         </div>
         {status.state === "local-only" ? (
-          <Callout tone="info" title="Sync across devices">
-            Progress is saved in this browser only. When the site&apos;s Supabase database is set up, your progress uploads automatically and you can pick your name on any device to continue.
+          <Callout tone="info" title={t("profile.syncTitle")}>
+            {t("profile.syncLocalBody")}
           </Callout>
         ) : (
           <p className="text-sm text-muted">
-            Changes upload a couple of seconds after you practise. On another device, open the site and pick <strong className="text-text">{learner.name}</strong> to continue where you left off.
+            {t("profile.syncOnBody", { name: learner.name })}
           </p>
         )}
         <div className="flex flex-wrap gap-2">
           {learner.id && (
-            <Button variant="secondary" onClick={async () => { await pushNow(); toast.success("Progress saved to your profile"); }}>
-              <RefreshCw className="h-4 w-4" /> Sync now
+            <Button variant="secondary" onClick={async () => { await pushNow(); toast.success(t("sync.savedToast")); }}>
+              <RefreshCw className="h-4 w-4" /> {t("sync.syncNow")}
             </Button>
           )}
           <Button
@@ -56,7 +58,7 @@ export function ProfileSyncPanel() {
               if (!r.ok) toast.error(r.message);
             }}
           >
-            <LogOut className="h-4 w-4" /> Switch learner
+            <LogOut className="h-4 w-4" /> {t("sync.switchLearner")}
           </Button>
         </div>
         <div className="space-y-2 border-t border-border pt-4" data-testid="pin-settings">
@@ -64,17 +66,17 @@ export function ProfileSyncPanel() {
             <KeyRound className="h-4 w-4 text-muted" /> PIN protection
           </p>
           {!id ? (
-            <p className="text-sm text-muted">A PIN needs the online database (Supabase). Without it, your progress stays on this device only.</p>
+            <p className="text-sm text-muted">{t("profile.pinNeedsDb")}</p>
           ) : status.state === "locked" ? (
             <>
-              <p className="text-sm text-muted">This profile&apos;s PIN was set or changed on another device. Enter it to keep syncing — nothing is lost.</p>
-              <Button onClick={() => setDialog("unlock")} data-testid="pin-unlock"><Unlock className="h-4 w-4" /> Enter PIN</Button>
+              <p className="text-sm text-muted">{t("profile.pinChangedElsewhere")}</p>
+              <Button onClick={() => setDialog("unlock")} data-testid="pin-unlock"><Unlock className="h-4 w-4" /> {t("profile.enterPin")}</Button>
             </>
           ) : learner.hasPin ? (
             <>
-              <p className="flex items-center gap-1.5 text-sm text-muted"><Lock className="h-3.5 w-3.5" /> Protected — others need your PIN to open this profile.</p>
+              <p className="flex items-center gap-1.5 text-sm text-muted"><Lock className="h-3.5 w-3.5" /> {t("profile.protected")}</p>
               <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" onClick={() => setDialog("set")} data-testid="pin-change">Change PIN</Button>
+                <Button variant="secondary" onClick={() => setDialog("set")} data-testid="pin-change">{t("profile.changePin")}</Button>
                 <Button
                   variant="ghost"
                   data-testid="pin-remove"
@@ -86,14 +88,14 @@ export function ProfileSyncPanel() {
                     toast.success("PIN removed");
                   }}
                 >
-                  Remove PIN
+                  {t("profile.removePin")}
                 </Button>
               </div>
             </>
           ) : (
             <>
-              <p className="text-sm text-muted">Profiles only need a name, so anyone opening this site could open yours. Add a 4-digit PIN to stop that.</p>
-              <Button variant="secondary" onClick={() => setDialog("set")} data-testid="pin-set"><Lock className="h-4 w-4" /> Protect with a PIN</Button>
+              <p className="text-sm text-muted">{t("profile.privacyNote")}</p>
+              <Button variant="secondary" onClick={() => setDialog("set")} data-testid="pin-set"><Lock className="h-4 w-4" /> {t("profile.protectWithPin")}</Button>
             </>
           )}
         </div>
