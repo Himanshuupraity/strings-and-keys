@@ -59,8 +59,8 @@ export interface ChromaFrame {
 
 export interface MicOptions {
   /**
-   * Voice mode: use the browser's voice processing (auto-gain boosts quiet voices, echo
-   * cancellation removes sound this page plays — e.g. a YouTube video — noise suppression).
+   * Voice mode: echo cancellation (removes sound this page plays — e.g. a YouTube video) and
+   * noise suppression. Auto-gain stays off so pauses between phrases remain clearly quieter.
    * Off by default because tuning needs the raw, unprocessed signal.
    */
   voice?: boolean;
@@ -105,7 +105,9 @@ export class MicListener {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
         audio: this.opts.voice
-          ? { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          ? // Auto-gain is OFF on purpose: it boosts silence and squashes the voice, hiding the pauses
+            // that follow-my-voice relies on. Echo cancellation removes this page's own video audio.
+            { echoCancellation: true, noiseSuppression: true, autoGainControl: false }
           : { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       });
     } catch (e) {

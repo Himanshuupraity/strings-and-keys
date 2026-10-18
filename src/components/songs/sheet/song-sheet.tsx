@@ -50,6 +50,8 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
   const [voiceState, setVoiceState] = useState<"calibrating" | "ready" | "singing">("calibrating");
   const [threshold, setThreshold] = useState(0);
   const [noPause, setNoPause] = useState(false);
+  const [dbInfo, setDbInfo] = useState<{ above: number; need: number } | null>(null);
+  const frameCount = useRef(0);
   const [showVideo, setShowVideo] = useState(false);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const log = usePracticeLog(`Song sheet: ${title}`);
@@ -129,6 +131,10 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
       }
       if (ev === "phrase-end") setVoiceState("ready");
       if (follower.current.phraseLength(now) > 12000) setNoPause(true);
+      if (++frameCount.current % 6 === 0 && follower.current.isCalibrated) {
+        setDbInfo({ above: follower.current.aboveFloorDb, need: follower.current.marginDb });
+        setThreshold(follower.current.threshold);
+      }
       if (ev === "phrase-start" || ev === "phrase-end") {
         const next = advanceOn(parsed.lines, currentRef.current, ev);
         if (next !== currentRef.current) go(next);
@@ -184,6 +190,11 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                     <span className={cn("font-medium", voiceState === "singing" ? "text-success" : "text-muted")}>
                       {voiceState === "calibrating" ? "Stay quiet for a second — measuring the room…" : voiceState === "singing" ? "Singing — keep going" : "Ready — start singing the highlighted line"}
                     </span>
+                    {dbInfo && (
+                      <span className="tabular-nums text-xs text-muted" data-testid="voice-db">
+                        Voice: {dbInfo.above >= 0 ? "+" : ""}{Math.round(dbInfo.above)} dB over the room · needs +{Math.round(dbInfo.need)}
+                      </span>
+                    )}
                     <span className="relative h-2.5 w-40 overflow-hidden rounded-full bg-surface-3" aria-hidden title="Your voice level; the white line is how loud it needs to be">
                       <span className={cn("block h-full rounded-full transition-[width] duration-75", voiceState === "singing" ? "bg-success" : level > threshold && threshold > 0 ? "bg-accent" : "bg-subtle")} style={{ width: `${meter(level)}%` }} />
                       {threshold > 0 && <span className="absolute inset-y-0 w-0.5 bg-text" style={{ left: `${meter(threshold)}%` }} />}

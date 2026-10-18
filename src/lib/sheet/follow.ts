@@ -7,33 +7,43 @@ import { isStop, type SheetLine } from "./parse";
  * soon as you start singing again.
  */
 export interface FollowerOptions {
-  /** How far above the measured room noise counts as voice (multiplier). */
+  /** How much louder than the room your voice must be, as a ratio (2 ≈ +6 dB). */
   sensitivity: number;
   /** Shortest phrase that counts (ms) — ignores coughs and clicks. */
   minPhraseMs: number;
   /** Silence after a phrase before moving on (ms). */
   gapMs: number;
-  /** Time spent measuring room noise at the start (ms). */
+  /** Warm-up before the first decision (ms). */
   calibrateMs: number;
   /** Dips shorter than this between syllables don't break a phrase (ms). */
   bridgeMs: number;
+  /** How far back the room's quiet level is remembered (ms). */
+  floorWindowMs: number;
 }
 
-export const DEFAULT_FOLLOWER: FollowerOptions = { sensitivity: 2.5, minPhraseMs: 400, gapMs: 600, calibrateMs: 1000, bridgeMs: 250 };
+export const DEFAULT_FOLLOWER: FollowerOptions = { sensitivity: 2, minPhraseMs: 350, gapMs: 600, calibrateMs: 600, bridgeMs: 300, floorWindowMs: 8000 };
 
 export type PhraseEvent = "calibrated" | "phrase-start" | "phrase-end";
 
-/** Lowest threshold, so a very quiet room doesn't make breathing count as singing. */
-const MIN_THRESHOLD = 0.006;
+const toDb = (level: number) => 20 * Math.log10(Math.max(level, 1e-5)); // floor at −100 dB
+const fromDb = (db: number) => Math.pow(10, db / 20);
+/** Absolute minimum voice level (−52 dB) so breathing in a silent room doesn't count. */
+const MIN_VOICE_DB = -52;
 
+/**
+ * Relative (decibel) voice-activity detector. The room's quiet level is tracked continuously as
+ * the minimum of short averages over the last few seconds, so it adapts to any microphone gain,
+ * fan noise or video volume — no fixed calibration value to get wrong.
+ */
 export class PhraseFollower {
-  private calibration: number[] = [];
-  private noise = 0;
   private startedAt: number | null = null;
+  private smooth = -100;
+  private buckets: { t: number; min: number }[] = [];
   private voicedSince: number | null = null;
   private lastVoiced = -Infinity;
   private inPhrase = false;
   private calibrated = false;
+  private lastDb = -100;
 
   constructor(private opts: FollowerOptions = DEFAULT_FOLLOWER) {}
 
@@ -41,8 +51,23 @@ export class PhraseFollower {
     this.opts = { ...this.opts, ...patch };
   }
 
+  get marginDb() {
+    return 20 * Math.log10(Math.max(1.05, this.opts.sensitivity));
+  }
+
+  /** The room's quiet level (dB). */
+  get floorDb() {
+    return this.buckets.length ? Math.min(...this.buckets.map((b) => b.min)) : -100;
+  }
+
+  /** Current voice level above the room (dB) — shown in the UI to help troubleshooting. */
+  get aboveFloorDb() {
+    return this.lastDb - this.floorDb;
+  }
+
+  /** Level the voice must exceed (linear RMS) — for the meter's marker. */
   get threshold() {
-    return Math.max(MIN_THRESHOLD, this.noise * this.opts.sensitivity);
+    return fromDb(Math.max(MIN_VOICE_DB, this.floorDb + this.marginDb));
   }
 
   get isCalibrated() {
@@ -53,42 +78,49 @@ export class PhraseFollower {
     return this.inPhrase;
   }
 
-  /** How long the current phrase has lasted (ms); a very long one usually means music in the room. */
   phraseLength(now: number) {
     return this.inPhrase && this.voicedSince !== null ? now - this.voicedSince : 0;
   }
 
   /**
    * Feed one analysis frame. `level` is RMS 0..1; `clarity` (0..1) is how pitched the sound is —
-   * sung and spoken vowels are fairly pitched; fans and traffic are not.
+   * sung and spoken vowels are pitched; fans and traffic are not.
    */
   push(level: number, clarity: number, now: number): PhraseEvent | null {
     if (this.startedAt === null) this.startedAt = now;
+    const db = toDb(level);
+    this.lastDb = db;
+    // ~80 ms smoothing, then remember the quietest smoothed value per 250 ms bucket.
+    this.smooth = this.smooth <= -99 ? db : this.smooth + (db - this.smooth) * 0.25;
+    const bucketT = Math.floor(now / 250) * 250;
+    const last = this.buckets[this.buckets.length - 1];
+    if (last && last.t === bucketT) last.min = Math.min(last.min, this.smooth);
+    else this.buckets.push({ t: bucketT, min: this.smooth });
+    while (this.buckets.length && this.buckets[0].t < now - this.opts.floorWindowMs) this.buckets.shift();
+
     if (!this.calibrated) {
-      this.calibration.push(level);
       if (now - this.startedAt >= this.opts.calibrateMs) {
-        // A low percentile, so starting to sing during calibration doesn't inflate the noise floor.
-        const sorted = [...this.calibration].sort((a, b) => a - b);
-        this.noise = Math.min(0.04, sorted[Math.floor(sorted.length * 0.3)] ?? 0);
         this.calibrated = true;
         return "calibrated";
       }
       return null;
     }
-    const t = this.threshold;
-    const voiced = level > t && (clarity > 0.45 || level > t * 1.6);
+
+    const floor = this.floorDb;
+    const margin = this.marginDb;
+    const above = db - floor;
+    const loudEnough = db > MIN_VOICE_DB;
+    // Pitched sound (sung/spoken vowels) counts a little earlier than unpitched noise.
+    const voiced = loudEnough && (above > margin || (clarity > 0.6 && above > margin * 0.6));
     if (voiced) {
-      // Bridge the short dips between syllables: only a real gap restarts the phrase timer.
       if (this.voicedSince === null || now - this.lastVoiced > this.opts.bridgeMs) this.voicedSince = now;
       this.lastVoiced = now;
-      if (!this.inPhrase && now - this.voicedSince >= 150) {
+      if (!this.inPhrase && now - this.voicedSince >= 120) {
         this.inPhrase = true;
         return "phrase-start";
       }
       return null;
     }
-    // Slowly follow changes in room noise while quiet.
-    if (!this.inPhrase && level < t) this.noise = Math.min(0.04, this.noise * 0.995 + level * 0.005);
     if (this.inPhrase && now - this.lastVoiced >= this.opts.gapMs) {
       const length = this.lastVoiced - (this.voicedSince ?? this.lastVoiced);
       this.inPhrase = false;

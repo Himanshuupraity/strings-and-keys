@@ -111,10 +111,32 @@ describe("follow my voice", () => {
     expect(frames(f, 2700, 3600, 0.003, false)).toEqual(["phrase-end"]);
   });
 
-  it("measures room noise robustly even if you start singing during calibration", () => {
+  it("tracks the room level even if you start singing straight away", () => {
     const f = new PhraseFollower();
-    for (let t = 0; t < 1000; t += 20) f.push(t < 600 ? 0.004 : 0.08, 0.9, t);
+    for (let t = 0; t < 1000; t += 20) f.push(t < 400 ? 0.004 : 0.08, 0.9, t);
     expect(f.threshold).toBeLessThan(0.02);
+  });
+
+  it("works with a noisy room / small voice-to-pause difference (+8 dB), as on many laptop mics", () => {
+    const f = new PhraseFollower();
+    frames(f, 0, 700, 0.03);
+    const evs: string[] = [];
+    for (let t = 700; t < 2700; t += 20) {
+      const on = (t - 700) % 220 < 150;
+      const e = f.push(on ? 0.075 : 0.035, on ? 0.7 : 0.2, t);
+      if (e) evs.push(e);
+    }
+    expect(evs).toEqual(["phrase-start"]);
+    expect(frames(f, 2700, 3500, 0.03, false)).toEqual(["phrase-end"]);
+    expect(f.aboveFloorDb).toBeLessThan(3);
+  });
+
+  it("a long sung line with no pause still ends when you breathe, and the next line follows", () => {
+    const f = new PhraseFollower();
+    frames(f, 0, 700, 0.005);
+    expect(frames(f, 700, 6700, 0.06)).toEqual(["phrase-start"]); // 6 s held phrase
+    expect(frames(f, 6700, 7500, 0.005, false)).toEqual(["phrase-end"]);
+    expect(frames(f, 7500, 9000, 0.06)).toEqual(["phrase-start"]);
   });
 
   it("accepts spoken (less pitched) words when loud enough", () => {
@@ -128,7 +150,7 @@ describe("follow my voice", () => {
     frames(f, 0, 1300, 0.004);
     expect(frames(f, 1300, 1500, 0.08)).toEqual(["phrase-start"]);
     expect(frames(f, 1500, 2600, 0.004)).toEqual([]); // 200 ms phrase is too short to count
-    expect(frames(f, 2600, 4000, 0.012, false)).toEqual([]); // unpitched and only just above the noise
+    expect(frames(f, 2600, 4000, 0.006, false)).toEqual([]); // unpitched and only just above the room (+3.5 dB)
   });
 
   it("moves line by line, skipping blanks and sections; instrumental lines wait for the voice", () => {
