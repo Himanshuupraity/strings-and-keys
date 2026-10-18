@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useState } from "react";
 import { ClipboardCheck } from "lucide-react";
@@ -20,6 +21,8 @@ const CHECKLIST = [
 ];
 
 export function ChordCheck() {
+  const tr = useT();
+  const tx = useTx();
   const [chord, setChord] = useState("Em");
   const [checked, setChecked] = useState<boolean[]>(CHECKLIST.map(() => false));
   const [saved, setSaved] = useState<string | null>(null);
@@ -33,13 +36,13 @@ export function ChordCheck() {
   const saveSelf = async () => {
     const n = checked.filter(Boolean).length;
     await saveGuitarResult({ exerciseId: `guitar-chord-${chord}`, skill: "open-chords", input: "self", correct: n, total: CHECKLIST.length, measured: false, details: `self-check ${chord}` });
-    setSaved(`Saved your self-check for ${chord} (${n}/${CHECKLIST.length}).`);
+    setSaved(tr("ui.saved_self_check", { chord, n, total: CHECKLIST.length }));
     ping();
   };
   const saveAudio = async () => {
     if (!cmp) return;
     await saveGuitarResult({ exerciseId: `guitar-chord-audio-${chord}`, skill: "open-chords", input: "mic", correct: cmp.found.length, total: cmp.expected.length, measured: true, details: `audio estimate, confidence ${Math.round(c!.confidence * 100)}%` });
-    setSaved(`Saved the audio estimate for ${chord}: ${cmp.found.length}/${cmp.expected.length} chord tones heard.`);
+    setSaved(tr("ui.saved_audio_estimate", { chord, found: cmp.found.length, total: cmp.expected.length }));
     ping();
   };
 
@@ -48,8 +51,8 @@ export function ChordCheck() {
       <div className="flex flex-wrap items-start gap-4">
         <div className="space-y-2">
           <label className="block space-y-1 text-sm">
-            <span className="block font-medium">Chord</span>
-            <Select aria-label="Chord to check" value={chord} onChange={(e) => { setChord(e.target.value); setChecked(CHECKLIST.map(() => false)); setSaved(null); }}>
+            <span className="block font-medium">{tr("ui.chord")}</span>
+            <Select aria-label={tr("ui.chord_to_check")} value={chord} onChange={(e) => { setChord(e.target.value); setChecked(CHECKLIST.map(() => false)); setSaved(null); }}>
               {OPEN.map((o) => <option key={o}>{o}</option>)}
             </Select>
           </label>
@@ -57,42 +60,42 @@ export function ChordCheck() {
         </div>
         <div className="min-w-64 flex-1 space-y-3">
           <fieldset className="space-y-2 rounded-xl border border-border p-3">
-            <legend className="px-1 text-sm font-medium">Self-check <SourceTag source="self-reported" /></legend>
+            <legend className="px-1 text-sm font-medium">{tr("ui.self_check")} <SourceTag source="self-reported" /></legend>
             {CHECKLIST.map((item, i) => (
               <label key={item} className="flex items-start gap-2 text-sm">
                 <input type="checkbox" className="mt-0.5 accent-[var(--accent)]" checked={checked[i]} onChange={(e) => setChecked((xs) => xs.map((x, j) => (j === i ? e.target.checked : x)))} />
-                {item}
+                {tx(item)}
               </label>
             ))}
-            <Button size="sm" variant="secondary" onClick={saveSelf}><ClipboardCheck className="h-4 w-4" /> Save self-check</Button>
+            <Button size="sm" variant="secondary" onClick={saveSelf}><ClipboardCheck className="h-4 w-4" /> {tr("ui.save_self_check")}</Button>
           </fieldset>
           {shape?.tips && <ul className="list-disc pl-5 text-sm text-muted">{shape.tips.map((t) => <li key={t}>{t}</li>)}</ul>}
         </div>
       </div>
 
       <div className="space-y-3 rounded-xl border border-border p-3">
-        <p className="text-sm font-medium">Optional: let the microphone estimate which notes are sounding</p>
-        <MicButton status={mic.status} error={mic.error} onStart={mic.start} onStop={mic.stop} label="Listen to my chord" />
+        <p className="text-sm font-medium">{tr("ui.optional_let_the_microphone_estimate_which_notes")}</p>
+        <MicButton status={mic.status} error={mic.error} onStart={mic.start} onStop={mic.stop} label={tr("ui.listen_to_my_chord")} />
         {mic.listening && (
           <div className="space-y-2" aria-live="polite">
             <div className="flex items-center gap-2 text-sm">
-              <span className="w-28 text-muted">Confidence</span>
-              <ProgressBar value={c?.confidence ?? 0} className="max-w-xs" label="Detection confidence" tone={reliable ? "success" : "accent"} />
+              <span className="w-28 text-muted">{tr("ui.confidence")}</span>
+              <ProgressBar value={c?.confidence ?? 0} className="max-w-xs" label={tr("ui.detection_confidence")} tone={reliable ? "success" : "accent"} />
               <span className="tabular-nums text-muted">{Math.round((c?.confidence ?? 0) * 100)}%</span>
             </div>
             {cmp ? (
               <div className="flex flex-wrap items-center gap-1.5 text-sm">
-                <span className="text-muted">Heard chord tones:</span>
-                {cmp.expected.map((pc) => <Badge key={pc} tone={cmp.found.includes(pc) ? "success" : "danger"}>{cmp.name(pc)} {cmp.found.includes(pc) ? "✓" : "missing"}</Badge>)}
-                {cmp.unwanted.map((pc) => <Badge key={pc} tone="warn">extra {cmp.name(pc)}</Badge>)}
-                <Button size="sm" variant="ghost" onClick={saveAudio}>Save estimate</Button>
+                <span className="text-muted">{tr("ui.heard_chord_tones")}</span>
+                {cmp.expected.map((pc) => <Badge key={pc} tone={cmp.found.includes(pc) ? "success" : "danger"}>{cmp.name(pc)} {cmp.found.includes(pc) ? "✓" : tr("ui.missing_word")}</Badge>)}
+                {cmp.unwanted.map((pc) => <Badge key={pc} tone="warn">{tr("ui.extra_note", { note: cmp.name(pc) })}</Badge>)}
+                <Button size="sm" variant="ghost" onClick={saveAudio}>{tr("ui.save_estimate")}</Button>
               </div>
             ) : (
-              <p className="text-sm text-muted">Strum the chord firmly and let it ring. If confidence stays low, the sound isn&apos;t clear enough to judge — that&apos;s not a mark against you.</p>
+              <p className="text-sm text-muted">{tr("ui.strum_the_chord_firmly_and_let_it_ring_if_confid")}</p>
             )}
           </div>
         )}
-        <Callout tone="neutral">Chord detection from a microphone is a <strong>best-effort estimate</strong>. Overtones, room noise and quiet strings can fool it, and it can never tell how your fingers are placed. Trust your ears and the self-check too.</Callout>
+        <Callout tone="neutral">{tr("ui.chord_detect_disclaimer")}</Callout>
       </div>
       {saved && <p className="text-sm text-success" role="status">{saved}</p>}
     </div>

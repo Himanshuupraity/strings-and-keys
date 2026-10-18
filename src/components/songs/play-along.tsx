@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTm } from "@/lib/i18n";
 
 import { useMemo, useState } from "react";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
@@ -32,6 +33,8 @@ type Mode = "wait" | "along";
  * and technique (fingering, finger pressure) is never claimed.
  */
 export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow, onPing }: Props) {
+  const tr = useT();
+  const tm = useTm();
   const melody = useMemo(() => timeline.notes.filter((n) => n.midi !== null).map((n) => n.midi!), [timeline]);
   const hasMelody = melody.length > 0;
   const [mode, setMode] = useState<Mode>(hasMelody ? "wait" : "along");
@@ -52,11 +55,11 @@ export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow
       if (!hasMelody || seq.done) return;
       const r = stepSequence(seq, midi);
       setSeq(r.state);
-      if (r.verdict === "correct") setLast({ ok: true, text: `${midiToName(midi)} — correct` });
+      if (r.verdict === "correct") setLast({ ok: true, text: tr("ui.pa_correct", { note: midiToName(midi) }) });
       else if (r.verdict === "wrong" && r.expected !== undefined) {
         const diff = mod12(midi - r.expected);
-        const dir = diff <= 6 ? `${diff} semitone${diff === 1 ? "" : "s"} too high` : `${12 - diff} semitone${12 - diff === 1 ? "" : "s"} too low`;
-        setLast({ ok: false, text: `You played ${midiToName(midi)}; the note is ${midiToName(r.expected)} (${dir}).` });
+        const n = diff <= 6 ? diff : 12 - diff;
+        setLast({ ok: false, text: tm({ key: diff <= 6 ? "ui.pa_too_high" : "ui.pa_too_low", vars: { note: midiToName(midi), target: midiToName(r.expected), semis: { key: n === 1 ? "unit.semitone.one" : "unit.semitone.many", vars: { n } } } }) });
       }
       if (r.state.done && !saved) {
         setSaved(true);
@@ -68,18 +71,18 @@ export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow
     // Play-along: judge against the song position right now.
     const b = beatNow();
     if (!playing || b === null) {
-      setLast({ ok: false, text: "Press Play first — play-along judges your notes against the music as it plays." });
+      setLast({ ok: false, text: tr("ui.press_play_first_play_along_judges_your_notes_ag") });
       return;
     }
     if (hasMelody) {
       const r = judgeMelodyHit(timeline, b, midi);
       setStats((s) => (r.correct ? { ...s, hits: s.hits + 1 } : { ...s, misses: s.misses + 1 }));
-      setLast(r.correct ? { ok: true, text: `${midiToName(midi)} — right note, in time` } : { ok: false, text: r.expected !== null ? `Expected ${midiToName(r.expected)} around now, heard ${midiToName(midi)}.` : `No melody note right now (heard ${midiToName(midi)}).` });
+      setLast(r.correct ? { ok: true, text: tr("ui.pa_right_in_time", { note: midiToName(midi) }) } : { ok: false, text: r.expected !== null ? tr("ui.pa_expected_heard", { exp: midiToName(r.expected), heard: midiToName(midi) }) : tr("ui.pa_no_melody_now", { heard: midiToName(midi) }) });
     } else {
       const c = chordAt(timeline, b).current;
       const ok = !!c && chordPitchClasses(c.chord).includes(mod12(midi));
       setStats((s) => (ok ? { ...s, hits: s.hits + 1 } : { ...s, misses: s.misses + 1 }));
-      setLast(ok ? { ok: true, text: `${midiToName(midi)} belongs to ${c!.chord}` } : { ok: false, text: c ? `${midiToName(midi)} isn't in ${c.chord} (${chordPitchClasses(c.chord).map((p) => midiToName(60 + p).slice(0, -1)).join(" ")})` : "Between chords" });
+      setLast(ok ? { ok: true, text: tr("ui.pa_belongs", { note: midiToName(midi), chord: c!.chord }) } : { ok: false, text: c ? tr("ui.pa_not_in", { note: midiToName(midi), chord: c.chord, notes: chordPitchClasses(c.chord).map((p) => midiToName(60 + p).slice(0, -1)).join(" ") }) : tr("ui.between_chords") });
     }
   };
 
@@ -115,15 +118,15 @@ export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented<Mode>
-          label="Practice mode"
+          label={tr("ui.practice_mode")}
           value={mode}
           onChange={(m) => {
             setMode(m);
             setLast(null);
           }}
           options={[
-            ...(hasMelody ? [{ value: "wait" as Mode, label: "Step-by-step (no timer)" }] : []),
-            { value: "along", label: hasMelody ? "Play along in time" : "Play chord tones in time" },
+            ...(hasMelody ? [{ value: "wait" as Mode, label: tr("ui.step_by_step_no_timer") }] : []),
+            { value: "along", label: hasMelody ? tr("ui.play_along_in_time") : tr("ui.play_chord_tones_in_time") },
           ]}
         />
         <SourceTag source="measured" />
@@ -132,20 +135,20 @@ export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow
       {mode === "wait" && hasMelody && (
         <div className="space-y-2">
           <p className="text-sm text-muted">
-            The next melody note glows orange. Play it — on screen, a MIDI keyboard, or your instrument with the microphone. Any octave counts. Take your time: there’s no timer.
+            {tr("ui.the_next_melody_note_glows_orange_play_it_on_scr")}
           </p>
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <Badge tone="accent">
               Note {Math.min(seq.index + 1, melody.length)} / {melody.length}
             </Badge>
-            {target !== undefined && <span>Next: <strong>{midiToName(target)}</strong></span>}
+            {target !== undefined && <span>{tr("ui.next")} <strong>{midiToName(target)}</strong></span>}
             <Button size="sm" variant="ghost" onClick={() => { setSeq(startSequence(melody, true)); setSaved(false); setLast(null); }}>
-              <RotateCcw className="h-4 w-4" /> Restart
+              <RotateCcw className="h-4 w-4" /> {tr("ui.restart")}
             </Button>
           </div>
           {seq.done && (
             <Callout tone="success" title={`Melody complete — ${Math.round(sequenceAccuracy(seq) * 100)}% right first time`}>
-              {mistakeSummary(seq, (m) => midiToName(m)) ?? "No mistakes. Try play-along mode next to add timing."} Result saved to your progress.
+              {mistakeSummary(seq, (m) => midiToName(m)) ?? tr("ui.no_mistakes_try_play_along_mode_next_to_add_timi")} Result saved to your progress.
             </Callout>
           )}
         </div>
@@ -153,11 +156,11 @@ export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow
 
       {mode === "along" && (
         <div className="flex flex-wrap items-center gap-3 text-sm">
-          <p className="text-muted">{hasMelody ? "Press Play above, then play the melody notes as they come." : "Press Play above, then play any note of the current chord (or strum it on a real guitar with the mic)."}</p>
+          <p className="text-muted">{hasMelody ? tr("ui.press_play_above_then_play_the_melody_notes_as_t") : tr("ui.press_play_above_then_play_any_note_of_the_curre")}</p>
           <Badge tone="success">{stats.hits} hits</Badge>
           <Badge tone="danger">{stats.misses} misses</Badge>
           {acc !== null && <Badge>{Math.round(acc * 100)}% accuracy</Badge>}
-          <Button size="sm" variant="ghost" onClick={() => setStats({ hits: 0, misses: 0 })}>Reset</Button>
+          <Button size="sm" variant="ghost" onClick={() => setStats({ hits: 0, misses: 0 })}>{tr("ui.reset")}</Button>
         </div>
       )}
 
@@ -177,21 +180,21 @@ export function PlayAlong({ songId, timeline, instrument, playing, beat, beatNow
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-border p-3">
-          <p className="mb-2 text-sm font-medium">MIDI keyboard</p>
+          <p className="mb-2 text-sm font-medium">{tr("ui.midi_keyboard")}</p>
           {!midi.supported ? (
-            <p className="text-xs text-muted">Web MIDI isn’t available in this browser (try Chrome or Edge on desktop).</p>
+            <p className="text-xs text-muted">{tr("ui.web_midi_isn_t_available_in_this_browser_try_chr")}</p>
           ) : midi.status === "connected" ? (
-            <p className="text-xs text-success">{midi.devices.length ? `Connected: ${midi.devices.join(", ")}` : "Waiting for a device…"}</p>
+            <p className="text-xs text-success">{midi.devices.length ? `Connected: ${midi.devices.join(", ")}` : tr("ui.waiting_for_a_device")}</p>
           ) : (
-            <Button size="sm" variant="secondary" onClick={() => void midi.connect()}>Connect MIDI</Button>
+            <Button size="sm" variant="secondary" onClick={() => void midi.connect()}>{tr("ui.connect_midi")}</Button>
           )}
           {midi.error && <p className="mt-1 text-xs text-danger">{midi.error}</p>}
         </div>
         <div className="rounded-xl border border-border p-3">
-          <p className="mb-2 text-sm font-medium">Real instrument (microphone)</p>
-          <MicButton status={mic.status} error={mic.error} onStart={() => void mic.start()} onStop={mic.stop} label="Listen to me" />
-          <p className="mt-1 text-xs text-muted">Best for single melody notes played clearly. Chords and noisy rooms can’t be judged reliably by the mic.</p>
-          {mic.listening && mic.pitch?.note && <p className="mt-1 text-xs">Hearing: <strong>{mic.pitch.note.name}</strong>{mic.pitch.stable ? "" : " (unstable)"}</p>}
+          <p className="mb-2 text-sm font-medium">{tr("ui.real_instrument_microphone")}</p>
+          <MicButton status={mic.status} error={mic.error} onStart={() => void mic.start()} onStop={mic.stop} label={tr("ui.listen_to_me")} />
+          <p className="mt-1 text-xs text-muted">{tr("ui.best_for_single_melody_notes_played_clearly_chor")}</p>
+          {mic.listening && mic.pitch?.note && <p className="mt-1 text-xs">{tr("ui.hearing")} <strong>{mic.pitch.note.name}</strong>{mic.pitch.stable ? "" : " (unstable)"}</p>}
         </div>
       </div>
     </div>

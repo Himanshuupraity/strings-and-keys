@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx, useTm } from "@/lib/i18n";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BarChart3, CheckCircle2, Hand, Lock, Mic, Pause, Play, RotateCcw, Sparkles, Timer, Trophy } from "lucide-react";
@@ -58,6 +59,9 @@ const DIFFICULTY: Record<Difficulty, { label: string; audio: AudioOptions; bpm: 
 const CUSTOM_CHORDS = Array.from(new Set(OPEN_SHAPES.filter((s) => s.kind !== "power").map((s) => s.chord)));
 
 export function ChordDrill() {
+  const tr = useT();
+  const tm = useTm();
+  const tx = useTx();
   const drills = useData(() => drillRepo.list(), ["chordDrills"], [] as ChordDrillResult[]);
   const goals = useData(() => goalsRepo.get(), ["goals"], DEFAULT_GOALS);
   const bests = useMemo(() => personalBests(drills.data), [drills.data]);
@@ -143,9 +147,9 @@ export function ChordDrill() {
         untimed: length === "untimed" || undefined,
       });
       setFinished({ result, previousBest: length === "untimed" ? undefined : previousBest, ambiguous });
-      if (length === "timed" && (previousBest === undefined || t.count > previousBest) && t.count > 0) toast.success(`New personal best for ${pair.join(" ↔ ")}: ${t.count}!`);
+      if (length === "timed" && (previousBest === undefined || t.count > previousBest) && t.count > 0) toast.success(tr("ui.new_pb_pair", { pair: pair.join(" ↔ "), n: t.count }));
     },
-    [bests, pair, mode, length],
+    [bests, pair, mode, length, tr],
   );
 
   // Timer reached zero → finish once.
@@ -220,12 +224,12 @@ export function ChordDrill() {
     <div className="space-y-6">
       {/* Pair selection */}
       <Card>
-        <CardHeader icon={<Hand className="h-5 w-5" />} title="1. Choose a chord pair" description="Start with easy pairs. Harder pairs unlock as your scores improve — but you can always practise any pair freely." />
+        <CardHeader icon={<Hand className="h-5 w-5" />} title={tr("ui.1_choose_a_chord_pair")} description={tr("ui.start_with_easy_pairs_harder_pairs_unlock_as_you")} />
         <CardBody className="space-y-4">
           {DRILL_PAIRS.reduce<number[]>((tiers, p) => (tiers.includes(p.tier) ? tiers : [...tiers, p.tier]), []).map((tier) => (
             <div key={tier}>
               <p className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted">
-                {TIER_NAMES[tier]} {tier > tierUnlocked && <Badge><Lock className="h-3 w-3" /> recommended later</Badge>}
+                {tx(TIER_NAMES[tier])} {tier > tierUnlocked && <Badge><Lock className="h-3 w-3" /> {tr("ui.recommended_later")}</Badge>}
               </p>
               <div className="flex flex-wrap gap-2">
                 {DRILL_PAIRS.filter((p) => p.tier === tier).map((p) => {
@@ -249,7 +253,7 @@ export function ChordDrill() {
             </div>
           ))}
           <div className="flex flex-wrap items-end gap-2 border-t border-border pt-3">
-            <span className="text-sm font-medium">Or any two chords:</span>
+            <span className="text-sm font-medium">{tr("ui.or_any_two_chords")}</span>
             {[0, 1].map((i) => (
               <Select key={i} aria-label={`Custom chord ${i + 1}`} disabled={running} value={pair[i]} onChange={(e) => {
                 const p: [string, string] = i === 0 ? [e.target.value, pair[1]] : [pair[0], e.target.value];
@@ -259,13 +263,13 @@ export function ChordDrill() {
               </Select>
             ))}
           </div>
-          {!unlocked && <Callout tone="warn" title="This pair is usually tackled later">Free practice is fine! For faster progress, score {30}+ on two easier pairs first.</Callout>}
+          {!unlocked && <Callout tone="warn" title={tr("ui.this_pair_is_usually_tackled_later")}>{tr("ui.free_practice_fine", { n: 30 })}</Callout>}
         </CardBody>
       </Card>
 
       {/* Learn the shapes */}
       <Card>
-        <CardHeader icon={<Sparkles className="h-5 w-5" />} title="2. Learn and practise each chord on its own" description="Place your fingers, strum once, and check every string rings. Only move on when both chords feel comfortable." />
+        <CardHeader icon={<Sparkles className="h-5 w-5" />} title={tr("ui.2_learn_and_practise_each_chord_on_its_own")} description={tr("ui.place_your_fingers_strum_once_and_check_every_st")} />
         <CardBody>
           <div className="grid gap-4 md:grid-cols-2">
             {pair.map((c, i) => {
@@ -275,10 +279,10 @@ export function ChordDrill() {
                 <div key={c + i} className={cn("flex gap-4 rounded-2xl border p-3 transition-colors", isTarget ? "border-accent bg-accent-soft/40" : "border-border")}>
                   <ChordDiagram chord={c} size="lg" highlight={isTarget} />
                   <div className="min-w-0 flex-1 space-y-2 text-sm">
-                    {s?.tips ? <ul className="list-disc space-y-1 pl-4 text-muted">{s.tips.map((t) => <li key={t}>{t}</li>)}</ul> : <p className="text-muted">Press just behind the frets with your fingertips; keep the thumb relaxed behind the neck.</p>}
+                    {s?.tips ? <ul className="list-disc space-y-1 pl-4 text-muted">{s.tips.map((t) => <li key={t}>{t}</li>)}</ul> : <p className="text-muted">{tr("ui.press_just_behind_the_frets_with_your_fingertips")}</p>}
                     <label className="flex items-center gap-2">
                       <input type="checkbox" className="accent-[var(--accent)]" checked={practised[i]} onChange={(e) => setPractised((p) => (i === 0 ? [e.target.checked, p[1]] : [p[0], e.target.checked]))} />
-                      I can play {c} cleanly <SourceTag source="self-reported" />
+                      {tr("ui.i_can_play_cleanly", { chord: c })} <SourceTag source="self-reported" />
                     </label>
                   </div>
                 </div>
@@ -286,78 +290,78 @@ export function ChordDrill() {
             })}
           </div>
           <p className="mt-3 text-sm text-muted">
-            <strong className="text-text">Tip:</strong> look for a finger that can stay in place or slide along the same string between {pair[0]} and {pair[1]} — it&apos;s your anchor.
+            <strong className="text-text">{tr("ui.tip")}</strong> {tr("ui.anchor_tip", { a: pair[0], b: pair[1] })}
           </p>
         </CardBody>
       </Card>
 
       {/* Drill */}
       <Card>
-        <CardHeader icon={<Timer className="h-5 w-5" />} title="3. The drill" description="Switch back and forth between the two chords. Count one change each time you land the next chord cleanly." />
+        <CardHeader icon={<Timer className="h-5 w-5" />} title={tr("ui.3_the_drill")} description={tr("ui.switch_back_and_forth_between_the_two_chords_cou")} />
         <CardBody className="space-y-5">
           <div className="flex flex-wrap gap-3">
-            <Segmented<Mode> label="Scoring mode" value={mode} onChange={(m) => !running && setMode(m)} options={[
-              { value: "self", label: "Self-reported", icon: <Hand className="h-4 w-4" /> },
-              { value: "audio", label: "Audio-assisted", icon: <Mic className="h-4 w-4" /> },
+            <Segmented<Mode> label={tr("ui.scoring_mode")} value={mode} onChange={(m) => !running && setMode(m)} options={[
+              { value: "self", label: tr("ui.self_reported"), icon: <Hand className="h-4 w-4" /> },
+              { value: "audio", label: tr("ui.audio_assisted"), icon: <Mic className="h-4 w-4" /> },
             ]} />
-            <Segmented<Length> label="Length" value={length} onChange={(l) => { if (!running) { setLength(l); restart(); } }} options={[
-              { value: "timed", label: "60 seconds" },
-              { value: "untimed", label: "Untimed (slow)" },
+            <Segmented<Length> label={tr("ui.length")} value={length} onChange={(l) => { if (!running) { setLength(l); restart(); } }} options={[
+              { value: "timed", label: tr("ui.60_seconds") },
+              { value: "untimed", label: tr("ui.untimed_slow") },
             ]} />
-            <Segmented<Difficulty> label="Difficulty" value={difficulty} onChange={(d) => !running && setDifficulty(d)} options={(Object.keys(DIFFICULTY) as Difficulty[]).map((d) => ({ value: d, label: DIFFICULTY[d].label }))} />
+            <Segmented<Difficulty> label={tr("ui.difficulty")} value={difficulty} onChange={(d) => !running && setDifficulty(d)} options={(Object.keys(DIFFICULTY) as Difficulty[]).map((d) => ({ value: d, label: tx(DIFFICULTY[d].label) }))} />
           </div>
-          <p className="text-xs text-muted">{DIFFICULTY[difficulty].hint} {mode === "self" ? "Tap the button or press Space after each completed change. Your score is self-reported." : "The microphone listens for the next chord. Only clear, confident detections count; you can confirm a change manually if it misses one."}</p>
+          <p className="text-xs text-muted">{tx(DIFFICULTY[difficulty].hint)} {mode === "self" ? tr("ui.tap_the_button_or_press_space_after_each_complet") : tr("ui.mic_listens_next_chord")}</p>
 
           {(!practised[0] || !practised[1]) && timer.status === "idle" && (
-            <Callout tone="info" title="Warm up first">Tick both chords above once you can play them cleanly. Speed comes from clean, relaxed changes — not from rushing.</Callout>
+            <Callout tone="info" title={tr("ui.warm_up_first")}>{tr("ui.tick_both_chords_above_once_you_can_play_them_cl")}</Callout>
           )}
 
           {mode === "audio" && (
             <div className="rounded-xl border border-border p-3">
-              <MicButton status={mic.status} error={mic.error} onStart={mic.start} onStop={mic.stop} label="Turn on the microphone" />
+              <MicButton status={mic.status} error={mic.error} onStart={mic.start} onStop={mic.stop} label={tr("ui.turn_on_the_microphone")} />
               {mic.listening && (
                 <div className="mt-2 flex flex-wrap items-center gap-3 text-sm" aria-live="polite">
-                  <span className="text-muted">Hearing:</span>
-                  <span className="font-semibold">{mic.chroma?.best && (mic.chroma.confidence ?? 0) >= DIFFICULTY[difficulty].audio.threshold ? mic.chroma.best.symbol : "unclear"}</span>
-                  <ProgressBar value={mic.chroma?.confidence ?? 0} className="max-w-40" label="Detection confidence" />
+                  <span className="text-muted">{tr("ui.hearing")}</span>
+                  <span className="font-semibold">{mic.chroma?.best && (mic.chroma.confidence ?? 0) >= DIFFICULTY[difficulty].audio.threshold ? mic.chroma.best.symbol : tr("ui.unclear")}</span>
+                  <ProgressBar value={mic.chroma?.confidence ?? 0} className="max-w-40" label={tr("ui.detection_confidence")} />
                   <span className="tabular-nums text-muted">{Math.round((mic.chroma?.confidence ?? 0) * 100)}% confidence</span>
                 </div>
               )}
-              {mic.error && <p className="mt-2 text-sm text-muted">You can still use Self-reported mode.</p>}
-              <p className="mt-2 text-xs text-muted">Audio chord detection is a best-effort estimate. It cannot check finger placement, and noisy or quiet strums are ignored rather than guessed.</p>
+              {mic.error && <p className="mt-2 text-sm text-muted">{tr("ui.you_can_still_use_self_reported_mode")}</p>}
+              <p className="mt-2 text-xs text-muted">{tr("ui.audio_chord_detection_is_a_best_effort_estimate")}</p>
             </div>
           )}
 
           {/* Big display */}
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-2xl bg-surface-2 p-4 text-center">
-              <p className="text-xs uppercase tracking-wide text-muted">{length === "timed" ? "Time left" : "Time"}</p>
+              <p className="text-xs uppercase tracking-wide text-muted">{length === "timed" ? tr("ui.time_left") : tr("ui.time")}</p>
               <p className="font-mono text-5xl font-semibold tabular-nums" role="timer" aria-live="off" data-testid="drill-clock">
                 {length === "timed" ? formatClock(timer.status === "idle" ? 60_000 : remaining) : formatClock(elapsed)}
               </p>
-              {length === "timed" && <ProgressBar value={timer.status === "idle" ? 1 : remaining / 60_000} className="mt-2" tone="guitar" label="Time remaining" />}
+              {length === "timed" && <ProgressBar value={timer.status === "idle" ? 1 : remaining / 60_000} className="mt-2" tone="guitar" label={tr("ui.time_remaining")} />}
             </div>
             <div key={trans.count} className={cn("rounded-2xl bg-surface-2 p-4 text-center", trans.count > 0 && "animate-pop")}>
-              <p className="text-xs uppercase tracking-wide text-muted">Changes</p>
+              <p className="text-xs uppercase tracking-wide text-muted">{tr("ui.changes")}</p>
               <p className="text-6xl font-bold tabular-nums text-guitar" aria-live="polite" data-testid="drill-count">{trans.count}</p>
-              <p className="text-xs text-muted">{mode === "self" ? "self-reported" : `${trans.byAudio} by audio · ${trans.manual} manual`}</p>
+              <p className="text-xs text-muted">{mode === "self" ? tr("ui.self_reported_2") : tr("ui.by_audio_manual", { audio: trans.byAudio, manual: trans.manual })}</p>
             </div>
             <div className="rounded-2xl bg-surface-2 p-4 text-center">
-              <p className="text-xs uppercase tracking-wide text-muted">{running ? "Change to" : "Start on"}</p>
+              <p className="text-xs uppercase tracking-wide text-muted">{running ? tr("ui.change_to") : tr("ui.start_on")}</p>
               <p className="text-5xl font-bold">{running ? target : pair[0]}</p>
-              <p className="text-xs text-muted">{running ? `now holding ${holding}` : `then switch to ${pair[1]}`}</p>
+              <p className="text-xs text-muted">{running ? tr("ui.now_holding", { chord: holding }) : tr("ui.then_switch_to", { chord: pair[1] })}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {timer.status === "idle" && <Button size="lg" onClick={start} data-testid="drill-start"><Play className="h-5 w-5" /> Start</Button>}
-            {timer.status === "running" && <Button size="lg" variant="secondary" onClick={pause} data-testid="drill-pause"><Pause className="h-5 w-5" /> Pause</Button>}
-            {timer.status === "paused" && <Button size="lg" onClick={resume} data-testid="drill-resume"><Play className="h-5 w-5" /> Resume</Button>}
-            {timer.status !== "idle" && <Button size="lg" variant="ghost" onClick={restart} data-testid="drill-restart"><RotateCcw className="h-5 w-5" /> Restart</Button>}
-            {length === "untimed" && (timer.status === "running" || timer.status === "paused") && <Button size="lg" variant="success" onClick={finishUntimed}><CheckCircle2 className="h-5 w-5" /> Finish</Button>}
+            {timer.status === "idle" && <Button size="lg" onClick={start} data-testid="drill-start"><Play className="h-5 w-5" /> {tr("common.start")}</Button>}
+            {timer.status === "running" && <Button size="lg" variant="secondary" onClick={pause} data-testid="drill-pause"><Pause className="h-5 w-5" /> {tr("sheet.pause")}</Button>}
+            {timer.status === "paused" && <Button size="lg" onClick={resume} data-testid="drill-resume"><Play className="h-5 w-5" /> {tr("ui.resume")}</Button>}
+            {timer.status !== "idle" && <Button size="lg" variant="ghost" onClick={restart} data-testid="drill-restart"><RotateCcw className="h-5 w-5" /> {tr("ui.restart")}</Button>}
+            {length === "untimed" && (timer.status === "running" || timer.status === "paused") && <Button size="lg" variant="success" onClick={finishUntimed}><CheckCircle2 className="h-5 w-5" /> {tr("lesson.finish")}</Button>}
             {running && (
               <Button size="lg" variant="outline" className="min-w-48 border-guitar text-guitar" onClick={countChange} data-testid="drill-tap">
-                <Hand className="h-5 w-5" /> {mode === "self" ? "Changed! (Space)" : "Confirm change manually"}
+                <Hand className="h-5 w-5" /> {mode === "self" ? tr("ui.changed_space") : tr("ui.confirm_change_manually")}
               </Button>
             )}
           </div>
@@ -368,21 +372,21 @@ export function ChordDrill() {
       {/* Result */}
       {finished && (
         <Card className="border-guitar/40">
-          <CardHeader icon={<Trophy className="h-5 w-5" />} title={`${finished.result.transitions} change${finished.result.transitions === 1 ? "" : "s"}${finished.result.untimed ? ` in ${finished.result.durationSec}s (untimed)` : " in 60 seconds"}`} description={`${pair[0]} ↔ ${pair[1]}`} action={<SourceTag source={finished.result.mode === "self" ? "self-reported" : "measured"} />} />
+          <CardHeader icon={<Trophy className="h-5 w-5" />} title={finished.result.untimed ? tr(finished.result.transitions === 1 ? "ui.change_untimed" : "ui.changes_untimed", { n: finished.result.transitions, sec: finished.result.durationSec }) : tr(finished.result.transitions === 1 ? "ui.change_in_60" : "ui.changes_in_60", { n: finished.result.transitions })} description={`${pair[0]} ↔ ${pair[1]}`} action={<SourceTag source={finished.result.mode === "self" ? "self-reported" : "measured"} />} />
           <CardBody className="space-y-3 text-sm">
             <div className="flex flex-wrap gap-2">
-              {best !== undefined && <Badge tone="guitar">Personal best: {Math.max(best, finished.result.untimed ? 0 : finished.result.transitions)}</Badge>}
-              {finished.result.mode === "audio" && <Badge>Audio-confirmed {finished.result.confirmedByAudio ?? 0} · manual {finished.result.confirmedManually ?? 0}</Badge>}
-              {finished.result.cleanRate !== undefined && <Badge tone="success">Clean-detection rate {Math.round(finished.result.cleanRate * 100)}%</Badge>}
+              {best !== undefined && <Badge tone="guitar">{tr("ui.personal_best_n", { n: Math.max(best, finished.result.untimed ? 0 : finished.result.transitions) })}</Badge>}
+              {finished.result.mode === "audio" && <Badge>{tr("ui.audio_confirmed_manual", { audio: finished.result.confirmedByAudio ?? 0, manual: finished.result.confirmedManually ?? 0 })}</Badge>}
+              {finished.result.cleanRate !== undefined && <Badge tone="success">{tr("ui.clean_detection_rate", { pct: Math.round(finished.result.cleanRate * 100) })}</Badge>}
             </div>
             <ul className="list-disc space-y-1 pl-5 text-muted">
-              {drillSuggestions(finished.result.transitions, finished.previousBest, finished.result.mode, finished.ambiguous).map((s) => <li key={s}>{s}</li>)}
+              {drillSuggestions(finished.result.transitions, finished.previousBest, finished.result.mode, finished.ambiguous).map((s) => <li key={s.key}>{tm(s)}</li>)}
             </ul>
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button onClick={start}><RotateCcw className="h-4 w-4" /> Repeat this pair</Button>
-              {pairKey(rec.pair) !== pairKey(pair) && <Button variant="secondary" onClick={() => choosePair(rec.pair)}>Try {rec.pair[0]} ↔ {rec.pair[1]}</Button>}
+              <Button onClick={start}><RotateCcw className="h-4 w-4" /> {tr("ui.repeat_this_pair")}</Button>
+              {pairKey(rec.pair) !== pairKey(pair) && <Button variant="secondary" onClick={() => choosePair(rec.pair)}>{tr("ui.try_pair", { a: rec.pair[0], b: rec.pair[1] })}</Button>}
             </div>
-            <p className="text-xs text-muted">Recommended next: <strong className="text-text">{rec.pair.join(" ↔ ")}</strong> — {rec.reason}</p>
+            <p className="text-xs text-muted">{tr("ui.recommended_next")} <strong className="text-text">{rec.pair.join(" ↔ ")}</strong> — {tx(rec.reason)}</p>
           </CardBody>
         </Card>
       )}
@@ -390,36 +394,36 @@ export function ChordDrill() {
       {/* History & goal */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader icon={<BarChart3 className="h-5 w-5" />} title={`History: ${pair[0]} ↔ ${pair[1]}`} description="Your last ten timed drills for this pair." />
+          <CardHeader icon={<BarChart3 className="h-5 w-5" />} title={tr("ui.history_pair", { a: pair[0], b: pair[1] })} description={tr("ui.your_last_ten_timed_drills_for_this_pair")} />
           <CardBody>
             {timedHistory.length === 0 ? (
-              <EmptyState title="No timed drills yet" description="Your scores for this pair will appear here." />
+              <EmptyState title={tr("ui.no_timed_drills_yet")} description={tr("ui.your_scores_for_this_pair_will_appear_here")} />
             ) : (
-              <div className="flex h-40 items-end gap-2" role="img" aria-label={`Scores: ${timedHistory.map((d) => d.transitions).join(", ")}`}>
+              <div className="flex h-40 items-end gap-2" role="img" aria-label={tr("ui.scores_list", { list: timedHistory.map((d) => d.transitions).join(", ") })}>
                 {timedHistory.map((d) => {
                   const max = Math.max(...timedHistory.map((x) => x.transitions), 1);
                   return (
                     <div key={d.id} className="flex flex-1 flex-col items-center gap-1">
                       <span className="text-xs tabular-nums text-muted">{d.transitions}</span>
-                      <div className={cn("w-full rounded-t-md", d.mode === "self" ? "bg-guitar/70" : "bg-success/70")} style={{ height: `${(d.transitions / max) * 100}%`, minHeight: 4 }} title={`${new Date(d.date).toLocaleString()} · ${d.mode === "self" ? "self-reported" : "audio-assisted"}`} />
+                      <div className={cn("w-full rounded-t-md", d.mode === "self" ? "bg-guitar/70" : "bg-success/70")} style={{ height: `${(d.transitions / max) * 100}%`, minHeight: 4 }} title={`${new Date(d.date).toLocaleString()} · ${d.mode === "self" ? tr("ui.self_reported_2") : tr("ui.audio_assisted_2")}`} />
                       <span className="text-[10px] text-subtle">{new Date(d.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
                     </div>
                   );
                 })}
               </div>
             )}
-            <p className="mt-2 text-xs text-muted"><span className="inline-block h-2 w-2 rounded-sm bg-guitar/70" /> self-reported · <span className="inline-block h-2 w-2 rounded-sm bg-success/70" /> audio-assisted</p>
+            <p className="mt-2 text-xs text-muted"><span className="inline-block h-2 w-2 rounded-sm bg-guitar/70" /> {tr("ui.self_reported_2")} · <span className="inline-block h-2 w-2 rounded-sm bg-success/70" /> {tr("ui.audio_assisted_2")}</p>
           </CardBody>
         </Card>
         <Card>
-          <CardHeader icon={<Trophy className="h-5 w-5" />} title="This week" description="Short, regular drills beat one long session." />
+          <CardHeader icon={<Trophy className="h-5 w-5" />} title={tr("dash.thisWeek")} description={tr("ui.short_regular_drills_beat_one_long_session")} />
           <CardBody className="space-y-3 text-sm">
             <div>
-              <div className="mb-1 flex justify-between"><span>Drills this week</span><span className="tabular-nums text-muted">{week.drills} / {goals.data.weeklyChordDrills} goal</span></div>
-              <ProgressBar value={goals.data.weeklyChordDrills ? week.drills / goals.data.weeklyChordDrills : 1} tone="guitar" label="Weekly chord drill goal" />
+              <div className="mb-1 flex justify-between"><span>{tr("ui.drills_this_week")}</span><span className="tabular-nums text-muted">{tr("ui.drills_goal", { n: week.drills, goal: goals.data.weeklyChordDrills })}</span></div>
+              <ProgressBar value={goals.data.weeklyChordDrills ? week.drills / goals.data.weeklyChordDrills : 1} tone="guitar" label={tr("ui.weekly_chord_drill_goal")} />
             </div>
-            <p className="text-muted">{week.transitions} chord changes practised in the last 7 days.</p>
-            <p className="text-muted">Unlocked level: <strong className="text-text">{TIER_NAMES[tierUnlocked]}</strong>. Score 30+ on two pairs in a level to unlock the next one.</p>
+            <p className="text-muted">{tr("ui.changes_last_7", { n: week.transitions })}</p>
+            <p className="text-muted">{tr("ui.unlocked_level")} <strong className="text-text">{tx(TIER_NAMES[tierUnlocked])}</strong>{tr("ui.score_30_on_two_pairs_in_a_level_to_unlock_the_n")}</p>
           </CardBody>
         </Card>
       </div>

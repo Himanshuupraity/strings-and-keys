@@ -1,4 +1,5 @@
 "use client";
+import { lessonText, useLang, useT, useTm } from "@/lib/i18n";
 
 import Link from "next/link";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
@@ -18,7 +19,8 @@ import { STANDARD_TUNING, positionsOfMidi } from "@/lib/music/guitar";
 import { midiToName, mod12 } from "@/lib/music/notes";
 import { mistakeSummary } from "@/lib/exercises/sequence";
 import { coachReducer, currentExercise, initialSession, ladderFor, type AttemptResult, type CoachExercise } from "@/lib/coach/session";
-import { summarizeResults } from "@/lib/coach/analysis";
+import { summarizeResultsMessages } from "@/lib/coach/analysis";
+import { COACH_HI } from "@/content/i18n/coach-hi";
 import { exerciseRepo, profileRepo, progressRepo } from "@/lib/storage/repositories";
 import { nextLesson } from "@/lib/progress/engine";
 import { LESSONS } from "@/content/curriculum";
@@ -40,6 +42,9 @@ function positionFor(ex: CoachExercise, i: number) {
 }
 
 export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void }) {
+  const tr = useT();
+  const tm = useTm();
+  const lang = useLang();
   const [prefs] = usePrefs();
   const [state, dispatch] = useReducer(coachReducer, prefs.instrument, (i) => initialSession(i));
   const ex = currentExercise(state);
@@ -245,20 +250,22 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
   const { data: progress } = useData(() => progressRepo.all(), ["lessonProgress"], {});
   const { data: profile } = useData(() => profileRepo.get(), ["profile"], undefined);
   const suggested = nextLesson(LESSONS, progress, [state.instrument, "theory"], profile?.placement);
+  const coachText = (x: { id: string; title: string; explain: string; hint: string }) => (lang === "hi" && COACH_HI[x.id]) || x;
+  const summary = summarizeResultsMessages(state.results.map((r) => ({ ...r, title: lang === "hi" ? (COACH_HI[r.exerciseId]?.title ?? r.title) : r.title }))).map(tm).join(" ");
 
   if (state.phase === "complete") {
     return (
       <Card>
-        <CardHeader icon={<Sparkles className="h-5 w-5" />} title="You finished the coach ladder!" description="Every exercise in this set is done." />
+        <CardHeader icon={<Sparkles className="h-5 w-5" />} title={tr("ui.you_finished_the_coach_ladder")} description={tr("ui.every_exercise_in_this_set_is_done")} />
         <CardBody className="space-y-4">
-          <p className="text-sm">{summarizeResults(state.results)}</p>
+          <p className="text-sm">{summary}</p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => dispatch({ type: "GOTO", index: 0 })}>
-              <RotateCcw className="h-4 w-4" /> Start again
+              <RotateCcw className="h-4 w-4" /> {tr("ui.start_again")}
             </Button>
             {suggested && (
               <Link href={`/lesson/${suggested.id}`} className="inline-flex h-10 items-center gap-2 rounded-xl border border-border-strong px-4 text-sm font-medium hover:bg-surface-2">
-                Next lesson: {suggested.title} <ArrowRight className="h-4 w-4" />
+                {tr("ui.next_lesson_x", { title: lessonText(suggested, lang).title })} <ArrowRight className="h-4 w-4" />
               </Link>
             )}
           </div>
@@ -271,29 +278,29 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
     <Card className="overflow-hidden">
       <CardHeader
         icon={<BookOpenCheck className="h-5 w-5" />}
-        title="Lesson coach"
+        title={tr("ui.lesson_coach")}
         description={`Step ${state.index + 1} of ${ladder.length} · ${state.instrument === "guitar" ? "Guitar" : "Piano"}`}
         action={<Badge tone={state.instrument}>{ex.skill}</Badge>}
       />
       <CardBody className="space-y-4">
-        <ProgressBar value={state.index / ladder.length} tone={state.instrument} label="Coach ladder progress" />
+        <ProgressBar value={state.index / ladder.length} tone={state.instrument} label={tr("ui.coach_ladder_progress")} />
 
         {/* Teacher speech */}
         <div className="rounded-2xl bg-surface-2 p-4" aria-live="polite">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{ex.title}</p>
-          <p className="mt-1.5 leading-relaxed">{ex.explain}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent">{coachText(ex).title}</p>
+          <p className="mt-1.5 leading-relaxed">{coachText(ex).explain}</p>
           {state.hintShown && (
             <p className="mt-3 flex gap-2 rounded-xl bg-warn-soft p-3 text-sm">
-              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warn" /> {ex.hint}
+              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-warn" /> {coachText(ex).hint}
             </p>
           )}
           {state.phase === "try" && !fb && (
             <p className="mt-3 text-sm font-medium text-accent">
               {ex.kind === "chord"
                 ? state.instrument === "piano"
-                  ? "Your turn: hold the chord keys together (on screen, MIDI) — or play it on your real piano with the mic on."
-                  : "Your turn: strum the chord on your guitar with the mic on — or build the shape on the fretboard below and press Check."
-                : `Your turn: play ${ex.targets.length > 1 ? `note ${doneCount + 1} of ${ex.targets.length}` : "the note"} — on screen, a MIDI keyboard, or your real instrument with the mic on.`}
+                  ? tr("ui.your_turn_hold_the_chord_keys_together_on_screen")
+                  : tr("ui.your_turn_strum_the_chord_on_your_guitar_with_th")
+                : ex.targets.length > 1 ? tr("ui.your_turn_note_of", { i: doneCount + 1, n: ex.targets.length }) : tr("ui.your_turn_the_note")}
             </p>
           )}
         </div>
@@ -303,27 +310,27 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
           <div className={cn("rounded-2xl border p-4", fb.verdict === "correct" ? "border-success/40 bg-success-soft" : fb.verdict === "uncertain" ? "border-border bg-surface-2" : fb.verdict === "wrong" ? "border-danger/30 bg-danger-soft" : "border-warn/30 bg-warn-soft")} role="status" data-testid="coach-feedback">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className={cn("flex items-center gap-2 font-semibold", V.cls)}>
-                <V.icon className="h-5 w-5" /> {fb.title}
+                <V.icon className="h-5 w-5" /> {fb.titleMsg ? tm(fb.titleMsg) : fb.title}
               </p>
               {fb.verdict !== "uncertain" && <SourceTag source={state.lastInput === "virtual" || state.lastInput === "midi" || state.lastInput === "mic" ? "measured" : "rules"} />}
             </div>
-            <p className="mt-1.5 text-sm">{fb.detail}</p>
+            <p className="mt-1.5 text-sm">{fb.detailMsg ? tm(fb.detailMsg) : fb.detail}</p>
             {fb.tip && (
               <p className="mt-2 flex gap-2 text-sm text-muted">
                 <MessageCircleQuestion className="mt-0.5 h-4 w-4 shrink-0" /> <span>
-                  <span className="font-medium text-text">Coaching tip: </span>
-                  {fb.tip}
+                  <span className="font-medium text-text">{tr("ui.coaching_tip_2")} </span>
+                  {fb.tipMsg ? tm(fb.tipMsg) : fb.tip}
                 </span>
               </p>
             )}
             {fb.link && (
               <Link href={fb.link.href} className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
-                {fb.link.label} <ArrowRight className="h-3.5 w-3.5" />
+                {fb.link.labelKey ? tr(fb.link.labelKey) : fb.link.label} <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             )}
             {state.lastInput && fb.verdict !== "uncertain" && (
               <p className="mt-2 text-xs text-muted">
-                Measured from {state.lastInput === "mic" ? "the microphone (pitch detection)" : state.lastInput === "midi" ? "your MIDI keyboard" : "the on-screen instrument"}. Technique such as finger pressure or posture can&apos;t be measured — use the self-check tips.
+                {tr(state.lastInput === "mic" ? "ui.measured_from_mic_coach" : state.lastInput === "midi" ? "ui.measured_from_midi_coach" : "ui.measured_from_screen_coach")}
               </p>
             )}
           </div>
@@ -331,8 +338,8 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
 
         {/* Played notes trail */}
         {ex.kind !== "chord" && state.played.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 text-sm" aria-label="Notes you played">
-            <span className="text-muted">You played:</span>
+          <div className="flex flex-wrap items-center gap-1.5 text-sm" aria-label={tr("ui.notes_you_played")}>
+            <span className="text-muted">{tr("ui.you_played")}</span>
             {state.played.map((p, i) => (
               <Badge key={i} tone={p.ok ? "success" : "danger"}>
                 <NoteText midi={p.midi} withOctave mode="western" />
@@ -343,13 +350,13 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
 
         {/* Suggestion from adaptation */}
         {state.suggestion && state.phase === "feedback" && (
-          <Callout tone="info" icon={<Sparkles className="h-4 w-4 text-piano" />} title={state.suggestion === "harder" ? "That was perfect — ready for something harder?" : "This one's tricky. Want to go back a step?"}>
+          <Callout tone="info" icon={<Sparkles className="h-4 w-4 text-piano" />} title={state.suggestion === "harder" ? tr("ui.that_was_perfect_ready_for_something_harder") : tr("ui.this_one_s_tricky_want_to_go_back_a_step")}>
             <div className="mt-2 flex gap-2">
               <Button size="sm" onClick={() => dispatch({ type: state.suggestion === "harder" ? "HARDER" : "EASIER" })}>
-                {state.suggestion === "harder" ? "Make it harder" : "Make it easier"}
+                {state.suggestion === "harder" ? tr("ui.make_it_harder") : tr("ui.make_it_easier")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => dispatch({ type: "RETRY" })}>
-                Stay here
+                {tr("ui.stay_here")}
               </Button>
             </div>
           </Callout>
@@ -361,11 +368,11 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
             <>
               {fb?.verdict === "correct" || fb?.verdict === "close" ? (
                 <Button onClick={() => dispatch({ type: "NEXT" })} data-testid="coach-next">
-                  Next exercise <ArrowRight className="h-4 w-4" />
+                  {tr("ui.next_exercise")} <ArrowRight className="h-4 w-4" />
                 </Button>
               ) : null}
               <Button variant={fb?.verdict === "correct" ? "secondary" : "primary"} onClick={() => dispatch({ type: "RETRY" })} data-testid="coach-retry">
-                <RotateCcw className="h-4 w-4" /> Try again
+                <RotateCcw className="h-4 w-4" /> {tr("ui.try_again")}
               </Button>
             </>
           ) : state.phase !== "try" ? (
@@ -374,25 +381,25 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
             </Button>
           ) : null}
           <Button variant="secondary" onClick={() => void demo()}>
-            <Play className="h-4 w-4" /> Play an example
+            <Play className="h-4 w-4" /> {tr("lesson.playExample")}
           </Button>
           <Button variant="ghost" onClick={() => dispatch({ type: "EXPLAIN" })}>
-            Explain again
+            {tr("lesson.explainAgain")}
           </Button>
           <Button variant="ghost" onClick={() => dispatch({ type: "HINT" })} disabled={state.hintShown}>
-            <Lightbulb className="h-4 w-4" /> Give me a hint
+            <Lightbulb className="h-4 w-4" /> {tr("lesson.hint")}
           </Button>
         </div>
 
-        <MicButton status={micStatus.status} error={micStatus.error} onStart={() => void listen()} onStop={stopMic} label="Listen to me" />
-        {ex.kind === "chord" && <p className="-mt-1 text-xs text-muted">Chord listening is a best-effort estimate with a confidence check. If it isn&apos;t sure, it will ask you to replay rather than guess.</p>}
+        <MicButton status={micStatus.status} error={micStatus.error} onStart={() => void listen()} onStop={stopMic} label={tr("ui.listen_to_me")} />
+        {ex.kind === "chord" && <p className="-mt-1 text-xs text-muted">{tr("ui.chord_listening_is_a_best_effort_estimate_with_a")}</p>}
         {input.midi.supported && (
           <div className="flex flex-wrap items-center gap-2 text-sm">
             {input.midi.status === "connected" ? (
               <Badge tone="success">MIDI: {input.midi.devices.join(", ") || "waiting for a device"}</Badge>
             ) : (
               <Button size="sm" variant="outline" onClick={() => void input.midi.connect()}>
-                Connect MIDI keyboard
+                {tr("ui.connect_midi_keyboard")}
               </Button>
             )}
             {input.midi.error && <span className="text-danger">{input.midi.error}</span>}
@@ -411,7 +418,7 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
             fingers={pianoFingers}
             pressed={input.midi.held}
             labels="white"
-            ariaLabel="Practice keyboard"
+            ariaLabel={tr("ui.practice_keyboard")}
             onNoteOn={(m) => {
               ping();
               if (ex.kind === "chord") setHeldVirtual((h) => new Set(h).add(m));
@@ -431,7 +438,7 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
               frets={12}
               marks={fretMarks}
               activeString={activeString}
-              ariaLabel="Practice fretboard"
+              ariaLabel={tr("ui.practice_fretboard")}
               onPlay={({ string, fret, midi }) => {
                 ping();
                 if (ex.kind === "chord") {
@@ -448,12 +455,12 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
             {ex.kind === "chord" && state.phase === "try" && (
               <div className="flex flex-wrap items-center gap-2">
                 <Button size="sm" onClick={checkGuitarChord} disabled={Object.keys(guitarShape).length < 3}>
-                  Check my shape
+                  {tr("ui.check_my_shape")}
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => void strum(Object.entries(guitarShape).map(([s, f]) => STANDARD_TUNING[Number(s)] + f))} disabled={!Object.keys(guitarShape).length}>
-                  Strum my shape
+                  {tr("ui.strum_my_shape")}
                 </Button>
-                <span className="text-xs text-muted">Tap one fret per string you want to ring (tap again to remove). Unselected strings count as muted.</span>
+                <span className="text-xs text-muted">{tr("ui.tap_one_fret_per_string_you_want_to_ring_tap_aga")}</span>
               </div>
             )}
           </div>
@@ -463,32 +470,32 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-4">
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => dispatch({ type: "EASIER" })} disabled={state.index === 0}>
-              <ChevronDown className="h-4 w-4" /> Make it easier
+              <ChevronDown className="h-4 w-4" /> {tr("ui.make_it_easier")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => dispatch({ type: "HARDER" })}>
-              <ChevronUp className="h-4 w-4" /> Make it harder
+              <ChevronUp className="h-4 w-4" /> {tr("ui.make_it_harder")}
             </Button>
           </div>
           <Button size="sm" variant="ghost" onClick={() => setShowSummary((v) => !v)} aria-expanded={showSummary}>
-            Practice summary
+            {tr("ui.practice_summary")}
           </Button>
         </div>
         {showSummary && (
           <div className="space-y-3 rounded-2xl bg-surface-2 p-4 text-sm" data-testid="coach-summary">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">This session</span>
+              <span className="font-semibold">{tr("ui.this_session")}</span>
               <SourceTag source="measured" />
             </div>
-            <p>{summarizeResults(state.results)}</p>
+            <p>{summary}</p>
             {suggested ? (
               <p>
-                Suggested next lesson:{" "}
+                {tr("ui.suggested_next_lesson")}{" "}
                 <Link href={`/lesson/${suggested.id}`} className="font-medium text-accent hover:underline">
-                  {suggested.title}
+                  {lessonText(suggested, lang).title}
                 </Link>
               </p>
             ) : (
-              <p className="text-muted">Browse the curriculum for your next lesson.</p>
+              <p className="text-muted">{tr("ui.browse_the_curriculum_for_your_next_lesson")}</p>
             )}
           </div>
         )}

@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx, lessonText, useLang } from "@/lib/i18n";
 
 import Link from "next/link";
 import { useMemo } from "react";
@@ -12,6 +13,9 @@ import { currentLevel, summarizeLevels } from "./lesson-state";
 import { CompletionCriteria, LevelSection } from "./level-section";
 
 export function CoursePage({ instrument }: { instrument: "guitar" | "piano" }) {
+  const tr = useT();
+  const lang = useLang();
+  const tx = useTx();
   const [prefs, setPrefs] = usePrefs();
   const { progress, placement, loading } = useLearningData();
   const lessons = useMemo(() => lessonsForInstrument(instrument), [instrument]);
@@ -26,20 +30,20 @@ export function CoursePage({ instrument }: { instrument: "guitar" | "piano" }) {
   return (
     <div>
       <Link href="/learn" className="mb-4 -ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
-        <ArrowLeft className="h-4 w-4" /> All courses
+        <ArrowLeft className="h-4 w-4" /> {tr("ui.all_courses")}
       </Link>
       <PageHeader
-        eyebrow={instrument === "guitar" ? "Guitar course" : "Piano & keyboard course"}
+        eyebrow={instrument === "guitar" ? tr("ui.guitar_course") : tr("ui.piano_keyboard_course")}
         title={course.title}
-        description={`${course.description} Includes the shared music-theory lessons.`}
+        description={tr("ui.includes_shared_theory", { desc: tx(course.description) })}
         actions={
           prefs.instrument !== instrument ? (
             <Button onClick={() => setPrefs({ instrument })}>
-              <Icon className="h-4 w-4" /> Switch to {instrument} mode
+              <Icon className="h-4 w-4" /> {tr(instrument === "guitar" ? "ui.switch_to_guitar_mode" : "ui.switch_to_piano_mode")}
             </Button>
           ) : next ? (
             <Link href={`/lesson/${next.id}`}>
-              <Button>Continue: {next.title}</Button>
+              <Button>{tr("ui.continue_x", { title: lessonText(next, lang).title })}</Button>
             </Link>
           ) : null
         }
@@ -53,7 +57,7 @@ export function CoursePage({ instrument }: { instrument: "guitar" | "piano" }) {
             <p className="text-sm font-medium">
               {done} of {total} lessons completed
             </p>
-            {loading ? <Skeleton className="mt-2 h-2" /> : <ProgressBar className="mt-2" value={total ? done / total : 0} tone={instrument} label="Course progress" />}
+            {loading ? <Skeleton className="mt-2 h-2" /> : <ProgressBar className="mt-2" value={total ? done / total : 0} tone={instrument} label={tr("ui.course_progress")} />}
           </div>
         </div>
         <div className="mt-4">
@@ -67,7 +71,7 @@ export function CoursePage({ instrument }: { instrument: "guitar" | "piano" }) {
           ))}
         </div>
       ) : levels.length === 0 ? (
-        <Callout title="No lessons yet">The curriculum for this course is still loading.</Callout>
+        <Callout title={tr("ui.no_lessons_yet")}>{tr("ui.the_curriculum_for_this_course_is_still_loading")}</Callout>
       ) : (
         <div className="space-y-3">
           {levels.map((s) => (

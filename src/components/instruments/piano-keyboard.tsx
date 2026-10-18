@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { blackKeyOffset, COMPUTER_KEY_MAP, keysInRange } from "@/lib/music/keyboard";
@@ -69,8 +70,9 @@ export function PianoKeyboard({
   height = 190,
   focusMidi,
   className,
-  ariaLabel = "Piano keyboard",
+  ariaLabel,
 }: PianoKeyboardProps) {
+  const tr = useT();
   const [prefs] = usePrefs();
   const mode = labelMode ?? prefs.labelMode;
   const keys = useMemo(() => keysInRange(low, high), [low, high]);
@@ -222,7 +224,7 @@ export function PianoKeyboard({
       <div ref={scroller} className="scrollbar-thin overflow-x-auto overflow-y-hidden rounded-2xl border border-border bg-[var(--key-black)] p-2 pt-3 shadow-card">
         <div
           role="group"
-          aria-label={ariaLabel}
+          aria-label={ariaLabel ?? tr("ui.piano_keyboard_2")}
           className="relative mx-auto touch-none select-none"
           style={{ width: totalW, height }}
           onPointerUp={pointerUp}
@@ -262,7 +264,7 @@ export function PianoKeyboard({
                   style={{ left: k.whiteIndex * whiteKeyWidth, width: whiteKeyWidth, height }}
                 >
                   {finger !== undefined && <span className="mb-1 flex h-5 w-5 items-center justify-center rounded-full bg-piano text-[11px] font-bold text-white">{finger}</span>}
-                  {k.isMiddleC && <span className="mb-1 h-1.5 w-1.5 rounded-full bg-accent" title="Middle C" aria-hidden />}
+                  {k.isMiddleC && <span className="mb-1 h-1.5 w-1.5 rounded-full bg-accent" title={tr("ui.middle_c")} aria-hidden />}
                   {showLabel(k.midi, false) && renderLabel(k.midi, false)}
                 </button>
               );
@@ -301,7 +303,7 @@ export function PianoKeyboard({
       </div>
       {computerKeyboard && (
         <p className="mt-2 text-xs text-muted">
-          Computer keys: <kbd className="rounded bg-surface-2 px-1">A</kbd>–<kbd className="rounded bg-surface-2 px-1">;</kbd> white keys, <kbd className="rounded bg-surface-2 px-1">W E T Y U O P</kbd> black keys, starting at <strong>{midiToName(baseC)}</strong>. <kbd className="rounded bg-surface-2 px-1">Z</kbd>/<kbd className="rounded bg-surface-2 px-1">X</kbd> shift octave.
+          {tr("ui.kb_help_a")} <kbd className="rounded bg-surface-2 px-1">A</kbd>–<kbd className="rounded bg-surface-2 px-1">;</kbd> {tr("ui.kb_help_b")} <kbd className="rounded bg-surface-2 px-1">W E T Y U O P</kbd> {tr("ui.kb_help_c")} <strong>{midiToName(baseC)}</strong>. <kbd className="rounded bg-surface-2 px-1">Z</kbd>/<kbd className="rounded bg-surface-2 px-1">X</kbd> {tr("ui.kb_help_d")}
         </p>
       )}
     </div>

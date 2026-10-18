@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useMemo, useState } from "react";
 import { Play, RotateCcw } from "lucide-react";
@@ -20,6 +21,7 @@ export interface SequencePosition {
 
 /** Play a melody or scale from tab; checked note-by-note from the virtual neck or the microphone. */
 export function SequenceExercise({ id, skill, positions, intro, step = 0.45 }: { id: string; skill: string; positions: SequencePosition[]; intro: string; step?: number }) {
+  const tr = useT();
   const targets = useMemo(() => positions.map((p) => STANDARD_TUNING[p.string] + p.fret), [positions]);
   const [state, setState] = useState(() => startSequence(targets));
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
@@ -32,7 +34,7 @@ export function SequenceExercise({ id, skill, positions, intro, step = 0.45 }: {
     if (source === "mic") setUsedMic(true);
     const r = stepSequence(state, midi);
     setState(r.state);
-    if (r.verdict === "wrong") setFlash({ ok: false, text: `Heard ${midiToName(midi)} — the next note is ${midiToName(r.expected!)} (${midi > r.expected! ? "lower" : "higher"}).` });
+    if (r.verdict === "wrong") setFlash({ ok: false, text: tr(midi > r.expected! ? "ui.seq_wrong_lower" : "ui.seq_wrong_higher", { note: midiToName(midi), next: midiToName(r.expected!) }) });
     else if (r.verdict === "correct") setFlash({ ok: true, text: `${midiToName(midi)} ✓` });
     if (r.state.done) {
       const acc = sequenceAccuracy(r.state);
@@ -56,8 +58,8 @@ export function SequenceExercise({ id, skill, positions, intro, step = 0.45 }: {
   if (state.done) {
     const acc = sequenceAccuracy(state);
     return (
-      <ResultSummary title="Sequence complete" correct={Math.round(acc * targets.length)} total={targets.length} source="measured" onRetry={reset}>
-        {mistakeSummary(state, (m) => midiToName(m)) ?? "Every note right first time!"} Score counts notes played right on the first try.
+      <ResultSummary title={tr("ui.sequence_complete")} correct={Math.round(acc * targets.length)} total={targets.length} source="measured" onRetry={reset}>
+        {mistakeSummary(state, (m) => midiToName(m)) ?? tr("ui.every_note_right_first_time")} Score counts notes played right on the first try.
       </ResultSummary>
     );
   }
@@ -67,11 +69,11 @@ export function SequenceExercise({ id, skill, positions, intro, step = 0.45 }: {
       <p className="text-sm">{intro}</p>
       <TabView positions={positions} current={state.index} />
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" onClick={() => void playSequence("guitar", targets, step)}><Play className="h-4 w-4" /> Hear it</Button>
-        <Button variant="ghost" onClick={reset}><RotateCcw className="h-4 w-4" /> Restart</Button>
+        <Button variant="secondary" onClick={() => void playSequence("guitar", targets, step)}><Play className="h-4 w-4" /> {tr("ui.hear_it")}</Button>
+        <Button variant="ghost" onClick={reset}><RotateCcw className="h-4 w-4" /> {tr("ui.restart")}</Button>
       </div>
       <Fretboard frets={8} marks={marks} onPlay={(p) => handle(p.midi, "virtual")} />
-      <MicButton status={mic.status} error={mic.error} onStart={mic.start} onStop={mic.stop} label="Check with my real guitar" />
+      <MicButton status={mic.status} error={mic.error} onStart={mic.start} onStop={mic.stop} label={tr("ui.check_with_my_real_guitar")} />
       {flash && <p className={cn("text-sm font-medium", flash.ok ? "text-success" : "text-danger")} role="status">{flash.text}</p>}
     </div>
   );

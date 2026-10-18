@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Bot, Send, Trash2, User } from "lucide-react";
@@ -15,6 +16,8 @@ import type { CoachMessage } from "@/lib/storage/schemas";
 const STARTERS = ["What notes are in a G major chord?", "Which chord should I learn first?", "Capo for F Bb C", "My strings are buzzing — why?", "How long should I practise each day?", "How did I do?"];
 
 export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastExercise; lessonTitle?: string }) {
+  const tr = useT();
+  const tx = useTx();
   const [prefs] = usePrefs();
   const { data: history, loading } = useData(() => coachRepo.list(), ["coachHistory"], [] as CoachMessage[]);
   const { data: results } = useData(() => exerciseRepo.list(), ["exerciseResults"], []);
@@ -44,7 +47,7 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
       const r = ruleReply(q, { ...context, tonicPc: prefs.tonicPc });
       await coachRepo.add({ role: "assistant", content: r.text, source: r.source });
     } catch {
-      toast.error("Couldn't save the conversation on this device.");
+      toast.error(tr("ui.couldn_t_save_the_conversation_on_this_device"));
     } finally {
       setBusy(false);
     }
@@ -59,11 +62,11 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
     <Card className="flex h-[640px] max-h-[80vh] flex-col">
       <CardHeader
         icon={<Bot className="h-5 w-5" />}
-        title="Ask your coach"
-        description="Questions about anything you're learning."
+        title={tr("ui.ask_your_coach")}
+        description={tr("ui.questions_about_anything_you_re_learning")}
         action={
           history.length > 0 && (
-            <Button size="icon" variant="ghost" aria-label="Clear chat history" title="Clear chat history" onClick={() => void coachRepo.clear()}>
+            <Button size="icon" variant="ghost" aria-label={tr("ui.clear_chat_history")} title={tr("ui.clear_chat_history")} onClick={() => void coachRepo.clear()}>
               <Trash2 className="h-4 w-4" />
             </Button>
           )
@@ -72,11 +75,11 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
       <div ref={scroller} className="scrollbar-thin flex-1 space-y-3 overflow-y-auto px-5 pb-3" aria-live="polite" data-testid="coach-chat-log">
         {!loading && history.length === 0 && (
           <div className="space-y-3 py-4">
-            <p className="text-sm text-muted">Try one of these:</p>
+            <p className="text-sm text-muted">{tr("ui.try_one_of_these")}</p>
             <div className="flex flex-wrap gap-2">
               {STARTERS.map((s) => (
                 <button key={s} type="button" onClick={() => void send(s)} className="rounded-full border border-border bg-surface-2 px-3 py-1.5 text-left text-sm hover:border-accent hover:text-accent">
-                  {s}
+                  {tx(s)}
                 </button>
               ))}
             </div>
@@ -88,7 +91,7 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
               {m.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
             </div>
             <div className={cn("max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed", m.role === "user" ? "bg-accent text-accent-fg" : "bg-surface-2")}>
-              <span className="sr-only">{m.role === "user" ? "You said:" : "Coach said:"}</span>
+              <span className="sr-only">{m.role === "user" ? tr("ui.you_said") : tr("ui.coach_said")}</span>
               <p className="whitespace-pre-wrap">{m.content}</p>
               {m.role === "assistant" && m.source && (
                 <div className="mt-2">
@@ -101,17 +104,17 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
       </div>
       <form onSubmit={onSubmit} className="flex gap-2 border-t border-border p-3">
         <label htmlFor="coach-input" className="sr-only">
-          Message your coach
+          {tr("ui.message_your_coach")}
         </label>
         <input
           id="coach-input"
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={MAX_MESSAGE_CHARS}
-          placeholder="Ask anything, e.g. “notes in A minor”"
+          placeholder={tr("ui.ask_anything_e_g_notes_in_a_minor")}
           className="h-10 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 text-sm placeholder:text-subtle focus:border-accent focus:outline-none"
         />
-        <Button type="submit" size="icon" aria-label="Send" disabled={!text.trim() || busy}>
+        <Button type="submit" size="icon" aria-label={tr("ui.send")} disabled={!text.trim() || busy}>
           <Send className="h-4 w-4" />
         </Button>
       </form>

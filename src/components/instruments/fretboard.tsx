@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useMemo } from "react";
 import { DOUBLE_INLAY_FRETS, INLAY_FRETS, STANDARD_TUNING, stringNumber } from "@/lib/music/guitar";
@@ -68,9 +69,10 @@ export function Fretboard({
   labelMode,
   leftHanded: lhProp,
   className,
-  ariaLabel = "Guitar fretboard",
+  ariaLabel,
   activeString,
 }: FretboardProps) {
+  const tr = useT();
   const [prefs] = usePrefs();
   const frets = fretsProp ?? prefs.fretCount;
   const leftHanded = lhProp ?? prefs.leftHanded;
@@ -110,7 +112,7 @@ export function Fretboard({
 
   return (
     <div className={cn("scrollbar-thin overflow-x-auto rounded-2xl border border-border bg-surface-2 p-2 shadow-card", className)}>
-      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={ariaLabel} className="block h-auto min-w-[720px] w-full select-none" style={{ touchAction: "manipulation" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={ariaLabel ?? tr("ui.guitar_fretboard")} className="block h-auto min-w-[720px] w-full select-none" style={{ touchAction: "manipulation" }}>
         <defs>
           <linearGradient id="fb-wood" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0" stopColor="var(--fret-wood)" />
@@ -162,7 +164,7 @@ export function Fretboard({
         ))}
         {/* Capo */}
         {capo > 0 && capo <= frets && (
-          <g aria-label={`Capo on fret ${capo}`}>
+          <g aria-label={tr("ui.capo_on_fret_aria", { n: capo })}>
             <rect x={flipX(xs[capo - 1] + (xs[capo] - xs[capo - 1]) * 0.55) - 7} y={top - 16} width={14} height={gap * 5 + 32} rx={6} fill="var(--text)" opacity={0.85} />
           </g>
         )}
@@ -187,7 +189,7 @@ export function Fretboard({
                 role="button"
                 tabIndex={blocked ? -1 : 0}
                 aria-disabled={blocked || undefined}
-                aria-label={`String ${stringNumber(s)}, ${f === 0 ? (capo ? "open at capo" : "open") : `fret ${f}`}: ${midiToName(midi, prefs.spelling)}`}
+                aria-label={tr(f === 0 ? (capo ? "ui.fb_cell_open_capo" : "ui.fb_cell_open") : "ui.fb_cell_fret", { s: stringNumber(s), f, note: midiToName(midi, prefs.spelling) })}
                 data-string={s}
                 data-fret={f}
                 data-midi={midi}

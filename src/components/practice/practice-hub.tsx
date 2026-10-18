@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import Link from "next/link";
 import { ArrowRight, AudioLines, Ear, Gauge, Guitar, Hand, Music2, Piano, Repeat2, Sparkles, Timer, Waves, Mic } from "lucide-react";
@@ -35,6 +36,8 @@ const TOOLS: Tool[] = [
 ];
 
 export function PracticeHub() {
+  const tr = useT();
+  const tx = useTx();
   const [prefs] = usePrefs();
   const { data: sessions } = useData(() => practiceRepo.list(), ["practiceSessions"], [] as PracticeSession[]);
   const todayMin = Math.round(sessions.filter((s) => dayKey(s.startedAt) === dayKey(new Date())).reduce((a, s) => a + s.durationSec, 0) / 60);
@@ -49,16 +52,16 @@ export function PracticeHub() {
           <Card className={cn("flex h-full items-center gap-4 p-5 transition-colors group-hover:border-accent", prefs.instrument === "guitar" ? "bg-guitar-soft" : "bg-piano-soft")}>
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-surface text-accent"><Sparkles className="h-6 w-6" /></div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wider text-accent">Recommended for {prefs.instrument}</p>
-              <p className="text-lg font-semibold">{recommended.title}</p>
-              <p className="text-sm text-muted">{recommended.description}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-accent">{tr(prefs.instrument === "guitar" ? "ui.recommended_for_guitar" : "ui.recommended_for_piano")}</p>
+              <p className="text-lg font-semibold">{tx(recommended.title)}</p>
+              <p className="text-sm text-muted">{tx(recommended.description)}</p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted transition-transform group-hover:translate-x-1" />
           </Card>
         </Link>
         <Card className="flex items-center gap-6 px-6 py-4">
-          <div><p className="text-xs text-muted">Today</p><p className="text-2xl font-semibold" data-testid="today-minutes">{todayMin} min</p></div>
-          <div><p className="text-xs text-muted">Streak</p><p className="text-2xl font-semibold">{streak} d</p></div>
+          <div><p className="text-xs text-muted">{tr("dash.today")}</p><p className="text-2xl font-semibold" data-testid="today-minutes">{tr("common.min", { n: todayMin })}</p></div>
+          <div><p className="text-xs text-muted">{tr("dash.streak")}</p><p className="text-2xl font-semibold">{tr("ui.n_d", { n: streak })}</p></div>
         </Card>
       </div>
 
@@ -72,13 +75,13 @@ export function PracticeHub() {
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-2 text-accent"><Icon className="h-5 w-5" /></div>
                   <div className="flex gap-1">
-                    {t.for.length === 1 && <Badge tone={t.for[0]}>{t.for[0]}</Badge>}
-                    {t.needs && <Badge>{t.needs}</Badge>}
+                    {t.for.length === 1 && <Badge tone={t.for[0]}>{tr(t.for[0] === "guitar" ? "shell.guitar" : "shell.piano")}</Badge>}
+                    {t.needs && <Badge>{tx(t.needs)}</Badge>}
                   </div>
                 </div>
                 <div>
-                  <p className="font-semibold">{t.title}</p>
-                  <p className="mt-1 text-sm text-muted">{t.description}</p>
+                  <p className="font-semibold">{tx(t.title)}</p>
+                  <p className="mt-1 text-sm text-muted">{tx(t.description)}</p>
                 </div>
               </Card>
             </Link>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/i18n";
+import { useT, useTx } from "@/lib/i18n";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Dumbbell, Gauge, Grip, Layers, Music2, Waves } from "lucide-react";
 import { PageHeader, Segmented } from "@/components/ui";
@@ -26,6 +26,7 @@ type Tab = (typeof TABS)[number]["value"];
 
 export function GuitarLab() {
   const t = useT();
+  const tx = useTx();
   const params = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -49,11 +50,11 @@ export function GuitarLab() {
       <PageHeader
         eyebrow={t("nav./guitar-lab")}
         title={t("guitarLab.title")}
-        description="Explore notes, chords and scales, simulate a capo, transpose songs into easy shapes and practise with instant feedback."
+        description={t("ui.explore_notes_chords_and_scales_simulate_a_capo")}
         actions={<MetronomeWidget />}
       />
       <div className="scrollbar-thin -mx-1 mb-6 overflow-x-auto px-1">
-        <Segmented<Tab> label="Guitar Lab sections" value={tab} onChange={setTab} options={TABS.map((t) => ({ value: t.value, label: t.label, icon: <t.icon className="h-4 w-4" aria-hidden />, testId: `tab-${t.value}` }))} />
+        <Segmented<Tab> label={t("ui.guitar_lab_sections")} value={tab} onChange={setTab} options={TABS.map((t) => ({ value: t.value, label: tx(t.label), icon: <t.icon className="h-4 w-4" aria-hidden />, testId: `tab-${t.value}` }))} />
       </div>
       <div className="space-y-6">
         {tab === "fretboard" && <FretboardExplorer />}

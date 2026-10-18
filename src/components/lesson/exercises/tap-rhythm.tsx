@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Hand, Play } from "lucide-react";
@@ -20,6 +21,7 @@ export function expectedHits(e: Pick<E, "pattern" | "bpm" | "beatsPerBar" | "bar
 }
 
 export function TapRhythmExercise({ exercise, onComplete, onActivity, passAccuracy }: ExerciseProps<E> & { passAccuracy?: number }) {
+  const tr = useT();
   const [phase, setPhase] = useState<"idle" | "countin" | "play" | "done">("idle");
   const [beat, setBeat] = useState(-1);
   const [taps, setTaps] = useState<number[]>([]);
@@ -113,19 +115,19 @@ export function TapRhythmExercise({ exercise, onComplete, onActivity, passAccura
     <div className="space-y-4">
       <p className="font-medium">{exercise.prompt}</p>
       <p className="text-sm text-muted">
-        {exercise.bpm} BPM · {exercise.beatsPerBar}/4 · {exercise.bars} bar{exercise.bars > 1 ? "s" : ""} after a one-bar count-in. Tap the pad, press <kbd className="rounded bg-surface-2 px-1">Space</kbd>.
+        {tr(exercise.bars > 1 ? "ui.tap_info_n" : "ui.tap_info_one", { bpm: exercise.bpm, beats: exercise.beatsPerBar, bars: exercise.bars })} <kbd className="rounded bg-surface-2 px-1">Space</kbd>.
       </p>
       <div className="flex items-center gap-2" aria-hidden>
         {Array.from({ length: exercise.beatsPerBar }, (_, i) => (
           <span key={i} className={cn("h-4 w-4 rounded-full transition-colors", running && beatInBar === i ? (i === 0 ? "bg-accent" : "bg-text") : "bg-surface-3")} />
         ))}
         <span className="ml-2 text-sm font-medium" aria-live="polite">
-          {phase === "countin" ? "Count-in… get ready" : phase === "play" ? "Tap now!" : ""}
+          {phase === "countin" ? tr("ui.count_in_get_ready") : phase === "play" ? tr("ui.tap_now") : ""}
         </span>
       </div>
       {phase === "idle" || phase === "done" ? (
         <Button onClick={() => void start()} data-testid="rhythm-start">
-          <Play className="h-4 w-4" /> {phase === "done" ? "Go again" : "Start"}
+          <Play className="h-4 w-4" /> {phase === "done" ? tr("ui.go_again") : "Start"}
         </Button>
       ) : (
         <button
@@ -135,14 +137,14 @@ export function TapRhythmExercise({ exercise, onComplete, onActivity, passAccura
             tap();
           }}
           className={cn("flex h-32 w-full select-none items-center justify-center gap-2 rounded-2xl border-2 text-lg font-semibold transition-colors", phase === "play" ? "border-accent bg-accent-soft text-accent active:bg-accent active:text-accent-fg" : "border-border bg-surface-2 text-muted")}
-          aria-label="Tap pad"
+          aria-label={tr("ui.tap_pad")}
           data-testid="tap-pad"
         >
-          <Hand className="h-6 w-6" /> TAP ({taps.length})
+          <Hand className="h-6 w-6" /> {tr("ui.tap_n", { n: taps.length })}
         </button>
       )}
       {result && (
-        <div className="flex flex-wrap gap-1.5" aria-label="Timing of each beat">
+        <div className="flex flex-wrap gap-1.5" aria-label={tr("ui.timing_of_each_beat")}>
           {result.hits.map((h, i) => (
             <span key={i} className={cn("rounded-md px-2 py-1 text-xs tabular-nums", h.offsetMs === null ? "bg-danger-soft text-danger" : Math.abs(h.offsetMs) <= 40 ? "bg-success-soft text-success" : "bg-warn-soft text-warn")}>
               {h.offsetMs === null ? "missed" : `${h.offsetMs > 0 ? "+" : ""}${Math.round(h.offsetMs)} ms`}

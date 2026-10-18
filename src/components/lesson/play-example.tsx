@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useState } from "react";
 import { Volume2 } from "lucide-react";
@@ -8,6 +9,7 @@ import { playExample, type Inst } from "./utils";
 
 /** "Play an example" control. Compare examples get A / B / both buttons. */
 export function PlayExample({ audio, instrument, label = "Play an example", onPlay }: { audio: AudioExample; instrument: Inst; label?: string; onPlay?: () => void }) {
+  const tr = useT();
   const [busy, setBusy] = useState<string | null>(null);
   const run = async (which: "a" | "b" | "both") => {
     setBusy(which);
@@ -29,7 +31,7 @@ export function PlayExample({ audio, instrument, label = "Play an example", onPl
           <Volume2 className="h-4 w-4" /> {audio.labelB}
         </Button>
         <Button variant="ghost" onClick={() => run("both")} loading={busy === "both"}>
-          Play both
+          {tr("ui.play_both")}
         </Button>
       </div>
     );

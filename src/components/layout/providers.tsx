@@ -6,6 +6,7 @@ import { usePrefs } from "@/hooks/use-prefs";
 import { onStorageError } from "@/lib/storage/db";
 import { setMasterVolume } from "@/lib/audio/engine";
 import { startSync } from "@/lib/learner/sync";
+import { tNow } from "@/lib/i18n";
 
 /** Applies theme + volume prefs and wires global toasts. */
 export function Providers({ children }: { children: ReactNode }) {
@@ -30,7 +31,7 @@ export function Providers({ children }: { children: ReactNode }) {
     onStorageError(() => {
       if (shown) return;
       shown = true;
-      toast.warning("Browser storage isn't available, so progress is only kept until you close this tab.", { duration: 8000 });
+      toast.warning(tNow("ui.storage_unavailable"), { duration: 8000 });
     });
   }, []);
 

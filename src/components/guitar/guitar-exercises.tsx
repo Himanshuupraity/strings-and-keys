@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -26,6 +27,8 @@ const EXERCISES = [
 type ExId = (typeof EXERCISES)[number]["id"];
 
 export function GuitarExercises() {
+  const tr = useT();
+  const tx = useTx();
   const [active, setActive] = useState<ExId>("open-strings");
   const [scale, setScale] = useState<"c" | "em">("c");
   // Exercises pick random questions — render them only on the client to avoid hydration mismatches.
@@ -33,7 +36,7 @@ export function GuitarExercises() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      <nav aria-label="Guitar exercises" className="space-y-1">
+      <nav aria-label={tr("ui.guitar_exercises")} className="space-y-1">
         {EXERCISES.map((e, i) => (
           <button
             key={e.id}
@@ -44,14 +47,14 @@ export function GuitarExercises() {
           >
             <span className={cn("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold", active === e.id ? "bg-guitar text-white dark:text-black" : "bg-surface-3 text-muted")}>{i + 1}</span>
             <span>
-              <span className="block text-sm font-medium">{e.title}</span>
-              <span className="block text-xs text-muted">{e.description}</span>
+              <span className="block text-sm font-medium">{tx(e.title)}</span>
+              <span className="block text-xs text-muted">{tx(e.description)}</span>
             </span>
           </button>
         ))}
       </nav>
       <Card>
-        <CardHeader icon={<Dumbbell className="h-5 w-5" />} title={EXERCISES.find((e) => e.id === active)!.title} description="Results are saved to your progress. Measured results come from the virtual neck, your taps, or the microphone." />
+        <CardHeader icon={<Dumbbell className="h-5 w-5" />} title={tx(EXERCISES.find((e) => e.id === active)!.title)} description={tr("ui.results_are_saved_to_your_progress_measured_resu")} />
         <CardBody>
           {!hydrated ? (
             <Skeleton className="h-64" />
@@ -63,22 +66,22 @@ export function GuitarExercises() {
               {active === "open-chords" && <ChordCheck />}
               {active === "switch" && (
                 <div className="space-y-3 text-sm">
-                  <p>Changing chords quickly and cleanly is the skill that makes songs possible. The drill gives you 60 seconds to switch between two chords as many times as you can — cleanly.</p>
-                  <Link href="/practice/chord-drill"><Button>Open the chord change drill <ArrowRight className="h-4 w-4" /></Button></Link>
+                  <p>{tr("ui.changing_chords_quickly_and_cleanly_is_the_skill")}</p>
+                  <Link href="/practice/chord-drill"><Button>{tr("ui.open_the_chord_change_drill")} <ArrowRight className="h-4 w-4" /></Button></Link>
                 </div>
               )}
               {active === "strumming" && <Strumming />}
-              {active === "melody" && <SequenceExercise key="ode" id="guitar-melody-ode-to-joy" skill="melody" positions={ODE_TO_JOY} intro="Beethoven's 'Ode to Joy' (public domain) on the top two strings. The orange dot shows the next note. Play it on the virtual neck, or turn on the mic and play your guitar." />}
+              {active === "melody" && <SequenceExercise key="ode" id="guitar-melody-ode-to-joy" skill="melody" positions={ODE_TO_JOY} intro={tr("ui.beethoven_s_ode_to_joy_public_domain_on_the_top")} />}
               {active === "scales" && (
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    <Button size="sm" variant={scale === "c" ? "primary" : "secondary"} onClick={() => setScale("c")}>C major (first position)</Button>
-                    <Button size="sm" variant={scale === "em" ? "primary" : "secondary"} onClick={() => setScale("em")}>E minor pentatonic (open)</Button>
+                    <Button size="sm" variant={scale === "c" ? "primary" : "secondary"} onClick={() => setScale("c")}>{tr("ui.c_major_first_position")}</Button>
+                    <Button size="sm" variant={scale === "em" ? "primary" : "secondary"} onClick={() => setScale("em")}>{tr("ui.e_minor_pentatonic_open")}</Button>
                   </div>
                   {scale === "c" ? (
-                    <SequenceExercise key="c" id="guitar-scale-c-major" skill="scales" positions={C_MAJOR_FIRST_POSITION} intro="C D E F G A B C — start with your ring finger on the A string, 3rd fret. Go slowly and evenly." step={0.5} />
+                    <SequenceExercise key="c" id="guitar-scale-c-major" skill="scales" positions={C_MAJOR_FIRST_POSITION} intro={tr("ui.c_d_e_f_g_a_b_c_start_with_your_ring_finger_on_t")} step={0.5} />
                   ) : (
-                    <SequenceExercise key="em" id="guitar-scale-e-minor-pentatonic" skill="scales" positions={E_MINOR_PENTATONIC_OPEN} intro="The most-used lead guitar scale, using open strings. Two notes per string, low to high." step={0.4} />
+                    <SequenceExercise key="em" id="guitar-scale-e-minor-pentatonic" skill="scales" positions={E_MINOR_PENTATONIC_OPEN} intro={tr("ui.the_most_used_lead_guitar_scale_using_open_strin")} step={0.4} />
                   )}
                 </div>
               )}

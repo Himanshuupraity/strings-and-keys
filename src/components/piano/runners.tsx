@@ -1,4 +1,5 @@
 "use client";
+import { tNow, txNow, useT, useTx } from "@/lib/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -33,9 +34,9 @@ async function saveResult(def: PianoExerciseDef, suffix: string, source: Source,
       measured: true,
       details,
     });
-    toast.success(`Saved: ${Math.round(accuracy * 100)}% on first try`, { description: `${def.title} — measured from your ${source === "midi" ? "MIDI keyboard" : "on-screen key presses"}.` });
+    toast.success(tNow("ui.saved_first_try", { pct: Math.round(accuracy * 100) }), { description: tNow(source === "midi" ? "ui.measured_from_midi" : "ui.measured_from_screen", { title: txNow(def.title) }) });
   } catch {
-    toast.error("Couldn't save this result, but you can keep practising.");
+    toast.error(tNow("ui.couldn_t_save_this_result_but_you_can_keep_pract"));
   }
 }
 
@@ -60,22 +61,23 @@ function useFlash() {
 }
 
 function DoneCard({ accuracy, correct, total, source, note, onRetry, children }: { accuracy: number; correct: number; total: number; source: Source; note?: string | null; onRetry: () => void; children?: React.ReactNode }) {
+  const tr = useT();
   const great = accuracy >= 0.8;
   return (
     <div className={cn("animate-pop rounded-2xl border p-4", great ? "border-transparent bg-success-soft" : "border-border bg-surface-2")} role="status">
       <div className="flex flex-wrap items-center gap-2">
         <CheckCircle2 className={cn("h-5 w-5", great ? "text-success" : "text-muted")} aria-hidden />
         <p className="font-semibold">
-          {great ? "Lovely — exercise complete!" : "Done! Let's tidy it up next time."} {Math.round(accuracy * 100)}% right on the first try ({correct}/{total})
+          {great ? tr("ui.lovely_exercise_complete") : tr("ui.done_let_s_tidy_it_up_next_time")} {Math.round(accuracy * 100)}% right on the first try ({correct}/{total})
         </p>
         <SourceTag source="measured" />
-        <Badge>{source === "midi" ? "MIDI input" : "On-screen keys"}</Badge>
+        <Badge>{source === "midi" ? tr("ui.midi_input") : tr("ui.on_screen_keys")}</Badge>
       </div>
       {note && <p className="mt-2 text-sm text-muted">{note}</p>}
-      {!great && <p className="mt-1 text-sm text-muted">Tip: slow down. Accuracy first — speed comes by itself.</p>}
+      {!great && <p className="mt-1 text-sm text-muted">{tr("ui.tip_slow_down_accuracy_first_speed_comes_by_itse")}</p>}
       {children}
       <Button className="mt-3" size="sm" variant="secondary" onClick={onRetry}>
-        <RotateCcw className="h-4 w-4" /> Try again
+        <RotateCcw className="h-4 w-4" /> {tr("ui.try_again")}
       </Button>
     </div>
   );
@@ -86,6 +88,8 @@ const beats = (d?: string) => (d === "w" ? 4 : d === "h" ? 2 : d === "8" ? 0.5 :
 /* ---------------- Sequence (incl. middle C, scales, melodies, staff reading, sargam) ---------------- */
 
 export function SequenceRunner({ def, res, suffix, hideLabels, showStaff, chipMode }: { def: PianoExerciseDef; res: ResolvedExercise; suffix: string; hideLabels?: boolean; showStaff?: boolean; chipMode?: "both" }) {
+  const tr = useT();
+  const tx = useTx();
   const [seq, setSeq] = useState<SequenceState>(() => startSequence(res.targets));
   const seqRef = useRef(seq);
   const usedMidi = useRef(false);
@@ -156,9 +160,9 @@ export function SequenceRunner({ def, res, suffix, hideLabels, showStaff, chipMo
       <div className="flex flex-wrap items-end gap-3">
         <Button variant="secondary" onClick={demoIdx !== null ? stopDemo : listen} data-testid="exercise-listen">
           {demoIdx !== null ? <Square className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
-          {demoIdx !== null ? "Stop" : "Listen first"}
+          {demoIdx !== null ? "Stop" : tr("ui.listen_first")}
         </Button>
-        <Slider className="w-48" label="Demo tempo" value={bpm} min={40} max={160} step={4} onChange={setBpm} format={(v) => `${v} BPM`} />
+        <Slider className="w-48" label={tr("ui.demo_tempo")} value={bpm} min={40} max={160} step={4} onChange={setBpm} format={(v) => `${v} BPM`} />
         <div className="ml-auto min-w-40 flex-1 sm:max-w-xs">
           <div className="mb-1 flex justify-between text-xs text-muted">
             <span>
@@ -166,14 +170,14 @@ export function SequenceRunner({ def, res, suffix, hideLabels, showStaff, chipMo
             </span>
             {seq.mistakes.length > 0 && <span>{seq.mistakes.length} slip{seq.mistakes.length > 1 ? "s" : ""}</span>}
           </div>
-          <ProgressBar value={seq.index / Math.max(1, res.targets.length)} tone="piano" label="Exercise progress" />
+          <ProgressBar value={seq.index / Math.max(1, res.targets.length)} tone="piano" label={tr("ui.exercise_progress")} />
         </div>
       </div>
 
       {showStaff && <Staff clef={clefFor(res.targets)} notes={staffNotes} highlightIndex={seq.done ? undefined : demoIdx ?? seq.index} states={states} />}
 
       {!hideLabels && (
-        <ol className="flex flex-wrap gap-1.5" aria-label="Notes to play">
+        <ol className="flex flex-wrap gap-1.5" aria-label={tr("ui.notes_to_play")}>
           {res.targets.map((m, i) => (
             <li
               key={i}
@@ -196,12 +200,12 @@ export function SequenceRunner({ def, res, suffix, hideLabels, showStaff, chipMo
         seq.mistakes.length > 0 &&
         seq.mistakes[seq.mistakes.length - 1].at === seq.index && (
           <p className="text-sm text-warn" role="status" aria-live="polite">
-            Not quite — you played {midiToName(seq.mistakes[seq.mistakes.length - 1].played)}. Look for the glowing key{hideLabels ? " and check the staff" : ""}.
+            {tr(hideLabels ? "ui.not_quite_played_staff" : "ui.not_quite_played", { note: midiToName(seq.mistakes[seq.mistakes.length - 1].played) })}
           </p>
         )
       )}
 
-      <LabKeyboard highlight={highlight} fingers={fingers} hideLabels={hideLabels} onNoteOn={(m) => handle(m, "virtual")} ariaLabel={`Piano keyboard for exercise: ${def.title}`} />
+      <LabKeyboard highlight={highlight} fingers={fingers} hideLabels={hideLabels} onNoteOn={(m) => handle(m, "virtual")} ariaLabel={tr("ui.piano_kb_for_exercise", { title: tx(def.title) })} />
     </div>
   );
 }
@@ -209,6 +213,7 @@ export function SequenceRunner({ def, res, suffix, hideLabels, showStaff, chipMo
 /* ---------------- Find all ---------------- */
 
 export function FindAllRunner({ def, low, high }: { def: Extract<PianoExerciseDef, { kind: "find-all" }>; low: number; high: number }) {
+  const tr = useT();
   const [clicked, setClicked] = useState<number[]>([]);
   const clickedRef = useRef<number[]>([]);
   const usedMidi = useRef(false);
@@ -251,7 +256,7 @@ export function FindAllRunner({ def, low, high }: { def: Extract<PianoExerciseDe
         </Badge>
         {progress.wrong.length > 0 && <Badge tone="warn">{progress.wrong.length} wrong</Badge>}
         <Button size="sm" variant="ghost" onClick={() => setHint((h) => !h)} aria-pressed={hint}>
-          <Lightbulb className="h-4 w-4" /> {hint ? "Hide hint" : "Show remaining"}
+          <Lightbulb className="h-4 w-4" /> {hint ? tr("ui.hide_hint") : tr("ui.show_remaining")}
         </Button>
       </div>
       {progress.done && (
@@ -260,7 +265,7 @@ export function FindAllRunner({ def, low, high }: { def: Extract<PianoExerciseDe
           correct={Math.round(progress.accuracy * progress.targets.length)}
           total={progress.targets.length}
           source={midiUsed ? "midi" : "virtual"}
-          note={hint ? "You used the hint this time — try once more without it." : null}
+          note={hint ? tr("ui.you_used_the_hint_this_time_try_once_more_withou") : null}
           onRetry={() => {
             clickedRef.current = [];
             savedRef.current = false;
@@ -272,8 +277,8 @@ export function FindAllRunner({ def, low, high }: { def: Extract<PianoExerciseDe
           }}
         />
       )}
-      <LabKeyboard highlight={highlight} hideLabels onNoteOn={(m) => handle(m, "virtual")} ariaLabel="Piano keyboard: find every C (labels hidden)" />
-      <p className="text-xs text-muted">Labels are hidden so you learn the pattern: C sits just left of every group of two black keys.</p>
+      <LabKeyboard highlight={highlight} hideLabels onNoteOn={(m) => handle(m, "virtual")} ariaLabel={tr("ui.kb_find_every_c")} />
+      <p className="text-xs text-muted">{tr("ui.labels_are_hidden_so_you_learn_the_pattern_c_sit")}</p>
     </div>
   );
 }
@@ -287,6 +292,7 @@ const samePcs = (a: number[], b: number[]) => {
 };
 
 export function ChordRunner({ def, res }: { def: Extract<PianoExerciseDef, { kind: "chords" }>; res: ResolvedExercise }) {
+  const tr = useT();
   const chords = res.chords!;
   const [idx, setIdx] = useState(0);
   const [latch, setLatch] = useState<number[]>([]);
@@ -304,9 +310,9 @@ export function ChordRunner({ def, res }: { def: Extract<PianoExerciseDef, { kin
     setFirstTry([...s.firstTry]);
     const cmp = compareChordTones(chords[s.idx].symbol, played.map(mod12));
     const parts = [];
-    if (cmp.missing.length) parts.push(`missing ${cmp.missing.map(cmp.name).join(", ")}`);
-    if (cmp.unwanted.length) parts.push(`extra ${cmp.unwanted.map(cmp.name).join(", ")}`);
-    setFeedback(`Not ${chords[s.idx].symbol} yet — ${parts.join("; ") || "check your notes"}.`);
+    if (cmp.missing.length) parts.push(tr("ui.chord_missing", { notes: cmp.missing.map(cmp.name).join(", ") }));
+    if (cmp.unwanted.length) parts.push(tr("ui.chord_extra", { notes: cmp.unwanted.map(cmp.name).join(", ") }));
+    setFeedback(tr("ui.chord_not_yet", { chord: chords[s.idx].symbol, detail: parts.join("; ") || tr("ui.check_your_notes") }));
   };
 
   const succeed = () => {
@@ -379,7 +385,7 @@ export function ChordRunner({ def, res }: { def: Extract<PianoExerciseDef, { kin
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-1.5" aria-label="Chords in this exercise">
+      <div className="flex flex-wrap gap-1.5" aria-label={tr("ui.chords_in_this_exercise")}>
         {chords.map((c, i) => (
           <Badge key={c.symbol} tone={i < idx ? (firstTry[i] ? "success" : "warn") : i === idx ? "piano" : "neutral"} className="text-sm">
             {c.symbol}
@@ -387,26 +393,26 @@ export function ChordRunner({ def, res }: { def: Extract<PianoExerciseDef, { kin
         ))}
       </div>
       {done ? (
-        <DoneCard accuracy={firstTry.filter(Boolean).length / chords.length} correct={firstTry.filter(Boolean).length} total={chords.length} source={midiUsed ? "midi" : "virtual"} onRetry={retry} note="Hints count as a second try, so the score stays honest." />
+        <DoneCard accuracy={firstTry.filter(Boolean).length / chords.length} correct={firstTry.filter(Boolean).length} total={chords.length} source={midiUsed ? "midi" : "virtual"} onRetry={retry} note={tr("ui.hints_second_try")} />
       ) : (
         <div className="rounded-2xl border border-border bg-surface-2 p-4">
-          <p className="text-sm text-muted">Build this chord</p>
+          <p className="text-sm text-muted">{tr("ui.build_this_chord")}</p>
           <p className="font-display text-4xl">{current.symbol}</p>
           <p className="mt-1 text-sm text-muted">
-            {current.symbol.endsWith("m") ? "Minor" : "Major"} triad: root, third and fifth. {hint && <>Notes: {current.notes.map((n) => midiToName(n)).join(" – ")}</>}
+            {tr(current.symbol.endsWith("m") ? "ui.minor_triad_info" : "ui.major_triad_info")} {hint && <>{tr("ui.notes_list", { notes: current.notes.map((n) => midiToName(n)).join(" – ") })}</>}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button size="sm" variant="secondary" onClick={() => void playPianoChord(current.notes, 1.2)}>
-              <Volume2 className="h-4 w-4" /> Hear it
+              <Volume2 className="h-4 w-4" /> {tr("ui.hear_it")}
             </Button>
             <Button size="sm" onClick={check} disabled={!latch.length}>
-              <CheckCircle2 className="h-4 w-4" /> Check my chord
+              <CheckCircle2 className="h-4 w-4" /> {tr("ui.check_my_chord")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setLatch([])} disabled={!latch.length}>
-              <Eraser className="h-4 w-4" /> Clear
+              <Eraser className="h-4 w-4" /> {tr("ui.clear")}
             </Button>
             <Button size="sm" variant="ghost" onClick={showHint} disabled={hint}>
-              <Lightbulb className="h-4 w-4" /> Show me
+              <Lightbulb className="h-4 w-4" /> {tr("ui.show_me")}
             </Button>
           </div>
           {feedback && (
@@ -416,8 +422,8 @@ export function ChordRunner({ def, res }: { def: Extract<PianoExerciseDef, { kin
           )}
         </div>
       )}
-      <LabKeyboard highlight={highlight} onNoteOn={toggle} ariaLabel="Piano keyboard: click keys to add or remove them from your chord" />
-      <p className="text-xs text-muted">With a mouse, click keys to add or remove them (they stay selected). With a MIDI keyboard, just hold the chord — it&apos;s checked automatically.</p>
+      <LabKeyboard highlight={highlight} onNoteOn={toggle} ariaLabel={tr("ui.kb_build_chord")} />
+      <p className="text-xs text-muted">{tr("ui.with_a_mouse_click_keys_to_add_or_remove_them_th")}</p>
     </div>
   );
 }
@@ -425,6 +431,7 @@ export function ChordRunner({ def, res }: { def: Extract<PianoExerciseDef, { kin
 /* ---------------- Ear training ---------------- */
 
 export function EarRunner({ def, res }: { def: Extract<PianoExerciseDef, { kind: "ear" }>; res: ResolvedExercise }) {
+  const tr = useT();
   const pool = res.pool!;
   const [round, setRound] = useState(0);
   const [target, setTarget] = useState<number | null>(null);
@@ -491,33 +498,33 @@ export function EarRunner({ def, res }: { def: Extract<PianoExerciseDef, { kind:
   return (
     <div className="space-y-4">
       {done ? (
-        <DoneCard accuracy={score / def.rounds} correct={score} total={def.rounds} source={midiUsed ? "midi" : "virtual"} onRetry={retry} note="Any octave of the right note counts." />
+        <DoneCard accuracy={score / def.rounds} correct={score} total={def.rounds} source={midiUsed ? "midi" : "virtual"} onRetry={retry} note={tr("ui.any_octave_counts")} />
       ) : (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface-2 p-4">
           <Ear className="h-6 w-6 text-piano" aria-hidden />
           <div className="mr-auto">
             <p className="font-medium">
-              Round {round + 1} of {def.rounds} · Score {score}
+              {tr("ui.round_of_score", { round: round + 1, total: def.rounds, score })}
             </p>
-            <p className="text-sm text-muted">{target === null ? "Press play, listen, then click the key you think it was." : answer === null ? "Which key was it? The possible keys are tinted." : correct ? "Correct — well heard!" : `That was ${midiToName(target)}. You chose ${midiToName(answer!)}.`}</p>
+            <p className="text-sm text-muted">{target === null ? tr("ui.press_play_listen_then_click_the_key_you_think_i") : answer === null ? tr("ui.which_key_was_it_the_possible_keys_are_tinted") : correct ? tr("ui.correct_well_heard") : tr("ui.that_was_you_chose", { target: midiToName(target), answer: midiToName(answer!) })}</p>
           </div>
           {target === null ? (
             <Button onClick={start} data-testid="ear-start">
-              <Play className="h-4 w-4" /> Play note
+              <Play className="h-4 w-4" /> {tr("ui.play_note")}
             </Button>
           ) : (
             <>
               <Button variant="secondary" onClick={() => play(target)}>
-                <RotateCcw className="h-4 w-4" /> Replay
+                <RotateCcw className="h-4 w-4" /> {tr("ui.replay")}
               </Button>
-              {answer !== null && <Button onClick={next}>{round + 1 >= def.rounds ? "Finish" : "Next note"}</Button>}
+              {answer !== null && <Button onClick={next}>{round + 1 >= def.rounds ? "Finish" : tr("ui.next_note")}</Button>}
             </>
           )}
         </div>
       )}
-      <LabKeyboard highlight={highlight} hideLabels={answer === null && !done} onNoteOn={(m) => handle(m, "virtual")} ariaLabel="Piano keyboard: answer by clicking the key you heard" />
+      <LabKeyboard highlight={highlight} hideLabels={answer === null && !done} onNoteOn={(m) => handle(m, "virtual")} ariaLabel={tr("ui.kb_answer_heard")} />
       <Callout tone="neutral" icon={<Headphones className="h-4 w-4" />}>
-        Tip: sing or hum the note back before you answer. Holding a pitch in your voice is how musicians train their ears. Your first key press counts as your answer.
+        {tr("ui.tip_sing_or_hum_the_note_back_before_you_answer")}
       </Callout>
     </div>
   );

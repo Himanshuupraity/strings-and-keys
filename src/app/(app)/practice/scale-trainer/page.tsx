@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.scale" description="Play a scale one note at a time. Accuracy first, then speed." />
+      <TPageHeader titleKey="tool.scale" descriptionKey="tool.desc.scale" />
       <ScaleTrainer />
     </>
   );

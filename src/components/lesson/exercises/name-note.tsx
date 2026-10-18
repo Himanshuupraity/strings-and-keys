@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useMemo, useState } from "react";
 import type { Exercise } from "@/content/types";
@@ -22,6 +23,8 @@ const HINTS: Record<E["on"], string> = {
 };
 
 export function NameNoteExercise({ exercise, instrument, onComplete, onActivity, passAccuracy }: ExerciseProps<E> & { passAccuracy?: number }) {
+  const tr = useT();
+  const tx = useTx();
   const notes = useMemo(() => exercise.notes.map(toMidi), [exercise.notes]);
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function NameNoteExercise({ exercise, instrument, onComplete, onActivity,
     const ns = score + (o === answer ? 1 : 0);
     setScore(ns);
     if (i === notes.length - 1) {
-      const out: ExerciseOutcome = { accuracy: ns / notes.length, correct: ns, total: notes.length, input: "virtual", measured: true, details: "Note naming" };
+      const out: ExerciseOutcome = { accuracy: ns / notes.length, correct: ns, total: notes.length, input: "virtual", measured: true, details: tr("ui.note_naming") };
       setOutcome(out);
       onComplete(out);
     }
@@ -69,7 +72,7 @@ export function NameNoteExercise({ exercise, instrument, onComplete, onActivity,
       {exercise.on === "staff-treble" && <Staff clef="treble" notes={[{ note: midiToName(midi), duration: "w" }]} highlightIndex={0} />}
       {exercise.on === "staff-bass" && <Staff clef="bass" notes={[{ note: midiToName(midi), duration: "w" }]} highlightIndex={0} />}
       {exercise.on === "fretboard" && pos && <Fretboard frets={12} marks={[{ string: pos.string, fret: pos.fret, tone: "target", label: "?" }]} />}
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Note names">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={tr("ui.note_names")}>
         {options.map((o) => (
           <button
             key={o}
@@ -93,10 +96,10 @@ export function NameNoteExercise({ exercise, instrument, onComplete, onActivity,
             setPicked(null);
           }}
         >
-          Next note
+          {tr("ui.next_note")}
         </Button>
       )}
-      {outcome ? <ResultPanel outcome={outcome} onRetry={reset} passAccuracy={passAccuracy} /> : <HintButton hint={HINTS[exercise.on]} />}
+      {outcome ? <ResultPanel outcome={outcome} onRetry={reset} passAccuracy={passAccuracy} /> : <HintButton hint={tx(HINTS[exercise.on])} />}
     </div>
   );
 }

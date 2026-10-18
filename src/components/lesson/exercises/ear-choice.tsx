@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useState } from "react";
 import { Play } from "lucide-react";
@@ -78,6 +79,8 @@ async function playRound(r: Round, instrument: Inst) {
 }
 
 export function EarChoiceExercise({ exercise, instrument, onComplete, onActivity, passAccuracy }: ExerciseProps<E> & { passAccuracy?: number }) {
+  const tr = useT();
+  const tx = useTx();
   const [prefs] = usePrefs();
   const [rounds, setRounds] = useState<Round[] | null>(null);
   const [i, setI] = useState(0);
@@ -100,9 +103,9 @@ export function EarChoiceExercise({ exercise, instrument, onComplete, onActivity
     return (
       <div className="space-y-3">
         <p className="font-medium">{exercise.prompt}</p>
-        {exercise.mode === "swara" && <p className="text-sm text-muted">Your Sa is {pcName(prefs.tonicPc, prefs.spelling)} (change it in Settings).</p>}
+        {exercise.mode === "swara" && <p className="text-sm text-muted">{tr("ui.your_sa_change", { note: pcName(prefs.tonicPc, prefs.spelling) })}</p>}
         <Button onClick={start} data-testid="ear-start">
-          <Play className="h-4 w-4" /> Start ({exercise.rounds} rounds)
+          <Play className="h-4 w-4" /> {tr("ui.start_n_rounds", { n: exercise.rounds })}
         </Button>
       </div>
     );
@@ -137,9 +140,9 @@ export function EarChoiceExercise({ exercise, instrument, onComplete, onActivity
         </span>
       </div>
       <Button variant="secondary" onClick={() => void playRound(round, instrument)}>
-        <Play className="h-4 w-4" /> Replay
+        <Play className="h-4 w-4" /> {tr("ui.replay")}
       </Button>
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Answers">
+      <div className="flex flex-wrap gap-2" role="group" aria-label={tr("ui.answers")}>
         {round.options.map((o) => (
           <button
             key={o}
@@ -151,12 +154,12 @@ export function EarChoiceExercise({ exercise, instrument, onComplete, onActivity
               picked && o === round.answer ? "border-success bg-success-soft text-success" : picked === o ? "border-danger bg-danger-soft text-danger" : "border-border bg-surface hover:border-accent hover:bg-accent-soft",
             )}
           >
-            {o}
+            {tx(o)}
           </button>
         ))}
       </div>
-      <Feedback kind={picked ? (picked === round.answer ? "correct" : "wrong") : null}>{picked ? (picked === round.answer ? "Correct!" : `It was ${round.answer}. Replay it to hear the difference.`) : null}</Feedback>
-      {picked && i < rounds.length - 1 && <Button onClick={next}>Next round</Button>}
+      <Feedback kind={picked ? (picked === round.answer ? "correct" : "wrong") : null}>{picked ? (picked === round.answer ? tr("ui.correct") : tr("ui.it_was_replay", { a: tx(round.answer) })) : null}</Feedback>
+      {picked && i < rounds.length - 1 && <Button onClick={next}>{tr("ui.next_round")}</Button>}
       {outcome && <ResultPanel outcome={outcome} onRetry={start} passAccuracy={passAccuracy} />}
     </div>
   );

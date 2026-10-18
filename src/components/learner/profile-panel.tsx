@@ -63,7 +63,7 @@ export function ProfileSyncPanel() {
         </div>
         <div className="space-y-2 border-t border-border pt-4" data-testid="pin-settings">
           <p className="flex items-center gap-2 text-sm font-medium">
-            <KeyRound className="h-4 w-4 text-muted" /> PIN protection
+            <KeyRound className="h-4 w-4 text-muted" /> {t("ui.pin_protection")}
           </p>
           {!id ? (
             <p className="text-sm text-muted">{t("profile.pinNeedsDb")}</p>
@@ -81,11 +81,11 @@ export function ProfileSyncPanel() {
                   variant="ghost"
                   data-testid="pin-remove"
                   onClick={async () => {
-                    if (!window.confirm("Remove the PIN? Anyone opening this site could then open your profile.")) return;
+                    if (!window.confirm(t("ui.remove_the_pin_anyone_opening_this_site_could_th"))) return;
                     const r = await changePin(id, null);
                     if (!r.ok) return void toast.error(r.message);
                     patchLearner({ hasPin: false });
-                    toast.success("PIN removed");
+                    toast.success(t("ui.pin_removed"));
                   }}
                 >
                   {t("profile.removePin")}
@@ -104,14 +104,14 @@ export function ProfileSyncPanel() {
             open={dialog !== null}
             onClose={() => setDialog(null)}
             mode={dialog === "unlock" ? "enter" : "set"}
-            title={dialog === "unlock" ? "Enter your PIN" : learner.hasPin ? "Choose a new PIN" : "Choose a 4-digit PIN"}
-            subtitle={dialog === "unlock" ? undefined : "You'll need it to open your profile on a new device."}
+            title={dialog === "unlock" ? t("ui.enter_your_pin") : learner.hasPin ? t("ui.choose_a_new_pin") : t("ui.choose_a_4_digit_pin")}
+            subtitle={dialog === "unlock" ? undefined : t("ui.you_ll_need_it_to_open_your_profile_on_a_new_dev")}
             onSubmit={async (pin) => {
               if (dialog === "unlock") {
                 const r = await unlockLearner(id, pin);
                 if (!r.ok) return r.message;
                 setDialog(null);
-                toast.success("Unlocked — syncing again");
+                toast.success(t("ui.unlocked_syncing_again"));
                 await resumeAfterUnlock();
                 return;
               }
@@ -119,7 +119,7 @@ export function ProfileSyncPanel() {
               if (!r.ok) return r.message;
               patchLearner({ hasPin: true });
               setDialog(null);
-              toast.success(learner.hasPin ? "PIN changed" : "PIN set — your profile is protected");
+              toast.success(learner.hasPin ? t("ui.pin_changed") : t("ui.pin_set_your_profile_is_protected"));
             }}
           />
         )}

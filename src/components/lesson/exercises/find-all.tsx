@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useMemo, useState } from "react";
 import type { Exercise } from "@/content/types";
@@ -16,6 +17,7 @@ const PIANO_HIGH = 84;
 const GUITAR_FRETS = 12;
 
 export function FindAllExercise({ exercise, instrument, onComplete, onActivity, passAccuracy }: ExerciseProps<E> & { passAccuracy?: number }) {
+  const tr = useT();
   const inst = exercise.instrument ?? instrument;
   const pc = mod12(exercise.pitchClass);
   // Targets keyed by position so the same pitch on two strings counts twice.
@@ -62,11 +64,11 @@ export function FindAllExercise({ exercise, instrument, onComplete, onActivity, 
   const hint =
     inst === "piano"
       ? pc === 0
-        ? "C is the white key just to the LEFT of each group of TWO black keys."
+        ? tr("ui.c_is_the_white_key_just_to_the_left_of_each_grou")
         : pc === 6
-          ? "F♯ is the FIRST black key in each group of THREE."
-          : `Every ${name} is 12 keys (one octave) apart. Find one, then jump by octaves.`
-      : `On each string, ${name} repeats 12 frets later. Use the 5th-fret rule: fret 5 = next open string (fret 4 from G to B).`;
+          ? tr("ui.f_is_the_first_black_key_in_each_group_of_three")
+          : tr("ui.every_x_12_keys", { name })
+      : tr("ui.each_string_12_frets", { name });
 
   return (
     <div className="space-y-4">

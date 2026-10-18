@@ -7,7 +7,7 @@ import { Badge, Button, Callout, Card, CardBody, CardHeader, EmptyState, Progres
 import { InstrumentToggle } from "@/components/layout/instrument-toggle";
 import { usePrefs, useHydrated } from "@/hooks/use-prefs";
 import { useLearner } from "@/hooks/use-learner";
-import { lessonText, useLang, useT, type MessageKey } from "@/lib/i18n";
+import { lessonText, useLang, useT, type MessageKey, useTx } from "@/lib/i18n";
 import { LESSONS, getLesson, lessonsForInstrument } from "@/content/curriculum";
 import { RevisionCard } from "./revision-card";
 import { NextSongCard } from "./next-song-card";
@@ -51,6 +51,7 @@ function planLink(kind: string, instrument: "guitar" | "piano", nextId?: string)
 
 export function Dashboard() {
   const t = useT();
+  const tx = useTx();
   const lang = useLang();
   const [prefs] = usePrefs();
   const hydrated = useHydrated();
@@ -114,7 +115,7 @@ export function Dashboard() {
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-muted">
             <InstrumentIcon className={cn("h-4 w-4", instrument === "guitar" ? "text-guitar" : "text-piano")} aria-hidden />
-            {instrument === "guitar" ? t("shell.guitar") : t("shell.piano")} · {t("dash.level", { n: level, name: LEVEL_NAMES[level] })}
+            {instrument === "guitar" ? t("shell.guitar") : t("shell.piano")} · {t("dash.level", { n: level, name: tx(LEVEL_NAMES[level]) })}
             <Badge tone={tone}>{t("dash.lessonsCount", { done: done.length, total: lessons.length })}</Badge>
           </p>
         </div>
@@ -129,7 +130,7 @@ export function Dashboard() {
         {/* Continue learning */}
         <Card className="overflow-hidden lg:col-span-2">
           <div className={cn("h-1.5", instrument === "guitar" ? "bg-guitar" : "bg-piano")} />
-          <CardHeader icon={<PlayCircle className="h-5 w-5" />} title={inProgress ? t("dash.continueLearning") : t("dash.recommended")} description={continueLesson ? t("dash.lessonMeta", { level: continueLesson.level, levelName: LEVEL_NAMES[continueLesson.level], min: continueLesson.minutes }) : undefined} />
+          <CardHeader icon={<PlayCircle className="h-5 w-5" />} title={inProgress ? t("dash.continueLearning") : t("dash.recommended")} description={continueLesson ? t("dash.lessonMeta", { level: continueLesson.level, levelName: tx(LEVEL_NAMES[continueLesson.level]), min: continueLesson.minutes }) : undefined} />
           <CardBody>
             {loading ? (
               <Skeleton className="h-20" />
@@ -157,7 +158,7 @@ export function Dashboard() {
                 </Link>
               </div>
             ) : LESSONS.length === 0 ? (
-              <EmptyState icon={<BookOpen className="h-8 w-8" />} title="Lessons are loading" description="The curriculum couldn't be found." />
+              <EmptyState icon={<BookOpen className="h-8 w-8" />} title={t("ui.lessons_are_loading")} description={t("ui.the_curriculum_couldn_t_be_found")} />
             ) : (
               <EmptyState icon={<Trophy className="h-8 w-8" />} title={t("dash.allDoneTitle")} description={t("dash.allDoneBody")} action={<Link href="/learn"><Button variant="secondary">{t("dash.browseCurriculum")}</Button></Link>} />
             )}
@@ -250,7 +251,7 @@ export function Dashboard() {
                       {s.instrument === "guitar" ? <Guitar className="h-4 w-4 shrink-0 text-guitar" /> : <Piano className="h-4 w-4 shrink-0 text-piano" />}
                       <span className="truncate">{s.activity}</span>
                     </span>
-                    <span className="shrink-0 text-xs text-muted">{Math.max(1, Math.round(s.durationSec / 60))} min · {new Date(s.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                    <span className="shrink-0 text-xs text-muted">{t("common.min", { n: Math.max(1, Math.round(s.durationSec / 60)) })} · {new Date(s.startedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
                   </li>
                 ))}
               </ul>
@@ -299,8 +300,8 @@ export function Dashboard() {
               <li key={a.id} className={cn("flex items-start gap-3 rounded-xl border p-3", a.earned ? "border-transparent bg-accent-soft" : "border-border opacity-70")}>
                 <Trophy className={cn("mt-0.5 h-4 w-4 shrink-0", a.earned ? "text-accent" : "text-subtle")} aria-hidden />
                 <div>
-                  <p className="text-sm font-medium">{a.title}<span className="sr-only">{a.earned ? " (earned)" : " (not yet earned)"}</span></p>
-                  <p className="text-xs text-muted">{a.description}</p>
+                  <p className="text-sm font-medium">{tx(a.title)}<span className="sr-only">{a.earned ? t("ui.earned_sr") : t("ui.not_earned_sr")}</span></p>
+                  <p className="text-xs text-muted">{tx(a.description)}</p>
                 </div>
               </li>
             ))}
@@ -321,8 +322,9 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
 }
 
 function DashboardSkeleton() {
+  const t = useT();
   return (
-    <div className="space-y-6" aria-busy="true" aria-label="Loading dashboard">
+    <div className="space-y-6" aria-busy="true" aria-label={t("ui.loading_dashboard")}>
       <Skeleton className="h-20" />
       <Skeleton className="h-12 w-72" />
       <div className="grid gap-6 lg:grid-cols-3">

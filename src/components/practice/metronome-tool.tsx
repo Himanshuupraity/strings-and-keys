@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useRef, useState } from "react";
 import { Hand, Minus, Pause, Play, Plus, RotateCcw } from "lucide-react";
@@ -19,6 +20,7 @@ const TEMPO_NAMES: [number, string][] = [[60, "Largo"], [76, "Adagio"], [108, "A
 const tempoName = (bpm: number) => TEMPO_NAMES.find(([b]) => bpm <= b)?.[1] ?? "Presto";
 
 export function MetronomeTool() {
+  const tr = useT();
   const [sig, setSig] = useState<(typeof SIGNATURES)[number]["id"]>("4/4");
   const { ping } = usePracticeLog("Metronome practice");
   const m = useMetronome({ bpm: 80, beatsPerBar: 4, accent: true }, () => ping());
@@ -48,9 +50,9 @@ export function MetronomeTool() {
         <CardBody className="flex flex-col items-center gap-6 py-8">
           <div className="text-center">
             <div className="font-display text-8xl tabular-nums leading-none" aria-live="polite" data-testid="metronome-bpm">{m.bpm}</div>
-            <div className="mt-1 text-sm text-muted">BPM · {tempoName(m.bpm)}{is68 ? " (eighth-note clicks)" : ""}</div>
+            <div className="mt-1 text-sm text-muted">BPM · {tempoName(m.bpm)}{is68 ? tr("ui.eighth_note_clicks") : ""}</div>
           </div>
-          <div className="flex flex-wrap justify-center gap-3" aria-label="Beat indicator">
+          <div className="flex flex-wrap justify-center gap-3" aria-label={tr("ui.beat_indicator")}>
             {Array.from({ length: m.beatsPerBar }, (_, i) => (
               <span
                 key={i}
@@ -65,41 +67,41 @@ export function MetronomeTool() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" size="icon" aria-label="Decrease tempo by 1" onClick={() => m.setBpm(m.bpm - 1)}><Minus className="h-5 w-5" /></Button>
+            <Button variant="secondary" size="icon" aria-label={tr("ui.decrease_tempo_by_1")} onClick={() => m.setBpm(m.bpm - 1)}><Minus className="h-5 w-5" /></Button>
             <Button size="lg" onClick={m.toggle} className="min-w-36" data-testid="metronome-toggle">
               {m.running ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
               {m.running ? "Stop" : "Start"}
             </Button>
-            <Button variant="secondary" size="icon" aria-label="Increase tempo by 1" onClick={() => m.setBpm(m.bpm + 1)}><Plus className="h-5 w-5" /></Button>
+            <Button variant="secondary" size="icon" aria-label={tr("ui.increase_tempo_by_1")} onClick={() => m.setBpm(m.bpm + 1)}><Plus className="h-5 w-5" /></Button>
           </div>
-          <Slider className="w-full max-w-lg" label="Tempo" value={m.bpm} min={MIN_BPM} max={MAX_BPM} onChange={m.setBpm} format={(v) => `${v} BPM`} />
+          <Slider className="w-full max-w-lg" label={tr("ui.tempo")} value={m.bpm} min={MIN_BPM} max={MAX_BPM} onChange={m.setBpm} format={(v) => `${v} BPM`} />
         </CardBody>
       </Card>
 
       <div className="space-y-4">
         <Card>
-          <CardHeader title="Settings" />
+          <CardHeader title={tr("nav./settings")} />
           <CardBody className="space-y-5">
             <div className="space-y-2">
-              <p className="text-sm font-medium">Time signature</p>
-              <Segmented label="Time signature" value={sig} onChange={changeSig} options={SIGNATURES.map((s) => ({ value: s.id, label: s.label }))} className="w-full" />
+              <p className="text-sm font-medium">{tr("ui.time_signature")}</p>
+              <Segmented label={tr("ui.time_signature")} value={sig} onChange={changeSig} options={SIGNATURES.map((s) => ({ value: s.id, label: s.label }))} className="w-full" />
             </div>
-            <Switch label="Accent the first beat" description="A higher click on beat 1 helps you feel the bar." checked={m.accent} onChange={m.setAccent} />
+            <Switch label={tr("ui.accent_the_first_beat")} description={tr("ui.a_higher_click_on_beat_1_helps_you_feel_the_bar")} checked={m.accent} onChange={m.setAccent} />
             <div className="space-y-2">
-              <p className="text-sm font-medium">Tap tempo</p>
-              <Button variant="secondary" className="w-full" onClick={onTap}><Hand className="h-4 w-4" /> Tap here in time{tapped ? ` · ${tapped} BPM` : ""}</Button>
-              <p className="text-xs text-muted">Tap at least twice at the speed of a song you like.</p>
+              <p className="text-sm font-medium">{tr("ui.tap_tempo")}</p>
+              <Button variant="secondary" className="w-full" onClick={onTap}><Hand className="h-4 w-4" /> {tr("ui.tap_here_in_time")}{tapped ? ` · ${tapped} BPM` : ""}</Button>
+              <p className="text-xs text-muted">{tr("ui.tap_at_least_twice_at_the_speed_of_a_song_you_li")}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {[60, 80, 100, 120].map((b) => <Button key={b} size="sm" variant="ghost" onClick={() => m.setBpm(b)}>{b}</Button>)}
-              <Button size="sm" variant="outline" onClick={() => { m.stop(); m.setBpm(80); changeSig("4/4"); m.setAccent(true); tap.current.reset(); setTapped(null); }}><RotateCcw className="h-4 w-4" /> Reset</Button>
+              <Button size="sm" variant="outline" onClick={() => { m.stop(); m.setBpm(80); changeSig("4/4"); m.setAccent(true); tap.current.reset(); setTapped(null); }}><RotateCcw className="h-4 w-4" /> {tr("ui.reset")}</Button>
             </div>
           </CardBody>
         </Card>
         <Card>
           <CardBody className="space-y-2 pt-5 text-sm text-muted">
-            <p className="font-medium text-text">How to practise with a metronome</p>
-            <p>Start slow enough that you can play without mistakes. When you can do it cleanly three times in a row, raise the tempo by 5 BPM.</p>
+            <p className="font-medium text-text">{tr("ui.how_to_practise_with_a_metronome")}</p>
+            <p>{tr("ui.start_slow_enough_that_you_can_play_without_mist")}</p>
           </CardBody>
         </Card>
       </div>

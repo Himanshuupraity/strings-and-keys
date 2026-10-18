@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useState } from "react";
 import { Fretboard, type FretMark } from "@/components/instruments/fretboard";
@@ -17,6 +18,7 @@ const pick = (prev?: number) => {
 
 /** Find any position of a note on frets 0–12. First click counts. */
 export function FindNote() {
+  const tr = useT();
   const [round, setRound] = useState(0);
   const [target, setTarget] = useState(() => pick());
   const [correct, setCorrect] = useState(0);
@@ -32,7 +34,7 @@ export function FindNote() {
     setBusy(true);
     const all = positionsOfPitchClass(target, 12).map((p) => ({ string: p.string, fret: p.fret, tone: "hint" as const }));
     setMarks([...(ok ? [] : all), { string, fret, tone: ok ? "correct" : "wrong" }]);
-    setMsg({ ok, text: ok ? `Correct — that's ${pcName(target)}.` : `That was ${pcName(midi)}. Every ${pcName(target)} is now shown in grey.` });
+    setMsg({ ok, text: ok ? tr("ui.correct_thats", { note: pcName(target) }) : tr("ui.that_was_every_grey", { played: pcName(midi), note: pcName(target) }) });
     const nc = correct + (ok ? 1 : 0);
     setCorrect(nc);
     setTimeout(() => {
@@ -48,15 +50,15 @@ export function FindNote() {
 
   if (round >= ROUNDS)
     return (
-      <ResultSummary title="Find the note" correct={correct} total={ROUNDS} source="measured" onRetry={() => { setRound(0); setCorrect(0); }}>
-        Tip: learn the notes on the low E and A strings first — they are the roots of most chords.
+      <ResultSummary title={tr("ui.find_the_note")} correct={correct} total={ROUNDS} source="measured" onRetry={() => { setRound(0); setCorrect(0); }}>
+        {tr("ui.tip_learn_the_notes_on_the_low_e_and_a_strings_f")}
       </ResultSummary>
     );
 
   return (
     <div className="space-y-4">
       <p className="text-sm">
-        Round {round + 1} of {ROUNDS}: tap <strong>any</strong> position of the note <strong className="text-2xl text-accent">{pcName(target)}</strong> (frets 0–12).
+        {tr("ui.round_of_n", { round: round + 1, total: ROUNDS })} <strong className="text-2xl text-accent">{pcName(target)}</strong> — {tr("ui.tap_any_position_of_note")} {tr("ui.frets_0_12")}
       </p>
       <Fretboard frets={12} marks={marks} onPlay={onPlay} />
       {msg && <p className={cn("text-sm font-medium", msg.ok ? "text-success" : "text-danger")} role="status">{msg.text}</p>}

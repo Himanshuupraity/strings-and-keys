@@ -1,3 +1,5 @@
+import type { MessageKey } from "@/lib/i18n/en";
+import type { I18nMessage } from "@/lib/i18n/messages";
 import { mod12 } from "@/lib/music/notes";
 
 /**
@@ -41,6 +43,21 @@ export function sequenceAccuracy(s: SequenceState): number {
 }
 
 /** Plain-language summary of the most common mistake, for coaching. */
+/** The most common mistake as a translatable message (see mistakeSummary for the English text). */
+export function mistakeSummaryMessage(s: SequenceState, name: (m: number) => string): I18nMessage | null {
+  if (!s.mistakes.length) return null;
+  const counts = new Map<string, number>();
+  for (const m of s.mistakes) {
+    const k = `${m.expected}->${m.played}`;
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+  const [top] = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const [exp, pl] = top[0].split("->").map(Number);
+  const diff = Math.abs(pl - exp);
+  const vars = { played: name(pl), expected: name(exp), times: top[1], semis: { key: diff === 1 ? "unit.semitone.one" : "unit.semitone.many", vars: { n: diff } } } as const;
+  return { key: `seq.mistake${top[1] > 1 ? "Times" : ""}${pl > exp ? "Higher" : "Lower"}` as MessageKey, vars };
+}
+
 export function mistakeSummary(s: SequenceState, name: (m: number) => string): string | null {
   if (!s.mistakes.length) return null;
   const counts = new Map<string, number>();

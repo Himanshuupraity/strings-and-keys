@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Gauge, Piano, Play, RotateCcw, TrendingUp } from "lucide-react";
@@ -30,6 +31,7 @@ interface Run {
 const TYPES = Object.keys(SCALE_TYPES).filter((t) => t !== "chromatic") as ScaleTypeId[];
 
 export function ScaleTrainer() {
+  const tr = useT();
   const [prefs] = usePrefs();
   const instrument = prefs.instrument;
   const [tonic, setTonic] = useState("C");
@@ -114,34 +116,34 @@ export function ScaleTrainer() {
       <Card>
         <CardBody className="flex flex-wrap items-end gap-4 pt-5">
           <div className="space-y-1">
-            <label htmlFor="st-tonic" className="text-sm font-medium">Key</label>
+            <label htmlFor="st-tonic" className="text-sm font-medium">{tr("ui.key")}</label>
             <Select id="st-tonic" value={tonic} onChange={(e) => setTonic(e.target.value)}>
               {MAJOR_KEYS.map((k) => <option key={k}>{k}</option>)}
             </Select>
           </div>
           <div className="space-y-1">
-            <label htmlFor="st-type" className="text-sm font-medium">Scale</label>
+            <label htmlFor="st-type" className="text-sm font-medium">{tr("ui.scale")}</label>
             <Select id="st-type" value={type} onChange={(e) => setType(e.target.value as ScaleTypeId)}>
               {TYPES.map((t) => <option key={t} value={t}>{SCALE_TYPES[t].name}</option>)}
             </Select>
           </div>
-          <Segmented label="Direction" value={direction} onChange={setDirection} options={[{ value: "up", label: "Up" }, { value: "up-down", label: "Up & down" }]} />
-          <Button variant="secondary" onClick={() => void playSequence(instrument, notes, 60 / tempo)}><Play className="h-4 w-4" /> Demonstrate at {tempo} BPM</Button>
+          <Segmented label={tr("ui.direction")} value={direction} onChange={setDirection} options={[{ value: "up", label: tr("ui.up_2") }, { value: "up-down", label: tr("ui.up_down") }]} />
+          <Button variant="secondary" onClick={() => void playSequence(instrument, notes, 60 / tempo)}><Play className="h-4 w-4" /> {tr("ui.demonstrate_at", { bpm: tempo })}</Button>
         </CardBody>
         <CardBody>
           <p className="text-sm text-muted">{SCALE_TYPES[type].description}</p>
-          <p className="mt-1 text-sm">Notes: <strong>{scaleNoteNames(tonic, type).join(" ")}</strong></p>
+          <p className="mt-1 text-sm">{tr("ui.notes")} <strong>{scaleNoteNames(tonic, type).join(" ")}</strong></p>
         </CardBody>
       </Card>
 
       <Card>
         <CardHeader
-          title={target !== null ? <>Play <span className="text-accent"><NoteText midi={target} withOctave /></span></> : "Scale complete!"}
-          description={`Note ${Math.min(seq.index + 1, seq.targets.length)} of ${seq.targets.length}. Use the ${instrument === "guitar" ? "fretboard" : "keyboard"} below, a MIDI keyboard, or your real instrument with the microphone.`}
+          title={target !== null ? <>{tr("ui.play_word")} <span className="text-accent"><NoteText midi={target} withOctave /></span></> : tr("ui.scale_complete")}
+          description={tr(instrument === "guitar" ? "ui.note_of_fretboard" : "ui.note_of_keyboard", { i: Math.min(seq.index + 1, seq.targets.length), n: seq.targets.length })}
           action={<Badge tone={instrument}>{instrument === "guitar" ? "Guitar" : "Piano"} mode</Badge>}
         />
         <CardBody className="space-y-4">
-          <div className="flex flex-wrap gap-1.5" aria-label="Progress through the scale">
+          <div className="flex flex-wrap gap-1.5" aria-label={tr("ui.progress_through_the_scale")}>
             {seq.targets.map((n, i) => (
               <span key={i} className={cn("rounded-lg px-2 py-1 text-sm font-medium", i < seq.index ? (seq.wrongBefore[i] ? "bg-warn-soft text-warn" : "bg-success-soft text-success") : i === seq.index ? "bg-accent text-accent-fg" : "bg-surface-2 text-muted")}>
                 <NoteText midi={n} />
@@ -154,49 +156,49 @@ export function ScaleTrainer() {
             <Fretboard marks={marks} highlightPitchClasses={pcs} rootPc={tonicPc} onPlay={(p) => onNote(p.midi, "virtual")} />
           )}
           {lastWrong !== null && target !== null && (
-            <p className="text-sm text-danger" aria-live="polite">That was {name(lastWrong)} — the next note is {name(target)} ({lastWrong > target ? "lower" : "higher"}).</p>
+            <p className="text-sm text-danger" aria-live="polite">{tr(lastWrong > target ? "ui.that_was_next_lower" : "ui.that_was_next_higher", { a: name(lastWrong), b: name(target) })}</p>
           )}
         </CardBody>
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Tempo & play-along" icon={<Gauge className="h-5 w-5" />} />
+          <CardHeader title={tr("ui.tempo_play_along")} icon={<Gauge className="h-5 w-5" />} />
           <CardBody className="space-y-4">
-            <Slider label="Target tempo" value={tempo} min={40} max={200} step={5} onChange={setTempo} format={(v) => `${v} BPM`} />
+            <Slider label={tr("ui.target_tempo")} value={tempo} min={40} max={200} step={5} onChange={setTempo} format={(v) => `${v} BPM`} />
             <MetronomeWidget key={tempo} initialBpm={tempo} />
-            <Switch label="Gradual speed-up" description="After a clean run (no mistakes), go 5 BPM faster." checked={autoSpeed} onChange={setAutoSpeed} />
-            <p className="text-xs text-muted">Start slow. Speed comes from accuracy, not the other way round.</p>
+            <Switch label={tr("ui.gradual_speed_up")} description={tr("ui.after_a_clean_run_no_mistakes_go_5_bpm_faster")} checked={autoSpeed} onChange={setAutoSpeed} />
+            <p className="text-xs text-muted">{tr("ui.start_slow_speed_comes_from_accuracy_not_the_oth")}</p>
           </CardBody>
         </Card>
         <Card aria-live="polite">
-          <CardHeader title="Your run" action={seq.done ? <SourceTag source="measured" /> : undefined} />
+          <CardHeader title={tr("ui.your_run")} action={seq.done ? <SourceTag source="measured" /> : undefined} />
           <CardBody className="space-y-3">
             <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-xl bg-surface-2 p-3"><p className="text-2xl font-semibold">{seq.wrongBefore.slice(0, seq.index).filter((w) => w === 0).length}</p><p className="text-xs text-muted">first-try correct</p></div>
-              <div className="rounded-xl bg-surface-2 p-3"><p className="text-2xl font-semibold">{seq.mistakes.length}</p><p className="text-xs text-muted">wrong notes</p></div>
-              <div className="rounded-xl bg-surface-2 p-3"><p className="text-2xl font-semibold">{evenness ? `${Math.round(evenness.steadiness * 100)}%` : "—"}</p><p className="text-xs text-muted">steadiness</p></div>
+              <div className="rounded-xl bg-surface-2 p-3"><p className="text-2xl font-semibold">{seq.wrongBefore.slice(0, seq.index).filter((w) => w === 0).length}</p><p className="text-xs text-muted">{tr("ui.first_try_correct")}</p></div>
+              <div className="rounded-xl bg-surface-2 p-3"><p className="text-2xl font-semibold">{seq.mistakes.length}</p><p className="text-xs text-muted">{tr("ui.wrong_notes")}</p></div>
+              <div className="rounded-xl bg-surface-2 p-3"><p className="text-2xl font-semibold">{evenness ? `${Math.round(evenness.steadiness * 100)}%` : "—"}</p><p className="text-xs text-muted">{tr("ui.steadiness")}</p></div>
             </div>
-            {evenness && <p className="text-sm text-muted">Average gap between notes {Math.round(evenness.mean)} ms (target at {tempo} BPM: {Math.round(60000 / tempo)} ms).{source === "mic" ? " Microphone timing includes a little detection delay." : ""}</p>}
+            {evenness && <p className="text-sm text-muted">{tr("ui.avg_gap", { ms: Math.round(evenness.mean), bpm: tempo, target: Math.round(60000 / tempo) })}{source === "mic" ? ` ${tr("ui.mic_delay_note")}` : ""}</p>}
             {mistakeSummary(seq, name) && <p className="text-sm">{mistakeSummary(seq, name)}</p>}
             {seq.done && (
-              <Callout tone={clean ? "success" : "neutral"} icon={<CheckCircle2 className="h-4 w-4" />} title={clean ? "Clean run!" : `Finished with ${Math.round(accuracy * 100)}% first-try accuracy`}>
-                {clean ? (autoSpeed ? `Next run at ${Math.min(200, tempo + 5)} BPM.` : "Try it a little faster, or with your eyes off the screen.") : "Repeat at the same tempo until it's clean."}
+              <Callout tone={clean ? "success" : "neutral"} icon={<CheckCircle2 className="h-4 w-4" />} title={clean ? tr("ui.clean_run") : `Finished with ${Math.round(accuracy * 100)}% first-try accuracy`}>
+                {clean ? (autoSpeed ? tr("ui.next_run_at", { bpm: Math.min(200, tempo + 5) }) : tr("ui.try_it_a_little_faster_or_with_your_eyes_off_the")) : tr("ui.repeat_at_the_same_tempo_until_it_s_clean")}
               </Callout>
             )}
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={() => reset(false)}><RotateCcw className="h-4 w-4" /> Restart</Button>
-              {clean && autoSpeed && <Button onClick={() => reset(true)}><TrendingUp className="h-4 w-4" /> Again, 5 BPM faster</Button>}
+              <Button variant="secondary" onClick={() => reset(false)}><RotateCcw className="h-4 w-4" /> {tr("ui.restart")}</Button>
+              {clean && autoSpeed && <Button onClick={() => reset(true)}><TrendingUp className="h-4 w-4" /> {tr("ui.again_5_bpm_faster")}</Button>}
             </div>
           </CardBody>
         </Card>
       </div>
 
       <Card>
-        <CardHeader title="Play your real instrument" icon={<Piano className="h-5 w-5" />} description="The microphone counts a note once it hears a clear, steady pitch. Play one note at a time." />
+        <CardHeader title={tr("ui.play_your_real_instrument")} icon={<Piano className="h-5 w-5" />} description={tr("ui.the_microphone_counts_a_note_once_it_hears_a_cle")} />
         <CardBody className="flex flex-wrap items-start gap-6">
           <MicButton status={input.mic.status} error={input.mic.error} onStart={() => void input.mic.start()} onStop={input.mic.stop} />
-          {input.midi.supported && (input.midi.status === "connected" ? <Badge tone="success">MIDI: {input.midi.devices.join(", ") || "waiting for device"}</Badge> : <Button variant="secondary" onClick={() => void input.midi.connect()}>Connect MIDI</Button>)}
+          {input.midi.supported && (input.midi.status === "connected" ? <Badge tone="success">MIDI: {input.midi.devices.join(", ") || "waiting for device"}</Badge> : <Button variant="secondary" onClick={() => void input.midi.connect()}>{tr("ui.connect_midi")}</Button>)}
         </CardBody>
       </Card>
     </div>

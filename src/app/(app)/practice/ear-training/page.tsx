@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.ear" description="Train your ears to recognise pitches, intervals, chords, melodies and swaras." />
+      <TPageHeader titleKey="tool.ear" descriptionKey="tool.desc.ear" />
       <EarTraining />
     </>
   );

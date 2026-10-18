@@ -2,6 +2,7 @@ import { chordMidi } from "@/lib/music/chords";
 import { mod12, pcName } from "@/lib/music/notes";
 import { SWARAS } from "@/lib/music/sargam";
 import { intervalName, SCALE_TYPES } from "@/lib/music/scales";
+import { enText, type I18nMessage } from "@/lib/i18n/messages";
 
 export type Rng = () => number;
 const pick = <T,>(rng: Rng, arr: readonly T[]): T => arr[Math.floor(rng() * arr.length) % arr.length];
@@ -19,6 +20,13 @@ export interface EarQuestion {
   /** For answers given on the keyboard (match-note, melody). */
   answerNotes?: number[];
   explanation: string;
+  /** Translatable forms of prompt / explanation (the English fields above are their English text). */
+  promptMsg: I18nMessage;
+  explanationMsg: I18nMessage;
+}
+
+function q(base: Omit<EarQuestion, "prompt" | "explanation">): EarQuestion {
+  return { ...base, prompt: enText(base.promptMsg), explanation: enText(base.explanationMsg) };
 }
 
 export function highLowQuestion(rng: Rng): EarQuestion {
@@ -27,12 +35,12 @@ export function highLowQuestion(rng: Rng): EarQuestion {
   if (a + diff < 48) diff = Math.abs(diff);
   const b = a + diff;
   const answer = b > a ? "Higher" : "Lower";
-  return { mode: "high-low", prompt: "Is the second note higher or lower than the first?", play: [{ kind: "sequence", notes: [a, b] }], options: ["Higher", "Lower"], answer, explanation: `The second note was ${Math.abs(diff)} semitones ${answer.toLowerCase()}.` };
+  return q({ mode: "high-low", promptMsg: { key: "ear.hl.prompt" }, play: [{ kind: "sequence", notes: [a, b] }], options: ["Higher", "Lower"], answer, explanationMsg: { key: answer === "Higher" ? "ear.hl.expHigher" : "ear.hl.expLower", vars: { n: Math.abs(diff) } } });
 }
 
 export function matchNoteQuestion(rng: Rng): EarQuestion {
   const n = int(rng, 60, 71);
-  return { mode: "match-note", prompt: "Listen, then find the same note on the keyboard (C4–B4).", play: [{ kind: "sequence", notes: [n] }], options: [], answer: pcName(n), answerNotes: [n], explanation: `It was ${pcName(n)}4.` };
+  return q({ mode: "match-note", promptMsg: { key: "ear.match.prompt" }, play: [{ kind: "sequence", notes: [n] }], options: [], answer: pcName(n), answerNotes: [n], explanationMsg: { key: "ear.itWas", vars: { note: `${pcName(n)}4` } } });
 }
 
 export function majorMinorQuestion(rng: Rng): EarQuestion {
@@ -40,7 +48,7 @@ export function majorMinorQuestion(rng: Rng): EarQuestion {
   const minor = rng() < 0.5;
   const sym = root + (minor ? "m" : "");
   const notes = chordMidi(sym, 4);
-  return { mode: "major-minor", prompt: "Major (bright) or minor (darker) chord?", play: [{ kind: "chord", notes }, { kind: "sequence", notes }], options: ["Major", "Minor"], answer: minor ? "Minor" : "Major", explanation: `That was ${sym} — ${minor ? "the middle note is a minor 3rd above the root, giving the darker sound" : "the middle note is a major 3rd above the root, giving the bright sound"}.` };
+  return q({ mode: "major-minor", promptMsg: { key: "ear.mm.prompt" }, play: [{ kind: "chord", notes }, { kind: "sequence", notes }], options: ["Major", "Minor"], answer: minor ? "Minor" : "Major", explanationMsg: { key: minor ? "ear.mm.expMinor" : "ear.mm.expMajor", vars: { chord: sym } } });
 }
 
 export function intervalQuestion(rng: Rng, maxSemitones = 12): EarQuestion {
@@ -51,7 +59,7 @@ export function intervalQuestion(rng: Rng, maxSemitones = 12): EarQuestion {
   const opts = new Set([semis]);
   while (opts.size < Math.min(4, pool.length)) opts.add(pick(rng, distractors));
   const options = [...opts].sort((a, b) => a - b).map(intervalName);
-  return { mode: "interval", prompt: "Which interval do you hear (two notes, low then high)?", play: [{ kind: "sequence", notes: [root, root + semis] }], options, answer: intervalName(semis), explanation: `${intervalName(semis)} = ${semis} semitones.` };
+  return q({ mode: "interval", promptMsg: { key: "ear.int.prompt" }, play: [{ kind: "sequence", notes: [root, root + semis] }], options, answer: intervalName(semis), explanationMsg: { key: "ear.int.exp", vars: { name: intervalName(semis), n: semis } } });
 }
 
 export function melodyQuestion(rng: Rng, length = 3): EarQuestion {
@@ -62,7 +70,7 @@ export function melodyQuestion(rng: Rng, length = 3): EarQuestion {
     notes.push(scale[i]);
     i = Math.max(0, Math.min(scale.length - 1, i + pick(rng, [-2, -1, 1, 2])));
   }
-  return { mode: "melody", prompt: `Listen to the ${length}-note melody (uses C D E F G), then play it back on the keyboard.`, play: [{ kind: "sequence", notes }], options: [], answer: notes.map((n) => pcName(n)).join(" "), answerNotes: notes, explanation: `The melody was ${notes.map((n) => pcName(n)).join(" – ")}.` };
+  return q({ mode: "melody", promptMsg: { key: "ear.mel.prompt", vars: { n: length } }, play: [{ kind: "sequence", notes }], options: [], answer: notes.map((n) => pcName(n)).join(" "), answerNotes: notes, explanationMsg: { key: "ear.mel.exp", vars: { notes: notes.map((n) => pcName(n)).join(" – ") } } });
 }
 
 export function scaleNoteQuestion(rng: Rng): EarQuestion {
@@ -70,7 +78,7 @@ export function scaleNoteQuestion(rng: Rng): EarQuestion {
   const deg = int(rng, 1, 6);
   const notes = [60 + intervals[deg]];
   const names = ["Do (1)", "Re (2)", "Mi (3)", "Fa (4)", "So (5)", "La (6)", "Ti (7)"];
-  return { mode: "scale-note", prompt: "After the C major scale, which scale degree is the last note?", play: [{ kind: "sequence", notes: [60, 62, 64, 65, 67, 69, 71, 72] }, { kind: "sequence", notes }], options: names, answer: names[deg], explanation: `It was ${pcName(notes[0])}, degree ${deg + 1} of C major.` };
+  return q({ mode: "scale-note", promptMsg: { key: "ear.deg.prompt" }, play: [{ kind: "sequence", notes: [60, 62, 64, 65, 67, 69, 71, 72] }, { kind: "sequence", notes }], options: names, answer: names[deg], explanationMsg: { key: "ear.deg.exp", vars: { note: pcName(notes[0]), d: deg + 1 } } });
 }
 
 /** Swara relative to the student's chosen Sa. Plays Sa first as a reference. */
@@ -80,7 +88,7 @@ export function swaraQuestion(rng: Rng, tonicPc: number, shuddhaOnly = true): Ea
   const d = pick(rng, degrees.slice(1));
   const swara = SWARAS[d];
   const options = degrees.map((x) => SWARAS[x].full);
-  return { mode: "swara", prompt: `Sa (${pcName(tonicPc)}) plays first. Which swara comes next?`, play: [{ kind: "sequence", notes: [sa, sa + d] }], options, answer: swara.full, explanation: `It was ${swara.full} (${pcName(sa + d)}), ${d} semitones above Sa.` };
+  return q({ mode: "swara", promptMsg: { key: "ear.sw.prompt", vars: { note: pcName(tonicPc) } }, play: [{ kind: "sequence", notes: [sa, sa + d] }], options, answer: swara.full, explanationMsg: { key: "ear.sw.exp", vars: { swara: swara.full, note: pcName(sa + d), n: d } } });
 }
 
 export function makeQuestion(mode: EarMode, rng: Rng, tonicPc = 0, level = 1): EarQuestion {

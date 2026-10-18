@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Download, Pause, Pencil, Play, Share2, Trash2 } from "lucide-react";
@@ -28,9 +29,11 @@ function useRecordings(sheetId?: string) {
 
 /** List of recordings (all, or only those made with one song sheet). */
 export function RecordingsList({ sheetId, showUsage = true, emptyHint }: { sheetId?: string; showUsage?: boolean; emptyHint?: string }) {
+  const tr = useT();
+  const tx = useTx();
   const { loading, items, bytes, error } = useRecordings(sheetId);
   if (loading) return <Skeleton className="h-24" />;
-  if (error) return <Callout tone="warn" title="Recordings unavailable">{error}</Callout>;
+  if (error) return <Callout tone="warn" title={tr("ui.recordings_unavailable")}>{tx(error)}</Callout>;
   return (
     <div className="space-y-3" data-testid="recordings-list">
       {showUsage && items.length > 0 && (
@@ -43,21 +46,21 @@ export function RecordingsList({ sheetId, showUsage = true, emptyHint }: { sheet
               size="sm"
               variant="ghost"
               onClick={async () => {
-                if (!window.confirm("Delete all recordings on this device? This can't be undone.")) return;
+                if (!window.confirm(tr("ui.delete_all_recordings_on_this_device_this_can_t"))) return;
                 await recordingsRepo.clear();
-                toast.success("All recordings deleted");
+                toast.success(tr("ui.all_recordings_deleted"));
               }}
             >
-              <Trash2 className="h-4 w-4" /> Delete all
+              <Trash2 className="h-4 w-4" /> {tr("ui.delete_all")}
             </Button>
           )}
         </div>
       )}
       {showUsage && bytes > STORAGE_WARN_BYTES && (
-        <Callout tone="warn" title="Recordings are using a lot of space">Over {formatBytes(STORAGE_WARN_BYTES)} on this device. Download the ones you want to keep and delete the rest.</Callout>
+        <Callout tone="warn" title={tr("ui.recordings_are_using_a_lot_of_space")}>{tr("ui.rec_space_over", { size: formatBytes(STORAGE_WARN_BYTES) })}</Callout>
       )}
       {items.length === 0 ? (
-        <EmptyState title="No recordings yet" description={emptyHint ?? "Tap Record, play or sing, then Stop. Listening back is one of the fastest ways to improve."} />
+        <EmptyState title={tr("ui.no_recordings_yet")} description={emptyHint ?? tr("ui.tap_record_play_or_sing_then_stop_listening_back")} />
       ) : (
         <ul className="space-y-2">
           {items.map((r) => (
@@ -72,6 +75,7 @@ export function RecordingsList({ sheetId, showUsage = true, emptyHint }: { sheet
 const SPEEDS = [0.75, 1, 1.25] as const;
 
 function RecordingRow({ rec }: { rec: RecordingMeta }) {
+  const tr = useT();
   const audio = useRef<HTMLAudioElement | null>(null);
   const [url, setUrl] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -90,7 +94,7 @@ function RecordingRow({ rec }: { rec: RecordingMeta }) {
     if (url) return url;
     const blob = await recordingsRepo.getBlob(rec.id);
     if (!blob) {
-      toast.error("This recording's audio is missing.");
+      toast.error(tr("ui.this_recording_s_audio_is_missing"));
       return null;
     }
     const u = URL.createObjectURL(blob);
@@ -104,7 +108,7 @@ function RecordingRow({ rec }: { rec: RecordingMeta }) {
     if (audio.current.src !== u) audio.current.src = u;
     audio.current.playbackRate = speed;
     (audio.current as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
-    if (audio.current.paused) await audio.current.play().catch(() => toast.error("Couldn't play this recording."));
+    if (audio.current.paused) await audio.current.play().catch(() => toast.error(tr("ui.couldn_t_play_this_recording")));
     else audio.current.pause();
   };
 
@@ -140,7 +144,7 @@ function RecordingRow({ rec }: { rec: RecordingMeta }) {
         onLoadedMetadata={(e) => Number.isFinite(e.currentTarget.duration) && setDuration(e.currentTarget.duration)}
       />
       <div className="flex items-start gap-3">
-        <Button size="icon" variant={playing ? "secondary" : "primary"} aria-label={playing ? `Pause ${rec.title}` : `Play ${rec.title}`} onClick={() => void toggle()}>
+        <Button size="icon" variant={playing ? "secondary" : "primary"} aria-label={tr(playing ? "ui.pause_x" : "ui.play_x", { x: rec.title })} onClick={() => void toggle()}>
           {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </Button>
         <div className="min-w-0 flex-1">
@@ -153,8 +157,8 @@ function RecordingRow({ rec }: { rec: RecordingMeta }) {
                 setEditing(false);
               }}
             >
-              <Input aria-label="Recording name" value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} autoFocus />
-              <Button type="submit" size="icon" aria-label="Save name">
+              <Input aria-label={tr("ui.recording_name")} value={title} maxLength={100} onChange={(e) => setTitle(e.target.value)} autoFocus />
+              <Button type="submit" size="icon" aria-label={tr("ui.save_name")}>
                 <Check className="h-4 w-4" />
               </Button>
             </form>
@@ -178,13 +182,13 @@ function RecordingRow({ rec }: { rec: RecordingMeta }) {
               audio.current.currentTime = v;
               setTime(v);
             }}
-            aria-label={`Position in ${rec.title}`}
+            aria-label={tr("ui.position_in_x", { x: rec.title })}
             className="mt-1 w-full accent-[var(--accent)]"
           />
         </div>
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-1">
-        <div className="mr-auto flex gap-1" role="group" aria-label="Playback speed">
+        <div className="mr-auto flex gap-1" role="group" aria-label={tr("ui.playback_speed")}>
           {SPEEDS.map((s) => (
             <button
               key={s}

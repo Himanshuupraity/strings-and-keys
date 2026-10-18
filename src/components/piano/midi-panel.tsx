@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { Cable, PlugZap, Unplug } from "lucide-react";
 import { Badge, Button, Callout, Card, CardBody, CardHeader } from "@/components/ui";
@@ -21,18 +22,19 @@ export function MidiPanel({
   onConnect: () => void;
   onDisconnect: () => void;
 }) {
+  const tr = useT();
   return (
     <Card>
       <CardHeader
         icon={<Cable className="h-5 w-5" />}
-        title="MIDI keyboard"
-        description="Optional. Gives exact notes and timing — more reliable than a microphone."
-        action={status === "connected" ? <Badge tone="success">Connected</Badge> : undefined}
+        title={tr("ui.midi_keyboard")}
+        description={tr("ui.optional_gives_exact_notes_and_timing_more_relia")}
+        action={status === "connected" ? <Badge tone="success">{tr("ui.connected")}</Badge> : undefined}
       />
       <CardBody className="space-y-3">
         {!supported ? (
-          <Callout tone="warn" title="Web MIDI isn't available in this browser">
-            Use Chrome, Edge or Opera on a desktop computer (Firefox 108+ also works). Safari and iOS don&apos;t support Web MIDI — the on-screen keys and your computer keyboard still work fine.
+          <Callout tone="warn" title={tr("ui.web_midi_isn_t_available_in_this_browser")}>
+            {tr("ui.use_chrome_edge_or_opera_on_a_desktop_computer_f")}
           </Callout>
         ) : status === "connected" ? (
           <>
@@ -45,21 +47,21 @@ export function MidiPanel({
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted">Access granted, but no keyboard is plugged in. Connect one by USB — it will appear here automatically.</p>
+              <p className="text-sm text-muted">{tr("ui.access_granted_but_no_keyboard_is_plugged_in_con")}</p>
             )}
             <p className="text-sm" aria-live="polite">
-              <span className="text-muted">Incoming notes: </span>
+              <span className="text-muted">{tr("ui.incoming_notes")} </span>
               <span className="font-medium">{held.size ? [...held].sort((a, b) => a - b).map((m) => midiToName(m)).join(", ") : "—"}</span>
             </p>
             <Button size="sm" variant="ghost" onClick={onDisconnect}>
-              <Unplug className="h-4 w-4" /> Disconnect
+              <Unplug className="h-4 w-4" /> {tr("ui.disconnect")}
             </Button>
           </>
         ) : (
           <>
-            <p className="text-sm text-muted">Plug your keyboard in by USB (or a USB-MIDI adapter) first, then connect. Your browser will ask for permission.</p>
+            <p className="text-sm text-muted">{tr("ui.plug_your_keyboard_in_by_usb_or_a_usb_midi_adapt")}</p>
             <Button size="sm" onClick={onConnect} loading={status === "connecting"} data-testid="midi-connect">
-              <PlugZap className="h-4 w-4" /> Connect MIDI keyboard
+              <PlugZap className="h-4 w-4" /> {tr("ui.connect_midi_keyboard")}
             </Button>
             {error && <Callout tone="danger">{error}</Callout>}
           </>

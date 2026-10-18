@@ -5,6 +5,7 @@ import { parseChord } from "@/lib/music/chords";
 import { mod12 } from "@/lib/music/notes";
 import { isDone } from "@/lib/progress/engine";
 import type { ChordDrillResult, LessonProgress, SongProgress } from "@/lib/storage/schemas";
+import { enText, type I18nMessage } from "@/lib/i18n/messages";
 
 /**
  * Which chords the learner already knows, from evidence only (never assumed):
@@ -72,28 +73,33 @@ export interface KnownChordInput {
 
 export const DRILL_KNOWN_THRESHOLD = 15;
 
-/** chord → why we think you know it (first reason found). */
-export function knownChords(input: KnownChordInput): Map<string, string> {
-  const known = new Map<string, string>();
-  const add = (chord: string | null, why: string) => {
+/** chord → why we think you know it (first reason found), as translatable messages. */
+export function knownChordReasons(input: KnownChordInput): Map<string, I18nMessage> {
+  const known = new Map<string, I18nMessage>();
+  const add = (chord: string | null, why: I18nMessage) => {
     if (chord && !known.has(chord)) known.set(chord, why);
   };
   for (const p of input.songProgress) {
     if (p.instrument !== input.instrument || !p.sectionsMastered.length) continue;
     const song = input.songs.find((s) => s.id === p.songId);
     if (!song) continue;
-    for (const c of songShapes(song, input.instrument, p.sectionsMastered)) add(c, `you can play it in ${song.title}`);
+    for (const c of songShapes(song, input.instrument, p.sectionsMastered)) add(c, { key: "known.fromSong", vars: { title: song.title } });
   }
   if (input.instrument === "guitar") {
     for (const d of input.drills) {
       if (d.untimed || d.transitions < DRILL_KNOWN_THRESHOLD) continue;
-      d.pair.forEach((c) => add(canonChord(c), `${d.transitions} changes/min in the chord drill`));
+      d.pair.forEach((c) => add(canonChord(c), { key: "known.fromDrill", vars: { n: d.transitions } }));
     }
   }
   for (const lesson of input.lessons) {
     if (lesson.track !== input.instrument && lesson.track !== "theory") continue;
     if (!isDone(input.lessonProgress[lesson.id])) continue;
-    for (const c of lessonChords(lesson)) add(c, `from the lesson “${lesson.title}”`);
+    for (const c of lessonChords(lesson)) add(c, { key: "known.fromLesson", vars: { title: lesson.title } });
   }
   return known;
+}
+
+/** chord → why we think you know it (first reason found), in English. */
+export function knownChords(input: KnownChordInput): Map<string, string> {
+  return new Map([...knownChordReasons(input)].map(([c, m]) => [c, enText(m)]));
 }

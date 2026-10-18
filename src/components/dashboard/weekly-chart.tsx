@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -18,6 +19,7 @@ const SERIES = [
 ] as const;
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; value: number }[]; label?: string }) {
+  const tl = useT();
   if (!active || !payload?.length) return null;
   const total = payload.reduce((a, p) => a + (p.value || 0), 0);
   return (
@@ -32,13 +34,14 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
           </p>
         );
       })}
-      <p className="mt-1 border-t border-border pt-1 text-muted">Total: <span className="font-medium text-text">{Math.round(total * 10) / 10} min</span></p>
+      <p className="mt-1 border-t border-border pt-1 text-muted">{tl("ui.total")} <span className="font-medium text-text">{Math.round(total * 10) / 10} min</span></p>
     </div>
   );
 }
 
 /** Stacked weekly practice minutes, guitar vs piano, with a table view for accessibility. */
 export function WeeklyChart({ data, height = 220 }: { data: WeeklyRow[]; height?: number }) {
+  const tl = useT();
   const [table, setTable] = useState(false);
   return (
     <div>
@@ -56,12 +59,12 @@ export function WeeklyChart({ data, height = 220 }: { data: WeeklyRow[]; height?
       </div>
       {table ? (
         <table className="w-full text-sm">
-          <caption className="sr-only">Practice minutes per day, last 7 days</caption>
+          <caption className="sr-only">{tl("ui.practice_minutes_per_day_last_7_days")}</caption>
           <thead>
             <tr className="text-left text-xs text-muted">
-              <th className="py-1 font-medium">Day</th>
-              <th className="py-1 text-right font-medium">Guitar</th>
-              <th className="py-1 text-right font-medium">Piano</th>
+              <th className="py-1 font-medium">{tl("ui.day")}</th>
+              <th className="py-1 text-right font-medium">{tl("shell.guitar")}</th>
+              <th className="py-1 text-right font-medium">{tl("shell.piano")}</th>
             </tr>
           </thead>
           <tbody>
@@ -82,8 +85,8 @@ export function WeeklyChart({ data, height = 220 }: { data: WeeklyRow[]; height?
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "var(--muted)", fontSize: 12 }} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fill: "var(--muted)", fontSize: 12 }} width={44} />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--surface-2)" }} />
-              <Bar dataKey="guitar" stackId="m" fill="var(--chart-guitar)" stroke="var(--surface)" strokeWidth={2} name="Guitar" />
-              <Bar dataKey="piano" stackId="m" fill="var(--chart-piano)" stroke="var(--surface)" strokeWidth={2} radius={[4, 4, 0, 0]} name="Piano" />
+              <Bar dataKey="guitar" stackId="m" fill="var(--chart-guitar)" stroke="var(--surface)" strokeWidth={2} name={tl("shell.guitar")} />
+              <Bar dataKey="piano" stackId="m" fill="var(--chart-piano)" stroke="var(--surface)" strokeWidth={2} radius={[4, 4, 0, 0]} name={tl("shell.piano")} />
             </BarChart>
           </ResponsiveContainer>
         </div>

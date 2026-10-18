@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.noteDetector" description="Play a single note on your piano or keyboard and check whether it matches the target." />
+      <TPageHeader titleKey="tool.noteDetector" descriptionKey="tool.desc.noteDetector" />
       <NoteDetector />
     </>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/i18n";
+import { useT, useTx } from "@/lib/i18n";
 import { useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronLeft, ChevronRight, Crosshair, Hand, Info, KeyboardMusic, Music2, Piano, SlidersHorizontal, ZoomIn } from "lucide-react";
 import { Badge, Button, Callout, Card, CardBody, CardHeader, PageHeader, Segmented, Select, Slider, Switch, cn } from "@/components/ui";
@@ -114,19 +114,19 @@ export function PianoLab() {
       <PageHeader
         eyebrow={t("nav./piano-lab")}
         title={t("pianoLab.title")}
-        description="Play with your mouse, fingers, computer keyboard or a MIDI keyboard. Every key makes real sound and shows its name."
+        description={t("ui.play_with_your_mouse_fingers_computer_keyboard_o")}
         actions={
           <>
             <Button variant="secondary" onClick={findMiddleC} data-testid="find-middle-c">
-              <Crosshair className="h-4 w-4" /> Find middle C
+              <Crosshair className="h-4 w-4" /> {t("ui.find_middle_c")}
             </Button>
             <Segmented
-              label="Lab mode"
+              label={t("ui.lab_mode")}
               value={mode}
               onChange={setMode}
               options={[
-                { value: "free", label: "Free play", icon: <Piano className="h-4 w-4" />, testId: "piano-mode-free" },
-                { value: "exercises", label: "Guided exercises", icon: <Music2 className="h-4 w-4" />, testId: "piano-mode-exercises" },
+                { value: "free", label: t("ui.free_play"), icon: <Piano className="h-4 w-4" />, testId: "piano-mode-free" },
+                { value: "exercises", label: t("ui.guided_exercises"), icon: <Music2 className="h-4 w-4" />, testId: "piano-mode-exercises" },
               ]}
             />
           </>
@@ -140,9 +140,9 @@ export function PianoLab() {
           <Card className="order-2 sm:order-none">
             <CardBody className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-5">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Keyboard size</span>
+                <span className="text-sm font-medium">{t("ui.keyboard_size")}</span>
                 <Segmented<KeyboardSize>
-                  label="Keyboard size"
+                  label={t("ui.keyboard_size")}
                   size="sm"
                   value={prefs.keyboardSize}
                   onChange={(keyboardSize) => {
@@ -153,37 +153,37 @@ export function PianoLab() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">View</span>
+                <span className="text-sm font-medium">{t("ui.view")}</span>
                 <Segmented
-                  label="Keyboard view"
+                  label={t("ui.keyboard_view")}
                   size="sm"
                   value={view}
                   onChange={(v) => setViewChoice(v)}
                   options={[
-                    { value: "full", label: "Full range" },
-                    { value: "focus", label: "2-octave focus" },
+                    { value: "full", label: t("ui.full_range") },
+                    { value: "focus", label: t("ui.2_octave_focus") },
                   ]}
                 />
               </div>
               {view === "focus" && (
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Move view down an octave" disabled={range.low <= preset.low} onClick={() => setFocusStart(Math.max(preset.low, range.low - 12))}>
+                  <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={t("ui.move_view_down_an_octave")} disabled={range.low <= preset.low} onClick={() => setFocusStart(Math.max(preset.low, range.low - 12))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm tabular-nums text-muted">
                     {midiToName(range.low)}–{midiToName(range.high)}
                   </span>
-                  <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Move view up an octave" disabled={range.high >= preset.high} onClick={() => setFocusStart(range.low + 12)}>
+                  <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={t("ui.move_view_up_an_octave")} disabled={range.high >= preset.high} onClick={() => setFocusStart(range.low + 12)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               )}
               <div className="flex min-w-48 flex-1 items-center gap-2">
                 <ZoomIn className="h-4 w-4 text-muted" aria-hidden />
-                <Slider className="flex-1" label="Key width" value={whiteKeyWidth} min={22} max={64} step={2} onChange={setZoom} format={(v) => `${v}px`} />
+                <Slider className="flex-1" label={t("ui.key_width")} value={whiteKeyWidth} min={22} max={64} step={2} onChange={setZoom} format={(v) => `${v}px`} />
               </div>
               <p className="w-full text-xs text-muted" data-testid="key-count">
-                Showing <strong className="text-text">{keyCount} keys</strong> ({midiToName(range.low)}–{midiToName(range.high)}) of the {prefs.keyboardSize}-key layout ({presetLabel}). Scroll sideways to see more.
+                {t("ui.showing")} {t("ui.key_count_line", { count: keyCount, low: midiToName(range.low), high: midiToName(range.high), size: prefs.keyboardSize, preset: presetLabel })}
               </p>
             </CardBody>
           </Card>
@@ -197,14 +197,14 @@ export function PianoLab() {
           <DisplaySettings keyLabels={keyLabels} setKeyLabels={setKeyLabels} />
           <MidiPanel supported={midi.supported} status={midi.status} devices={midi.devices} error={midi.error} held={midi.held} onConnect={midi.connect} onDisconnect={midi.disconnect} />
           <Card>
-            <CardHeader icon={<Info className="h-5 w-5" />} title="About keyboard sizes" />
+            <CardHeader icon={<Info className="h-5 w-5" />} title={t("ui.about_keyboard_sizes")} />
             <CardBody className="space-y-2 text-sm text-muted">
               <p>
-                <strong className="text-text">49 keys</strong> (4 octaves, C2–C6) is a compact keyboard, <strong className="text-text">61 keys</strong> (5 octaves, C2–C7) is the most common home keyboard, and <strong className="text-text">88 keys</strong> (A0–C8) is a full piano.
+                <strong className="text-text">{t("ui.49_keys")}</strong> {t("ui.4_octaves_c2_c6_is_a_compact_keyboard")} <strong className="text-text">{t("ui.61_keys")}</strong> {t("ui.5_octaves_c2_c7_is_the_most_common_home_keyboard")} <strong className="text-text">{t("ui.88_keys")}</strong> {t("ui.a0_c8_is_a_full_piano")}
               </p>
-              <p>Pick the size that matches your real instrument so lessons line up with what you see at home. Beginner lessons only use the middle few octaves, so any size works.</p>
+              <p>{t("ui.pick_the_size_that_matches_your_real_instrument")}</p>
               <p>
-                This app calls middle C <strong className="text-text">C4</strong> (MIDI note 60). Some brands, like Yamaha, label the same key <strong className="text-text">C3</strong> — it&apos;s the same physical key, just a different naming habit.
+                {t("ui.this_app_calls_middle_c")} <strong className="text-text">C4</strong> {t("ui.midi_note_60_some_brands_like_yamaha_label_the_s")} <strong className="text-text">C3</strong> {t("ui.it_s_the_same_physical_key_just_a_different_nami")}
               </p>
             </CardBody>
           </Card>
@@ -217,6 +217,7 @@ export function PianoLab() {
 /* ---------------- Free play ---------------- */
 
 function FreePlay({ virtualHeld, midiHeld }: { virtualHeld: Set<number>; midiHeld: Set<number> }) {
+  const t = useT();
   const [prefs] = usePrefs();
   const held = [...new Set([...virtualHeld, ...midiHeld])].sort((a, b) => a - b);
   const pcs = [...new Set(held.map(mod12))];
@@ -225,11 +226,11 @@ function FreePlay({ virtualHeld, midiHeld }: { virtualHeld: Set<number>; midiHel
 
   return (
     <div className="space-y-4">
-      <LabKeyboard ariaLabel="Piano keyboard — free play" />
+      <LabKeyboard ariaLabel={t("ui.kb_free_play")} />
       <Card>
         <CardBody className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-5" aria-live="polite">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-subtle">Now playing</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-subtle">{t("ui.now_playing")}</p>
             <p className="mt-1 min-h-8 text-2xl font-semibold" data-testid="now-playing">
               {held.length
                 ? held
@@ -242,10 +243,10 @@ function FreePlay({ virtualHeld, midiHeld }: { virtualHeld: Set<number>; midiHel
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-subtle">Chord</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-subtle">{t("ui.chord")}</p>
             <p className="mt-1 min-h-8 text-2xl font-semibold">{chord ?? <span className="text-muted">{held.length >= 2 ? "not a basic chord" : "—"}</span>}</p>
           </div>
-          <p className="basis-full text-xs text-muted">Hold several keys at once (computer keys or MIDI) to see chord names. Try A + D + G on your computer keyboard.</p>
+          <p className="basis-full text-xs text-muted">{t("ui.hold_several_keys_at_once_computer_keys_or_midi")}</p>
         </CardBody>
       </Card>
     </div>
@@ -255,27 +256,28 @@ function FreePlay({ virtualHeld, midiHeld }: { virtualHeld: Set<number>; midiHel
 /* ---------------- Display settings ---------------- */
 
 function DisplaySettings({ keyLabels, setKeyLabels }: { keyLabels: KeyLabels; setKeyLabels: (l: KeyLabels) => void }) {
+  const t = useT();
   const [prefs, setPrefs] = usePrefs();
   return (
     <Card>
-      <CardHeader icon={<SlidersHorizontal className="h-5 w-5" />} title="Labels" description="Western names, Indian sargam, or both." />
+      <CardHeader icon={<SlidersHorizontal className="h-5 w-5" />} title={t("ui.labels")} description={t("ui.western_names_indian_sargam_or_both")} />
       <CardBody className="space-y-4">
         <Segmented<LabelMode>
-          label="Note label system"
+          label={t("ui.note_label_system")}
           size="sm"
           className="w-full"
           value={prefs.labelMode}
           onChange={(labelMode) => setPrefs({ labelMode })}
           options={[
-            { value: "western", label: "Western", testId: "labels-western" },
-            { value: "sargam", label: "Sargam", testId: "labels-sargam" },
-            { value: "both", label: "Both", testId: "labels-both" },
+            { value: "western", label: t("ui.western"), testId: "labels-western" },
+            { value: "sargam", label: t("ui.sargam"), testId: "labels-sargam" },
+            { value: "both", label: t("ui.both"), testId: "labels-both" },
           ]}
         />
         {prefs.labelMode !== "western" && (
           <div className="space-y-1.5">
             <label htmlFor="sa-select" className="text-sm font-medium">
-              Sa (tonic) is
+              {t("ui.sa_tonic_is")}
             </label>
             <Select id="sa-select" className="w-full" value={prefs.tonicPc} onChange={(e) => setPrefs({ tonicPc: Number(e.target.value) })}>
               {Array.from({ length: 12 }, (_, pc) => (
@@ -284,29 +286,29 @@ function DisplaySettings({ keyLabels, setKeyLabels }: { keyLabels: KeyLabels; se
                 </option>
               ))}
             </Select>
-            <p className="text-xs text-muted">Sa moves with the key you sing or play in — it isn&apos;t always C. Labels assume equal temperament; real Hindustani intonation can differ slightly.</p>
+            <p className="text-xs text-muted">{t("ui.sa_moves_with_the_key_you_sing_or_play_in_it_isn")}</p>
           </div>
         )}
         <div className="space-y-1.5">
-          <span className="text-sm font-medium">Key labels</span>
+          <span className="text-sm font-medium">{t("ui.key_labels")}</span>
           <Segmented<KeyLabels>
-            label="Which keys show labels"
+            label={t("ui.which_keys_show_labels")}
             size="sm"
             className="w-full"
             value={keyLabels}
             onChange={setKeyLabels}
             options={[
-              { value: "white", label: "Show" },
-              { value: "c-only", label: "C only" },
-              { value: "none", label: "Off" },
+              { value: "white", label: t("ui.show") },
+              { value: "c-only", label: t("ui.c_only") },
+              { value: "none", label: t("ui.off") },
             ]}
           />
         </div>
-        <Switch checked={prefs.showBlackKeyLabels} onChange={(showBlackKeyLabels) => setPrefs({ showBlackKeyLabels })} label="Label black keys" />
+        <Switch checked={prefs.showBlackKeyLabels} onChange={(showBlackKeyLabels) => setPrefs({ showBlackKeyLabels })} label={t("ui.label_black_keys")} />
         <div className="flex items-center justify-between gap-3">
-          <span className="text-sm font-medium">Black keys as</span>
+          <span className="text-sm font-medium">{t("ui.black_keys_as")}</span>
           <Segmented
-            label="Sharp or flat names"
+            label={t("ui.sharp_or_flat_names")}
             size="sm"
             value={prefs.spelling}
             onChange={(spelling) => setPrefs({ spelling })}
@@ -324,6 +326,8 @@ function DisplaySettings({ keyLabels, setKeyLabels }: { keyLabels: KeyLabels; se
 /* ---------------- Exercises ---------------- */
 
 function ExercisePanel({ range, ensureVisible }: { range: { low: number; high: number }; ensureVisible: (m: number) => void }) {
+  const t = useT();
+  const tx = useTx();
   const [prefs, setPrefs] = usePrefs();
   const [selectedId, setSelectedId] = useState(PIANO_EXERCISES[0].id);
   const [hand, setHand] = useState<HandT>("right");
@@ -345,13 +349,13 @@ function ExercisePanel({ range, ensureVisible }: { range: { low: number; high: n
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader icon={<KeyboardMusic className="h-5 w-5" />} title="Choose an exercise" description="Results are measured from your key presses (on-screen or MIDI) and saved to your progress." />
+        <CardHeader icon={<KeyboardMusic className="h-5 w-5" />} title={t("ui.choose_an_exercise")} description={t("ui.results_are_measured_from_your_key_presses_on_sc")} />
         <CardBody className="space-y-4">
           {EXERCISE_GROUPS.map((g) => {
             const items = PIANO_EXERCISES.filter((e) => e.group === g);
             return (
               <div key={g}>
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-subtle">{g}</p>
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-subtle">{tx(g)}</p>
                 <div className="flex flex-wrap gap-2">
                   {items.map((e) => (
                     <button
@@ -365,7 +369,7 @@ function ExercisePanel({ range, ensureVisible }: { range: { low: number; high: n
                         e.id === selectedId ? "border-piano bg-piano-soft text-piano" : "border-border bg-surface hover:bg-surface-2",
                       )}
                     >
-                      {e.title}
+                      {tx(e.title)}
                     </button>
                   ))}
                 </div>
@@ -377,35 +381,35 @@ function ExercisePanel({ range, ensureVisible }: { range: { low: number; high: n
 
       <Card>
         <CardHeader
-          title={def.title}
-          description={def.description}
-          action={res.shift !== 0 ? <Badge tone="neutral">Moved {res.shift > 0 ? "up" : "down"} {Math.abs(res.shift) / 12} octave{Math.abs(res.shift) > 12 ? "s" : ""} to fit</Badge> : undefined}
+          title={tx(def.title)}
+          description={tx(def.description)}
+          action={res.shift !== 0 ? <Badge tone="neutral">{Math.abs(res.shift) > 12 ? t(res.shift > 0 ? "ui.moved_up_n" : "ui.moved_down_n", { n: Math.abs(res.shift) / 12 }) : t(res.shift > 0 ? "ui.moved_up_one" : "ui.moved_down_one")}</Badge> : undefined}
         />
         <CardBody className="space-y-4">
           {(hands.length > 1 || def.kind === "sargam") && (
             <div className="flex flex-wrap items-center gap-4">
               {hands.length > 1 && (
                 <Segmented<HandT>
-                  label="Which hand"
+                  label={t("ui.which_hand")}
                   size="sm"
                   value={activeHand}
                   onChange={setHand}
                   options={[
-                    { value: "right", label: "Right hand", icon: <Hand className="h-3.5 w-3.5 -scale-x-100" /> },
-                    { value: "left", label: "Left hand", icon: <Hand className="h-3.5 w-3.5" /> },
+                    { value: "right", label: t("ui.right_hand"), icon: <Hand className="h-3.5 w-3.5 -scale-x-100" /> },
+                    { value: "left", label: t("ui.left_hand"), icon: <Hand className="h-3.5 w-3.5" /> },
                   ]}
                 />
               )}
               {def.kind === "sargam" && (
                 <>
-                  <Select aria-label="Alankar pattern" value={alankarId} onChange={(e) => setAlankarId(e.target.value)}>
+                  <Select aria-label={t("ui.alankar_pattern")} value={alankarId} onChange={(e) => setAlankarId(e.target.value)}>
                     {ALANKARS.map((a) => (
                       <option key={a.id} value={a.id}>
-                        {a.name}
+                        {tx(a.name)}
                       </option>
                     ))}
                   </Select>
-                  <Select aria-label="Sa (tonic)" value={prefs.tonicPc} onChange={(e) => setPrefs({ tonicPc: Number(e.target.value) })}>
+                  <Select aria-label={t("ui.sa_tonic")} value={prefs.tonicPc} onChange={(e) => setPrefs({ tonicPc: Number(e.target.value) })}>
                     {Array.from({ length: 12 }, (_, pc) => (
                       <option key={pc} value={pc}>
                         Sa = {pcDualName(pc)}
@@ -418,11 +422,11 @@ function ExercisePanel({ range, ensureVisible }: { range: { low: number; high: n
           )}
           {def.kind === "sargam" && (
             <p className="text-sm text-muted">
-              {ALANKARS.find((a) => a.id === alankarId)?.description}. All swaras here are shuddha (natural) — the same pattern as a Western major scale starting on Sa.
+              {t("ui.alankar_shuddha_note", { desc: ALANKARS.find((a) => a.id === alankarId)?.description ?? "" })}
             </p>
           )}
           {outOfRange ? (
-            <Callout tone="warn">Middle C isn&apos;t in the current view. Use “Find middle C” or switch to the full range.</Callout>
+            <Callout tone="warn">{t("ui.middle_c_isn_t_in_the_current_view_use_find_midd")}</Callout>
           ) : def.kind === "find-all" ? (
             <FindAllRunner key={runKey} def={def} low={range.low} high={range.high} />
           ) : def.kind === "chords" ? (

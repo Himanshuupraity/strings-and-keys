@@ -1,3 +1,6 @@
+"use client";
+
+import { useT } from "@/lib/i18n";
 /* Original, simple line illustrations used by lessons. Theme-aware via CSS variables. */
 import type { Visual } from "@/content/types";
 
@@ -16,8 +19,9 @@ function Label({ x, y, children, anchor = "start" }: { x: number; y: number; chi
 }
 
 function GuitarParts() {
+  const tr = useT();
   return (
-    <svg viewBox="0 0 640 220" role="img" aria-label="Guitar lying sideways: headstock with tuning pegs on the left, then the nut, the long neck with frets, the body with a sound hole and the bridge on the right." className="h-auto w-full">
+    <svg viewBox="0 0 640 220" role="img" aria-label={tr("ui.guitar_lying_sideways_headstock_with_tuning_pegs")} className="h-auto w-full">
       {/* headstock */}
       <path d="M20 90 L80 82 L80 128 L20 120 Z" fill="var(--fret-wood-2)" stroke={stroke} strokeWidth={1.5} />
       {[0, 1, 2].map((i) => (
@@ -49,17 +53,18 @@ function GuitarParts() {
         <line x1={547} y1={92} x2={547} y2={36} />
         <line x1={520} y1={160} x2={600} y2={196} />
       </g>
-      <Label x={20} y={28}>Headstock & tuning pegs</Label>
-      <Label x={60} y={206}>Nut</Label>
-      <Label x={190} y={28}>Neck & frets</Label>
-      <Label x={400} y={206}>Sound hole</Label>
-      <Label x={520} y={28}>Bridge</Label>
-      <Label x={560} y={212}>Body</Label>
+      <Label x={20} y={28}>{tr("ui.headstock_tuning_pegs")}</Label>
+      <Label x={60} y={206}>{tr("ui.nut")}</Label>
+      <Label x={190} y={28}>{tr("ui.neck_frets")}</Label>
+      <Label x={400} y={206}>{tr("ui.sound_hole")}</Label>
+      <Label x={520} y={28}>{tr("ui.bridge")}</Label>
+      <Label x={560} y={212}>{tr("ui.body")}</Label>
     </svg>
   );
 }
 
 function PianoParts() {
+  const tr = useT();
   const whites = 14;
   const w = 40;
   const blacks = [0, 1, 3, 4, 5];
@@ -81,16 +86,17 @@ function PianoParts() {
           </g>
         ))}
       </g>
-      <Label x={60} y={22}>group of 2</Label>
-      <Label x={170} y={22}>group of 3</Label>
-      <Label x={20} y={210}>C sits just left of every group of two black keys. The pattern repeats every octave.</Label>
+      <Label x={60} y={22}>{tr("ui.group_of_2")}</Label>
+      <Label x={170} y={22}>{tr("ui.group_of_3")}</Label>
+      <Label x={20} y={210}>{tr("ui.c_sits_just_left_of_every_group_of_two_black_key")}</Label>
     </svg>
   );
 }
 
 function PostureGuitar() {
+  const tr = useT();
   return (
-    <svg viewBox="0 0 360 260" role="img" aria-label="A seated player: straight back, guitar body resting on the right leg, neck angled slightly upward, feet flat." className="mx-auto h-auto w-full max-w-md">
+    <svg viewBox="0 0 360 260" role="img" aria-label={tr("ui.a_seated_player_straight_back_guitar_body_restin")} className="mx-auto h-auto w-full max-w-md">
       <circle cx={140} cy={50} r={20} fill="none" stroke={stroke} strokeWidth={2} />
       <path d="M140 70 L140 150" stroke={stroke} strokeWidth={3} strokeLinecap="round" />
       <path d="M140 150 L200 150 L200 220" stroke={stroke} strokeWidth={3} fill="none" strokeLinecap="round" />
@@ -105,16 +111,17 @@ function PostureGuitar() {
       <path d="M140 95 L190 125" stroke={stroke} strokeWidth={2.5} strokeLinecap="round" />
       <path d="M140 92 L230 95 L285 85" stroke={stroke} strokeWidth={2.5} fill="none" strokeLinecap="round" />
       <path d="M120 40 L120 150" stroke={accent} strokeDasharray="4 4" />
-      <Label x={20} y={30}>Back straight</Label>
-      <Label x={220} y={60}>Neck slightly up</Label>
-      <Label x={200} y={245}>Feet flat</Label>
+      <Label x={20} y={30}>{tr("ui.back_straight")}</Label>
+      <Label x={220} y={60}>{tr("ui.neck_slightly_up")}</Label>
+      <Label x={200} y={245}>{tr("ui.feet_flat")}</Label>
     </svg>
   );
 }
 
 function PosturePiano() {
+  const tr = useT();
   return (
-    <svg viewBox="0 0 360 260" role="img" aria-label="A seated pianist: back straight, forearms level with the keys, elbows slightly in front of the body, feet flat on the floor." className="mx-auto h-auto w-full max-w-md">
+    <svg viewBox="0 0 360 260" role="img" aria-label={tr("ui.a_seated_pianist_back_straight_forearms_level_wi")} className="mx-auto h-auto w-full max-w-md">
       <rect x={220} y={110} width={120} height={14} fill="var(--key-white)" stroke="var(--key-white-edge)" />
       <rect x={220} y={124} width={120} height={8} fill="var(--key-black)" />
       <path d="M330 132 v 100" stroke={soft} strokeWidth={3} />
@@ -124,15 +131,16 @@ function PosturePiano() {
       <path d="M120 160 L180 160 L180 230" stroke={stroke} strokeWidth={3} fill="none" strokeLinecap="round" />
       <rect x={80} y={162} width={80} height={10} rx={3} fill="var(--surface-3)" stroke={soft} />
       <path d="M160 116 h 70" stroke={accent} strokeDasharray="4 4" />
-      <Label x={175} y={100}>Forearms level</Label>
-      <Label x={20} y={30}>Back straight</Label>
-      <Label x={80} y={200}>Front half of bench</Label>
-      <Label x={190} y={248}>Feet flat</Label>
+      <Label x={175} y={100}>{tr("ui.forearms_level")}</Label>
+      <Label x={20} y={30}>{tr("ui.back_straight")}</Label>
+      <Label x={80} y={200}>{tr("ui.front_half_of_bench")}</Label>
+      <Label x={190} y={248}>{tr("ui.feet_flat")}</Label>
     </svg>
   );
 }
 
 function HandFingers() {
+  const tr = useT();
   const fingers = [
     { x: 70, y: 120, h: 50, pn: "1", gn: "T" },
     { x: 110, y: 60, h: 90, pn: "2", gn: "1" },
@@ -153,27 +161,28 @@ function HandFingers() {
         </g>
       ))}
       <circle cx={30} cy={245} r={7} fill="var(--piano)" />
-      <Label x={42} y={250}>Piano</Label>
+      <Label x={42} y={250}>{tr("shell.piano")}</Label>
       <circle cx={110} cy={245} r={7} fill="var(--guitar)" />
-      <Label x={122} y={250}>Guitar (fretting hand)</Label>
+      <Label x={122} y={250}>{tr("ui.guitar_fretting_hand")}</Label>
     </svg>
   );
 }
 
 function SoundWave() {
+  const tr = useT();
   const wave = (freq: number, y: number) => {
     const pts: string[] = [];
     for (let x = 0; x <= 520; x += 4) pts.push(`${x + 60},${y + Math.sin((x / 520) * Math.PI * 2 * freq) * 22}`);
     return pts.join(" ");
   };
   return (
-    <svg viewBox="0 0 600 200" role="img" aria-label="Two waves: the top one slow (few waves, low pitch), the bottom one fast (many waves, high pitch)." className="h-auto w-full">
+    <svg viewBox="0 0 600 200" role="img" aria-label={tr("ui.two_waves_the_top_one_slow_few_waves_low_pitch_t")} className="h-auto w-full">
       <polyline points={wave(3, 55)} fill="none" stroke="var(--guitar)" strokeWidth={3} />
       <polyline points={wave(9, 145)} fill="none" stroke="var(--piano)" strokeWidth={3} />
-      <Label x={6} y={60}>Low</Label>
-      <Label x={6} y={150}>High</Label>
-      <Label x={590} y={20} anchor="end">slow vibration → low pitch</Label>
-      <Label x={590} y={195} anchor="end">fast vibration → high pitch</Label>
+      <Label x={6} y={60}>{tr("ui.low")}</Label>
+      <Label x={6} y={150}>{tr("ui.high")}</Label>
+      <Label x={590} y={20} anchor="end">{tr("ui.slow_vibration_low_pitch")}</Label>
+      <Label x={590} y={195} anchor="end">{tr("ui.fast_vibration_high_pitch")}</Label>
     </svg>
   );
 }

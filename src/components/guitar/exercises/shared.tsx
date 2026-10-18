@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { CheckCircle2, RotateCcw } from "lucide-react";
 import type { ReactNode } from "react";
@@ -13,6 +14,7 @@ export async function saveGuitarResult(r: { exerciseId: string; skill: string; i
 }
 
 export function ResultSummary({ title, correct, total, source, children, onRetry }: { title: string; correct: number; total: number; source: "measured" | "self-reported"; children?: ReactNode; onRetry: () => void }) {
+  const tr = useT();
   const pct = total ? Math.round((correct / total) * 100) : 0;
   return (
     <div className="animate-pop space-y-3 rounded-2xl border border-border bg-surface-2 p-4" role="status">
@@ -23,7 +25,7 @@ export function ResultSummary({ title, correct, total, source, children, onRetry
         <SourceTag source={source} />
       </div>
       {children && <div className="text-sm text-muted">{children}</div>}
-      <Button size="sm" variant="secondary" onClick={onRetry}><RotateCcw className="h-4 w-4" /> Try again</Button>
+      <Button size="sm" variant="secondary" onClick={onRetry}><RotateCcw className="h-4 w-4" /> {tr("ui.try_again")}</Button>
     </div>
   );
 }
@@ -40,14 +42,15 @@ export function buildTab(positions: { string: number; fret: number }[]): string[
 }
 
 export function TabView({ positions, current }: { positions: { string: number; fret: number }[]; current?: number }) {
+  const tr = useT();
   const lines = buildTab(positions);
   return (
     <div className="scrollbar-thin overflow-x-auto rounded-xl border border-border bg-surface p-3">
-      <pre className="font-mono text-sm leading-6" aria-label="Guitar tablature: lines are strings, high e on top; numbers are frets">
+      <pre className="font-mono text-sm leading-6" aria-label={tr("ui.tab_aria")}>
         {lines.join("\n")}
       </pre>
       {current !== undefined && current < positions.length && (
-        <p className="mt-1 text-xs text-muted">Next: string {6 - positions[current].string}, {positions[current].fret === 0 ? "open" : `fret ${positions[current].fret}`} ({current + 1} of {positions.length})</p>
+        <p className="mt-1 text-xs text-muted">{tr(positions[current].fret === 0 ? "ui.next_string_open" : "ui.next_string_fret", { s: 6 - positions[current].string, f: positions[current].fret, i: current + 1, n: positions.length })}</p>
       )}
     </div>
   );

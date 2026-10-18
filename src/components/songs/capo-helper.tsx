@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import Link from "next/link";
 import { ArrowRight, Info } from "lucide-react";
@@ -11,6 +12,7 @@ import { Badge, Callout } from "@/components/ui";
  * The arrangement keeps the SOUNDING chords identical to the song; only the shapes change.
  */
 export function CapoHelper({ chords, songKey, preferCapo }: { chords: string[]; songKey: string; preferCapo?: number }) {
+  const tl = useT();
   const unique = Array.from(new Set(chords));
   if (!unique.length) return null;
   const keyArg = songKey.endsWith("m") ? undefined : songKey;
@@ -21,24 +23,24 @@ export function CapoHelper({ chords, songKey, preferCapo }: { chords: string[]; 
   return (
     <div className="space-y-3">
       {best.capo === 0 ? (
-        <Callout tone="success" title="No capo needed">These chords are already the easiest shapes for this key.</Callout>
+        <Callout tone="success" title={tl("ui.no_capo_needed")}>{tl("ui.these_chords_are_already_the_easiest_shapes_for")}</Callout>
       ) : (
         <>
           <p className="text-sm">
-            Put a capo on <strong>fret {best.capo}</strong> and play these shapes — the song still sounds in{" "}
+            {tl("ui.put_a_capo_on")} <strong>{tl("ui.capo_fret_play_shapes", { n: best.capo })}</strong> {tl("ui.capo_play_shapes_tail")}{" "}
             <strong>{songKey}</strong>.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted">
-                  <th className="py-1 pr-3 font-medium">Sounding chord</th>
+                  <th className="py-1 pr-3 font-medium">{tl("ui.sounding_chord")}</th>
                   {best.sounding.map((c) => (
                     <td key={c} className="px-2 py-1 font-semibold text-text">{c}</td>
                   ))}
                 </tr>
                 <tr className="text-left text-xs text-muted">
-                  <th className="py-1 pr-3 font-medium">Shape you play</th>
+                  <th className="py-1 pr-3 font-medium">{tl("ui.shape_you_play")}</th>
                   {best.shapes.map((c, i) => (
                     <td key={i} className="px-2 py-1 font-semibold text-accent">{c}</td>
                   ))}
@@ -52,8 +54,8 @@ export function CapoHelper({ chords, songKey, preferCapo }: { chords: string[]; 
             ))}
           </div>
           <div className="flex flex-wrap gap-2">
-            {best.verified && <Badge tone="success">Verified: shapes + capo = original chords</Badge>}
-            {best.requiresBarre && <Badge tone="warn">Needs a barre chord</Badge>}
+            {best.verified && <Badge tone="success">{tl("ui.verified_capo_eq")}</Badge>}
+            {best.requiresBarre && <Badge tone="warn">{tl("ui.needs_a_barre_chord")}</Badge>}
             {best.notes.map((n) => (
               <Badge key={n}>{n}</Badge>
             ))}
@@ -61,10 +63,10 @@ export function CapoHelper({ chords, songKey, preferCapo }: { chords: string[]; 
         </>
       )}
       <p className="flex items-start gap-1.5 text-xs text-muted">
-        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> A capo raises every string by one semitone per fret, so a G shape at capo 2 sounds as A.
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {tl("ui.a_capo_raises_every_string_by_one_semitone_per_f")}
       </p>
       <Link href={href} className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
-        Open in the capo simulator <ArrowRight className="h-4 w-4" />
+        {tl("ui.open_in_the_capo_simulator")} <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
   );

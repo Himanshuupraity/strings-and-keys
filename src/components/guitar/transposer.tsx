@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useMemo, useState } from "react";
 import { ArrowRight, Bookmark, CheckCircle2, Info, Play, Shuffle, TriangleAlert, X } from "lucide-react";
@@ -25,6 +26,8 @@ function difficultyTone(d: number) {
 }
 
 export function Transposer({ initialProgression, initialKey }: { initialProgression?: string[]; initialKey?: string }) {
+  const tl = useT();
+  const tx = useTx();
   const [key, setKey] = useState(initialKey && [...MAJOR_KEYS, ...MINOR_KEYS].includes(initialKey) ? initialKey : "F");
   const [chords, setChords] = useState<string[]>(initialProgression?.length ? initialProgression : ["F", "Bb", "C"]);
   const [draft, setDraft] = useState("");
@@ -45,7 +48,7 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
 
   const addChords = () => {
     const { chords: parsed, invalid } = parseProgressionInput(draft);
-    if (invalid.length) toast.error(`Couldn't read: ${invalid.join(", ")}. Try names like C, Am, F#m, Bb7.`);
+    if (invalid.length) toast.error(tl("ui.couldnt_read_chords", { list: invalid.join(", ") }));
     if (parsed.length) {
       setChords((c) => [...c, ...parsed].slice(0, 12));
       setDraft("");
@@ -55,7 +58,7 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
   const save = async () => {
     if (!selected) return;
     await transpositionRepo.add({ progression: chords, originalKey: key, capo: selected.capo, shapes: selected.shapes, label: `${chords.join("–")} · capo ${selected.capo}` });
-    toast.success("Saved to your recent transpositions");
+    toast.success(tl("ui.saved_to_your_recent_transpositions"));
   };
 
   const playProg = (list: string[], capo = 0) => {
@@ -67,19 +70,19 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
 
   return (
     <Card>
-      <CardHeader icon={<Shuffle className="h-5 w-5" />} title="Easy Chord Transposer" description="Turn hard chords into easy shapes with a capo — without changing how the song sounds." />
+      <CardHeader icon={<Shuffle className="h-5 w-5" />} title={tl("ui.easy_chord_transposer")} description={tl("ui.turn_hard_chords_into_easy_shapes_with_a_capo_wi")} />
       <CardBody className="space-y-5">
         {/* Input */}
         <div className="grid gap-4 lg:grid-cols-[auto_1fr]">
           <label className="space-y-1 text-sm">
-            <span className="block font-medium">Original key</span>
-            <Select aria-label="Original key" value={key} onChange={(e) => setKey(e.target.value)}>
-              <optgroup label="Major">{MAJOR_KEYS.map((k) => <option key={k} value={k}>{k} major</option>)}</optgroup>
-              <optgroup label="Minor">{MINOR_KEYS.map((k) => <option key={k} value={k}>{k.slice(0, -1)} minor</option>)}</optgroup>
+            <span className="block font-medium">{tl("ui.original_key")}</span>
+            <Select aria-label={tl("ui.original_key")} value={key} onChange={(e) => setKey(e.target.value)}>
+              <optgroup label={tl("ui.major")}>{MAJOR_KEYS.map((k) => <option key={k} value={k}>{tl("ui.key_major", { k })}</option>)}</optgroup>
+              <optgroup label={tl("ui.minor")}>{MINOR_KEYS.map((k) => <option key={k} value={k}>{tl("ui.key_minor", { k: k.slice(0, -1) })}</option>)}</optgroup>
             </Select>
           </label>
           <div className="space-y-1 text-sm">
-            <span className="block font-medium" id="prog-label">Chord progression</span>
+            <span className="block font-medium" id="prog-label">{tl("ui.chord_progression")}</span>
             <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-surface p-2" aria-labelledby="prog-label">
               {chords.map((c, i) => (
                 <span key={i} className="inline-flex items-center gap-1 rounded-lg bg-surface-2 py-1 pl-2.5 pr-1 font-semibold">
@@ -88,8 +91,8 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
                 </span>
               ))}
               <Input
-                aria-label="Add chords"
-                placeholder={chords.length ? "Add chord…" : "Type chords, e.g. F Bb C"}
+                aria-label={tl("songs.addChords")}
+                placeholder={chords.length ? tl("ui.add_chord") : tl("ui.type_chords_e_g_f_bb_c")}
                 className="h-8 w-40 flex-1 border-none px-1"
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -111,28 +114,28 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
         </div>
 
         {chords.length === 0 ? (
-          <Callout tone="neutral" title="Add a few chords to begin">Pick a preset above or type the chords of a song you know.</Callout>
+          <Callout tone="neutral" title={tl("ui.add_a_few_chords_to_begin")}>{tl("ui.pick_a_preset_above_or_type_the_chords_of_a_song")}</Callout>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-3">
               <Segmented<"capo" | "key">
-                label="Transpose using"
+                label={tl("ui.transpose_using")}
                 value={mode}
                 onChange={setMode}
-                options={[{ value: "capo", label: "Capo (same sound)" }, { value: "key", label: "Change key (new sound)" }]}
+                options={[{ value: "capo", label: tl("ui.capo_same_sound") }, { value: "key", label: tl("ui.change_key_new_sound") }]}
               />
               {mode === "capo" ? (
                 <label className="flex items-center gap-2 text-sm">
-                  <span className="text-muted">Capo</span>
-                  <Select aria-label="Capo position" className="h-9" value={String(capoChoice)} onChange={(e) => setCapoChoice(e.target.value === "auto" ? "auto" : Number(e.target.value))}>
-                    <option value="auto">Easiest (recommended)</option>
-                    {arrangements.slice().sort((a, b) => a.capo - b.capo).map((a) => <option key={a.capo} value={a.capo}>{a.capo === 0 ? "No capo" : `Fret ${a.capo}`}</option>)}
+                  <span className="text-muted">{tl("sheet.capo")}</span>
+                  <Select aria-label={tl("ui.capo_position_2")} className="h-9" value={String(capoChoice)} onChange={(e) => setCapoChoice(e.target.value === "auto" ? "auto" : Number(e.target.value))}>
+                    <option value="auto">{tl("ui.easiest_recommended")}</option>
+                    {arrangements.slice().sort((a, b) => a.capo - b.capo).map((a) => <option key={a.capo} value={a.capo}>{a.capo === 0 ? tl("ui.no_capo") : tl("ui.fret_n", { n: a.capo })}</option>)}
                   </Select>
                 </label>
               ) : (
                 <label className="flex items-center gap-2 text-sm">
-                  <span className="text-muted">Target key</span>
-                  <Select aria-label="Target key" className="h-9" value={effectiveTarget} onChange={(e) => setTargetKey(e.target.value)}>
+                  <span className="text-muted">{tl("ui.target_key")}</span>
+                  <Select aria-label={tl("ui.target_key")} className="h-9" value={effectiveTarget} onChange={(e) => setTargetKey(e.target.value)}>
                     {targetKeys.map((k) => <option key={k} value={k}>{k}</option>)}
                   </Select>
                 </label>
@@ -141,58 +144,58 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
 
             {/* Side by side */}
             <div className="grid gap-4 xl:grid-cols-2">
-              <section aria-label="Original progression" className="space-y-3 rounded-2xl border border-border p-4">
+              <section aria-label={tl("ui.original_progression")} className="space-y-3 rounded-2xl border border-border p-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-semibold">Original <span className="font-normal text-muted">· key of {key}</span></h4>
-                  <Button size="sm" variant="ghost" onClick={() => playProg(chords)}><Play className="h-4 w-4" /> Hear</Button>
+                  <h4 className="font-semibold">{tl("ui.original_label")} <span className="font-normal text-muted">{tl("ui.key_of", { k: key })}</span></h4>
+                  <Button size="sm" variant="ghost" onClick={() => playProg(chords)}><Play className="h-4 w-4" /> {tl("ui.hear")}</Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {chords.map((c, i) => {
                     const s = easiestShape(c);
-                    return <ChordDiagram key={i} chord={c} size="sm" subtitle={s ? `difficulty ${s.difficulty}/5` : undefined} />;
+                    return <ChordDiagram key={i} chord={c} size="sm" subtitle={s ? tl("ui.difficulty_n5", { n: s.difficulty }) : undefined} />;
                   })}
                 </div>
               </section>
 
               {mode === "capo" && selected && (
-                <section aria-label="Capo arrangement" className="space-y-3 rounded-2xl border-2 border-accent/50 bg-accent-soft/40 p-4">
+                <section aria-label={tl("ui.capo_arrangement")} className="space-y-3 rounded-2xl border-2 border-accent/50 bg-accent-soft/40 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h4 className="font-semibold">{selected.capo === 0 ? "No capo" : `Capo on fret ${selected.capo}`} <span className="font-normal text-muted">· play {selected.shapeKey}-key shapes</span></h4>
+                    <h4 className="font-semibold">{selected.capo === 0 ? tl("ui.no_capo") : tl("ui.capo_on_fret", { n: selected.capo })} <span className="font-normal text-muted">{tl("ui.play_key_shapes", { k: selected.shapeKey ?? "" })}</span></h4>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => playProg(selected.shapes, selected.capo)}><Play className="h-4 w-4" /> Hear</Button>
-                      <Button size="sm" variant="secondary" onClick={save}><Bookmark className="h-4 w-4" /> Save</Button>
+                      <Button size="sm" variant="ghost" onClick={() => playProg(selected.shapes, selected.capo)}><Play className="h-4 w-4" /> {tl("ui.hear")}</Button>
+                      <Button size="sm" variant="secondary" onClick={save}><Bookmark className="h-4 w-4" /> {tl("common.save")}</Button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {selected.shapes.map((shape, i) => (
-                      <ChordDiagram key={i} chord={shape} capo={selected.capo} size="sm" title={shape} subtitle={`sounds ${chords[i]}`} />
+                      <ChordDiagram key={i} chord={shape} capo={selected.capo} size="sm" title={shape} subtitle={tl("ui.sounds_chord", { chord: chords[i] })} />
                     ))}
                   </div>
                   <div className="flex flex-wrap gap-1.5 text-xs">
                     {selected.verified ? (
-                      <Badge tone="success"><CheckCircle2 className="h-3 w-3" /> Verified: shapes + capo give the original chords</Badge>
+                      <Badge tone="success"><CheckCircle2 className="h-3 w-3" /> {tl("ui.verified_shapes_capo_give_the_original_chords")}</Badge>
                     ) : (
-                      <Badge tone="danger"><TriangleAlert className="h-3 w-3" /> Some shapes aren&apos;t in our library</Badge>
+                      <Badge tone="danger"><TriangleAlert className="h-3 w-3" /> {tl("ui.some_shapes_aren_t_in_our_library")}</Badge>
                     )}
-                    <Badge tone={difficultyTone(selected.maxDifficulty)}>Hardest shape {selected.maxDifficulty}/5</Badge>
-                    {selected.allOpen && <Badge tone="success">All open chords</Badge>}
-                    {selected.requiresBarre && <Badge tone="warn">Needs a barre chord</Badge>}
+                    <Badge tone={difficultyTone(selected.maxDifficulty)}>{tl("ui.hardest_shape", { n: selected.maxDifficulty })}</Badge>
+                    {selected.allOpen && <Badge tone="success">{tl("ui.all_open_chords")}</Badge>}
+                    {selected.requiresBarre && <Badge tone="warn">{tl("ui.needs_a_barre_chord")}</Badge>}
                   </div>
-                  {selected.notes.length > 0 && <ul className="list-disc pl-5 text-xs text-muted">{selected.notes.map((n) => <li key={n}>{n}</li>)}</ul>}
-                  <p className="text-xs text-muted">The song still sounds in <strong>{key}</strong>. Same pitch as the recording, so you can play along.</p>
+                  {selected.notes.length > 0 && <ul className="list-disc pl-5 text-xs text-muted">{selected.notes.map((n) => <li key={n}>{tx(n)}</li>)}</ul>}
+                  <p className="text-xs text-muted">{tl("ui.still_sounds_in", { k: key })}</p>
                 </section>
               )}
 
               {mode === "key" && (
-                <section aria-label="Key change" className="space-y-3 rounded-2xl border-2 border-warn/50 bg-warn-soft/40 p-4">
+                <section aria-label={tl("ui.key_change")} className="space-y-3 rounded-2xl border-2 border-warn/50 bg-warn-soft/40 p-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-semibold">New key: {effectiveTarget} <span className="font-normal text-muted">({keyShift > 6 ? keyShift - 12 : keyShift} semitones)</span></h4>
-                    <Button size="sm" variant="ghost" onClick={() => playProg(keyChanged)}><Play className="h-4 w-4" /> Hear</Button>
+                    <h4 className="font-semibold">{tl("ui.new_key", { k: effectiveTarget })} <span className="font-normal text-muted">{tl("ui.n_semitones", { n: keyShift > 6 ? keyShift - 12 : keyShift })}</span></h4>
+                    <Button size="sm" variant="ghost" onClick={() => playProg(keyChanged)}><Play className="h-4 w-4" /> {tl("ui.hear")}</Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {keyChanged.map((c, i) => <ChordDiagram key={i} chord={c} size="sm" subtitle={`was ${chords[i]}`} />)}
+                    {keyChanged.map((c, i) => <ChordDiagram key={i} chord={c} size="sm" subtitle={tl("ui.was_chord", { chord: chords[i] })} />)}
                   </div>
-                  <Callout tone="warn" icon={<TriangleAlert className="h-4 w-4" />} title="This changes the song's key">It will sound higher or lower than the original recording. Great for matching your singing voice; not for playing along with the track.</Callout>
+                  <Callout tone="warn" icon={<TriangleAlert className="h-4 w-4" />} title={tl("ui.this_changes_the_song_s_key")}>{tl("ui.it_will_sound_higher_or_lower_than_the_original")}</Callout>
                 </section>
               )}
             </div>
@@ -200,24 +203,24 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
             {/* Compare all capo positions */}
             {mode === "capo" && (
               <details className="rounded-2xl border border-border p-4" open>
-                <summary className="cursor-pointer font-semibold">Compare every capo position</summary>
+                <summary className="cursor-pointer font-semibold">{tl("ui.compare_every_capo_position")}</summary>
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full min-w-[520px] text-sm">
                     <thead className="text-left text-xs uppercase tracking-wide text-muted">
-                      <tr><th className="py-1.5">Capo</th><th>Shapes you play</th><th>Sounds as</th><th>Difficulty</th><th /></tr>
+                      <tr><th className="py-1.5">{tl("sheet.capo")}</th><th>{tl("ui.shapes_you_play")}</th><th>{tl("ui.sounds_as")}</th><th>{tl("ui.difficulty")}</th><th /></tr>
                     </thead>
                     <tbody>
                       {arrangements.slice().sort((a, b) => a.capo - b.capo).map((a) => (
                         <tr key={a.capo} className={cn("border-t border-border", selected?.capo === a.capo && "bg-accent-soft/50")}>
-                          <td className="py-1.5 font-medium">{a.capo === 0 ? "none" : a.capo}</td>
+                          <td className="py-1.5 font-medium">{a.capo === 0 ? tl("ui.none") : a.capo}</td>
                           <td className="font-semibold">{a.shapes.join(" – ")}</td>
                           <td className="text-muted">{a.sounding.join(" – ")}</td>
                           <td>
                             <Badge tone={difficultyTone(a.maxDifficulty)}>{a.maxDifficulty}/5</Badge>
-                            {a.requiresBarre && <span className="ml-1 text-xs text-warn">barre</span>}
-                            {a.capo === best?.capo && <span className="ml-1 text-xs font-semibold text-success">best</span>}
+                            {a.requiresBarre && <span className="ml-1 text-xs text-warn">{tl("ui.barre")}</span>}
+                            {a.capo === best?.capo && <span className="ml-1 text-xs font-semibold text-success">{tl("ui.best")}</span>}
                           </td>
-                          <td className="text-right"><Button size="sm" variant="ghost" onClick={() => setCapoChoice(a.capo)} aria-label={`Use capo ${a.capo}`}><ArrowRight className="h-4 w-4" /></Button></td>
+                          <td className="text-right"><Button size="sm" variant="ghost" onClick={() => setCapoChoice(a.capo)} aria-label={tl("ui.use_capo_n", { n: a.capo })}><ArrowRight className="h-4 w-4" /></Button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -228,7 +231,7 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
 
             {mode === "capo" && keyOptions.length > 0 && (
               <div className="rounded-2xl border border-dashed border-border-strong p-4 text-sm">
-                <p className="font-medium">Easy keys if you don&apos;t need the original pitch <span className="font-normal text-muted">(changes the song&apos;s key)</span></p>
+                <p className="font-medium">{tl("ui.easy_keys_title")} <span className="font-normal text-muted">{tl("ui.changes_songs_key")}</span></p>
                 <ul className="mt-2 grid gap-1 sm:grid-cols-2">
                   {keyOptions.map((o) => (
                     <li key={o.targetKey}>
@@ -241,15 +244,15 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
               </div>
             )}
 
-            <Callout tone="info" icon={<Info className="h-4 w-4" />} title="Shape vs. sounding chord">
-              The <strong>shape</strong> is the finger pattern you know (say, G). The <strong>sounding chord</strong> is what comes out: the shape raised by one semitone per capo fret. G shape + capo 3 = Bb. We work out each arrangement from the semitone maths and check it against the real fret positions.
+            <Callout tone="info" icon={<Info className="h-4 w-4" />} title={tl("ui.shape_vs_sounding_chord")}>
+              {tl("ui.shape_vs_sounding_body")}
             </Callout>
           </>
         )}
 
         {recent.data.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Recent transpositions</p>
+            <p className="text-sm font-medium">{tl("ui.recent_transpositions")}</p>
             <ul className="flex flex-wrap gap-2">
               {recent.data.slice(0, 8).map((t) => (
                 <li key={t.id}>

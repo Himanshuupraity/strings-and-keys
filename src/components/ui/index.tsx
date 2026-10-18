@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -274,11 +275,12 @@ export function PageHeader({ title, description, eyebrow, actions }: { title: Re
 
 /** Small label that tells the student whether a number was measured or self-reported / AI-generated. */
 export function SourceTag({ source }: { source: "measured" | "self-reported" | "rules" | "sample" }) {
+  const tr = useT();
   const map = {
-    measured: { tone: "success", text: "Measured" },
-    "self-reported": { tone: "warn", text: "Self-reported" },
-    rules: { tone: "theory", text: "Coaching tip" },
-    sample: { tone: "neutral", text: "Sample data" },
+    measured: { tone: "success", text: tr("ui.measured") },
+    "self-reported": { tone: "warn", text: tr("ui.self_reported") },
+    rules: { tone: "theory", text: tr("ui.coaching_tip") },
+    sample: { tone: "neutral", text: tr("ui.sample_data") },
   } as const;
   const m = map[source];
   return <Badge tone={m.tone}>{m.text}</Badge>;

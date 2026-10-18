@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.metronome" description="Keep steady time. Start slow, play cleanly, then speed up 5 BPM at a time." />
+      <TPageHeader titleKey="tool.metronome" descriptionKey="tool.desc.metronome" />
       <MetronomeTool />
     </>
   );

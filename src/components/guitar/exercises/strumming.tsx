@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Hand, Square } from "lucide-react";
@@ -28,6 +29,8 @@ export function strokeTimes(slots: Stroke[], barStart: number, bpm: number): { t
 }
 
 export function Strumming() {
+  const tr = useT();
+  const tx = useTx();
   const [patternId, setPatternId] = useState("downs");
   const [bpm, setBpm] = useState(60);
   const [chord, setChord] = useState("G");
@@ -123,24 +126,24 @@ export function Strumming() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <label className="space-y-1 text-sm">
-          <span className="block font-medium">Pattern</span>
-          <Select aria-label="Strumming pattern" value={patternId} onChange={(e) => setPatternId(e.target.value)} disabled={metro.running}>
-            {STRUM_PATTERNS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          <span className="block font-medium">{tr("ui.pattern")}</span>
+          <Select aria-label={tr("ui.strumming_pattern")} value={patternId} onChange={(e) => setPatternId(e.target.value)} disabled={metro.running}>
+            {STRUM_PATTERNS.map((p) => <option key={p.id} value={p.id}>{tx(p.name)}</option>)}
           </Select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="block font-medium">Tempo</span>
-          <Select aria-label="Tempo" value={bpm} onChange={(e) => setBpm(Number(e.target.value))} disabled={metro.running}>
+          <span className="block font-medium">{tr("ui.tempo")}</span>
+          <Select aria-label={tr("ui.tempo")} value={bpm} onChange={(e) => setBpm(Number(e.target.value))} disabled={metro.running}>
             {[50, 60, 70, 80, 90, 100].map((b) => <option key={b} value={b}>{b} BPM</option>)}
           </Select>
         </label>
         <label className="space-y-1 text-sm">
-          <span className="block font-medium">Chord sound on tap</span>
-          <Select aria-label="Chord" value={chord} onChange={(e) => setChord(e.target.value)}>
+          <span className="block font-medium">{tr("ui.chord_sound_on_tap")}</span>
+          <Select aria-label={tr("ui.chord")} value={chord} onChange={(e) => setChord(e.target.value)}>
             {["G", "C", "D", "Em", "Am"].map((c) => <option key={c}>{c}</option>)}
           </Select>
         </label>
-        <Segmented label="Tap sound" size="sm" value={sound} onChange={setSound} options={[{ value: "on", label: "Sound on" }, { value: "off", label: "Silent (I'll play my guitar)" }]} />
+        <Segmented label={tr("ui.tap_sound")} size="sm" value={sound} onChange={setSound} options={[{ value: "on", label: tr("ui.sound_on") }, { value: "off", label: tr("ui.silent_i_ll_play_my_guitar") }]} />
       </div>
 
       <div className="flex gap-1.5" role="img" aria-label={`Pattern: ${pattern.slots.join(" ")}`}>
@@ -154,9 +157,9 @@ export function Strumming() {
 
       <div className="flex flex-wrap items-center gap-3">
         {metro.running ? (
-          <Button variant="secondary" onClick={stop}><Square className="h-4 w-4" /> Stop</Button>
+          <Button variant="secondary" onClick={stop}><Square className="h-4 w-4" /> {tr("ui.stop")}</Button>
         ) : (
-          <Button onClick={start}>Start (1 bar count-in, then {BARS} bars)</Button>
+          <Button onClick={start}>{tr("ui.start_count_in", { n: BARS })}</Button>
         )}
         <Button
           size="lg"
@@ -164,32 +167,32 @@ export function Strumming() {
           className="min-w-40"
           onPointerDown={(e) => { e.preventDefault(); tap(); }}
           disabled={!metro.running}
-          aria-label="Tap on each strum (or press Space)"
+          aria-label={tr("ui.tap_on_each_strum_or_press_space")}
         >
-          <Hand className="h-5 w-5" /> Tap each strum
+          <Hand className="h-5 w-5" /> {tr("ui.tap_each_strum")}
         </Button>
-        <span className="text-sm text-muted" aria-live="polite">{phase === "count-in" ? "Count-in… get ready" : phase === "playing" ? "Strum and tap!" : ""}</span>
+        <span className="text-sm text-muted" aria-live="polite">{phase === "count-in" ? tr("ui.count_in_get_ready") : phase === "playing" ? tr("ui.strum_and_tap") : ""}</span>
       </div>
-      <p className="text-xs text-muted">Strum your real guitar and tap the button (or Space) at the same moment — or just tap along to learn the feel. We measure the timing of your taps, not the guitar sound.</p>
+      <p className="text-xs text-muted">{tr("ui.strum_your_real_guitar_and_tap_the_button_or_spa")}</p>
 
       {result && (
-        <Callout tone={result.accuracy >= 0.8 ? "success" : "warn"} title={`${result.hitCount} of ${result.total} strums on time`}>
+        <Callout tone={result.accuracy >= 0.8 ? "success" : "warn"} title={tr("ui.strums_on_time", { hit: result.hitCount, total: result.total })}>
           <div className="mt-1 flex flex-wrap gap-1.5">
             <SourceTag source="measured" />
-            <Badge>avg error {Math.round(result.meanAbsMs ?? 0)} ms</Badge>
-            <Badge tone="warn">{result.early} early</Badge>
-            <Badge tone="warn">{result.late} late</Badge>
-            <Badge tone="danger">{result.missed} missed</Badge>
-            {result.extra > 0 && <Badge>{result.extra} extra taps</Badge>}
+            <Badge>{tr("ui.avg_error_ms", { ms: Math.round(result.meanAbsMs ?? 0) })}</Badge>
+            <Badge tone="warn">{tr("ui.n_early", { n: result.early })}</Badge>
+            <Badge tone="warn">{tr("ui.n_late", { n: result.late })}</Badge>
+            <Badge tone="danger">{tr("ui.n_missed", { n: result.missed })}</Badge>
+            {result.extra > 0 && <Badge>{tr("ui.n_extra_taps", { n: result.extra })}</Badge>}
           </div>
           <p className="mt-2 text-text">
             {result.missed > result.total / 3
-              ? "Lots of missed strums — slow the tempo down and keep your hand moving down and up even on the silent slots."
+              ? tr("ui.lots_of_missed_strums_slow_the_tempo_down_and_ke")
               : result.early > result.late
-                ? "You tend to rush ahead of the click. Relax and let the beat come to you."
+                ? tr("ui.you_tend_to_rush_ahead_of_the_click_relax_and_le")
                 : result.late > result.early
-                  ? "You're a little behind the click. Start the motion slightly earlier."
-                  : "Nicely steady! Try a faster tempo or the next pattern."}
+                  ? tr("ui.you_re_a_little_behind_the_click_start_the_motio")
+                  : tr("ui.nicely_steady_try_a_faster_tempo_or_the_next_pat")}
           </p>
         </Callout>
       )}

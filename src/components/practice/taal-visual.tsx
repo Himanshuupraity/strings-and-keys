@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { cn } from "@/components/ui";
 import { markAt, type Taal } from "@/lib/music/taal";
@@ -23,9 +24,10 @@ export function TaalVisual({
   strokes?: string[];
   className?: string;
 }) {
+  const tr = useT();
   let m = 0;
   return (
-    <div className={cn("flex flex-wrap gap-2", className)} role="img" aria-label={`${taal.name}: ${taal.matras} matras, ${taal.vibhag.join("+")}. Bols ${taal.bols.join(" ")}.`}>
+    <div className={cn("flex flex-wrap gap-2", className)} role="img" aria-label={tr("ui.taal_aria", { name: taal.name, n: taal.matras, vibhag: taal.vibhag.join("+"), bols: taal.bols.join(" ") })}>
       {taal.vibhag.map((len, v) => {
         const cells = Array.from({ length: len }, () => m++);
         return (

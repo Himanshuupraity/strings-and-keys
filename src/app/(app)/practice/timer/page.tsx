@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.timer" description="Time your practice sessions and watch your weekly progress grow." />
+      <TPageHeader titleKey="tool.timer" descriptionKey="tool.desc.timer" />
       <PracticeTimer />
     </>
   );

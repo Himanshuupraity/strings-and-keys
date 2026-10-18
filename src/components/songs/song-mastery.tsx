@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Circle, Timer, Trophy } from "lucide-react";
@@ -16,6 +17,7 @@ import { SongStatusChip } from "./song-status-chip";
 
 /** Per-section "I can play this" marks and the overall song mastery. */
 export function SongMasteryCard({ song, instrument, progress }: { song: Song; instrument: Instrument; progress?: SongProgress }) {
+  const tr = useT();
   const status = songStatus(song, progress);
   const mastered = new Set(progress?.sectionsMastered ?? []);
   const toggle = (id: string) =>
@@ -29,13 +31,13 @@ export function SongMasteryCard({ song, instrument, progress }: { song: Song; in
   return (
     <Card data-testid="song-mastery">
       <CardHeader
-        title="Can you play it?"
-        description={`Mark each section when you can play it all the way through on ${instrument}.`}
+        title={tr("ui.can_you_play_it")}
+        description={tr(instrument === "guitar" ? "ui.mark_sections_guitar" : "ui.mark_sections_piano")}
         action={<SourceTag source="self-reported" />}
       />
       <CardBody className="space-y-3">
         <div className="flex items-center gap-3">
-          <ProgressBar value={status.pct} tone="success" label="Song mastery" className="flex-1" />
+          <ProgressBar value={status.pct} tone="success" label={tr("ui.song_mastery")} className="flex-1" />
           <span className="text-sm font-semibold tabular-nums">{Math.round(status.pct * 100)}%</span>
           <SongStatusChip status={status} />
         </div>
@@ -54,7 +56,7 @@ export function SongMasteryCard({ song, instrument, progress }: { song: Song; in
                 >
                   {on ? <CheckCircle2 className="h-5 w-5 shrink-0 text-success" /> : <Circle className="h-5 w-5 shrink-0 text-subtle" />}
                   <span className="flex-1 font-medium">{s.name}</span>
-                  <span className={cn("text-xs", on ? "text-success" : "text-muted")}>{on ? "I can play this" : "Not yet"}</span>
+                  <span className={cn("text-xs", on ? "text-success" : "text-muted")}>{on ? tr("ui.i_can_play_this") : tr("ui.not_yet")}</span>
                 </button>
               </li>
             );
@@ -62,7 +64,7 @@ export function SongMasteryCard({ song, instrument, progress }: { song: Song; in
         </ul>
         {status.state === "mastered" && (
           <p className="flex items-center gap-2 text-sm font-medium text-success">
-            <Trophy className="h-4 w-4" /> Song mastered — it now counts towards the chords you know.
+            <Trophy className="h-4 w-4" /> {tr("ui.song_mastered_it_now_counts_towards_the_chords_y")}
           </p>
         )}
       </CardBody>
@@ -96,6 +98,7 @@ const DRILL_SECONDS = 30;
 
 /** 30-second self-reported chord change counter for the song's hardest pair. */
 export function SongChangeDrill({ song, instrument, progress }: { song: Song; instrument: Instrument; progress?: SongProgress }) {
+  const tr = useT();
   const pair = useMemo(() => hardestPair(song, instrument), [song, instrument]);
   const [phase, setPhase] = useState<"idle" | "running" | "done">("idle");
   const [count, setCount] = useState(0);
@@ -113,11 +116,11 @@ export function SongChangeDrill({ song, instrument, progress }: { song: Song; in
         setPhase("done");
         const perMinute = countRef.current * (60 / DRILL_SECONDS);
         void songRepo.upsert(song.id, instrument, (p) => ({ ...p, bestChangesPerMinute: Math.max(p.bestChangesPerMinute ?? 0, perMinute) }));
-        if (perMinute > (progress?.bestChangesPerMinute ?? 0)) toast.success(`New best: ${perMinute} changes per minute`);
+        if (perMinute > (progress?.bestChangesPerMinute ?? 0)) toast.success(tr("ui.new_best_cpm", { n: perMinute }));
       }
     }, 100);
     return () => window.clearInterval(id);
-  }, [phase, song.id, instrument, progress?.bestChangesPerMinute]);
+  }, [phase, song.id, instrument, progress?.bestChangesPerMinute, tr]);
 
   if (!pair) return null;
   const start = () => {
@@ -137,8 +140,8 @@ export function SongChangeDrill({ song, instrument, progress }: { song: Song; in
     <Card data-testid="song-change-drill">
       <CardHeader
         icon={<Timer className="h-5 w-5" />}
-        title="Chord change speed"
-        description={`The trickiest change in this song: ${pair[0]} ↔ ${pair[1]}. Switch back and forth for ${DRILL_SECONDS} seconds and tap after each change.`}
+        title={tr("ui.chord_change_speed")}
+        description={tr("ui.trickiest_change", { a: pair[0], b: pair[1], s: DRILL_SECONDS })}
         action={<SourceTag source="self-reported" />}
       />
       <CardBody className="space-y-4">
@@ -155,17 +158,17 @@ export function SongChangeDrill({ song, instrument, progress }: { song: Song; in
               <span className="text-sm tabular-nums text-muted" aria-live="polite">{left}s left</span>
             </div>
             <Button size="lg" className="h-16 w-full text-lg" onClick={tap} data-testid="drill-tap">
-              Changed!
+              {tr("ui.changed")}
             </Button>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
-            <Button onClick={start} data-testid="drill-start">{phase === "done" ? "Try again" : "Start 30 seconds"}</Button>
-            {phase === "done" && <span className="text-sm">This round: <strong>{count * (60 / DRILL_SECONDS)}</strong> changes/min</span>}
-            <span className="text-sm text-muted">Best: <strong className="text-text">{progress?.bestChangesPerMinute ? `${progress.bestChangesPerMinute}/min` : "—"}</strong></span>
+            <Button onClick={start} data-testid="drill-start">{phase === "done" ? tr("ui.try_again") : tr("ui.start_30_seconds")}</Button>
+            {phase === "done" && <span className="text-sm">{tr("ui.this_round")} <strong>{count * (60 / DRILL_SECONDS)}</strong> {tr("ui.changes_min")}</span>}
+            <span className="text-sm text-muted">{tr("dash.drillBest")} <strong className="text-text">{progress?.bestChangesPerMinute ? `${progress.bestChangesPerMinute}/min` : "—"}</strong></span>
           </div>
         )}
-        <p className="text-xs text-muted">Clean changes beat fast ones — only tap when every string rings.</p>
+        <p className="text-xs text-muted">{tr("ui.clean_changes_beat_fast_ones_only_tap_when_every")}</p>
       </CardBody>
     </Card>
   );

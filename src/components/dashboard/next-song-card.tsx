@@ -4,11 +4,12 @@ import Link from "next/link";
 import { ArrowRight, ListMusic } from "lucide-react";
 import { Button, Card, CardBody, CardHeader, Skeleton } from "@/components/ui";
 import { useSongInsights } from "@/components/songs/use-song-insights";
-import { useT } from "@/lib/i18n";
+import { useT, useTm } from "@/lib/i18n";
 
 /** Dashboard card: the best song to learn next, based on the chords you already know. */
 export function NextSongCard({ instrument }: { instrument: "guitar" | "piano" }) {
   const t = useT();
+  const tm = useTm();
   const { loading, known, suggestions } = useSongInsights(instrument, 1);
   const top = suggestions[0];
   return (
@@ -22,7 +23,7 @@ export function NextSongCard({ instrument }: { instrument: "guitar" | "piano" })
             <div>
               <p className="text-lg font-semibold">{top.song.title}</p>
               <p className="text-xs text-subtle">{[top.song.artist, top.song.film].filter(Boolean).join(" · ")}</p>
-              <p className="mt-2 text-sm text-muted">{top.reason}</p>
+              <p className="mt-2 text-sm text-muted">{tm(top.reasonMsg)}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link href={`/songs/${top.song.id}`}>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useT } from "@/lib/i18n";
+import { lessonText, useLang, useT, useTx } from "@/lib/i18n";
+import { VIDEO_DESC_HI } from "@/content/i18n/videos-hi";
 import { useMemo, useState } from "react";
 import { CheckCircle2, Circle, ExternalLink, Heart, Play, Search, ShieldCheck, Sparkles, X } from "lucide-react";
 import { Badge, Button, Card, EmptyState, Input, PageHeader, Select, Switch, cn } from "@/components/ui";
@@ -29,6 +30,8 @@ type InstrumentFilter = "all" | "guitar" | "piano";
 
 export function VideoHub() {
   const t = useT();
+  const tx = useTx();
+  const uiLang = useLang();
   const [prefs] = usePrefs();
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<VideoCategory | "all">("all");
@@ -101,30 +104,30 @@ export function VideoHub() {
       <PageHeader
         eyebrow={t("nav./videos")}
         title={t("videos.title")}
-        description={`${VIDEOS.length} hand-picked free lessons from YouTube creators, organised by instrument, level and topic.`}
+        description={t("ui.videos_desc", { n: VIDEOS.length })}
       />
 
       <p className="mb-6 flex items-start gap-2 rounded-xl bg-surface-2 p-3 text-xs text-muted">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-        Every video was checked on YouTube on {VIDEOS[0]?.verifiedAt} (it existed and allowed embedding); titles and creators are as YouTube reported them. Creators can remove videos later, so each one also has a “Watch on YouTube” link. Videos load from youtube-nocookie.com only when you press play.
+        {t("ui.videos_verified", { date: VIDEOS[0]?.verifiedAt ?? "" })}
       </p>
 
       {recommended.length > 0 && (
         <section className="mb-8" aria-labelledby="rec-h">
           <h2 id="rec-h" className="mb-1 flex items-center gap-2 font-semibold">
-            <Sparkles className="h-4 w-4 text-accent" /> Recommended for you
+            <Sparkles className="h-4 w-4 text-accent" /> {t("ui.recommended_for_you")}
           </h2>
-          <p className="mb-3 text-sm text-muted">{lesson ? <>Based on your next lesson: <strong className="text-text">{lesson.title}</strong> ({prefs.instrument} mode)</> : `Beginner picks for ${prefs.instrument} mode`}</p>
+          <p className="mb-3 text-sm text-muted">{lesson ? <>{t("ui.based_on_next_lesson")} <strong className="text-text">{lessonText(lesson, uiLang).title}</strong> {t(prefs.instrument === "guitar" ? "ui.mode_guitar" : "ui.mode_piano")}</> : t(prefs.instrument === "guitar" ? "ui.beginner_picks_guitar" : "ui.beginner_picks_piano")}</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">{recommended.map(card)}</div>
         </section>
       )}
 
       <div className="mb-4 flex flex-col gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Quick picks">
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t("ui.quick_picks")}>
           {([
-            { label: "Hindi piano lessons", inst: "piano", lang: "hindi", testId: "pick-hindi-piano" },
-            { label: "Hindi guitar lessons", inst: "guitar", lang: "hindi", testId: "pick-hindi-guitar" },
-            { label: "Everything", inst: "all", lang: "all", testId: "pick-all" },
+            { label: t("ui.hindi_piano_lessons"), inst: "piano", lang: "hindi", testId: "pick-hindi-piano" },
+            { label: t("ui.hindi_guitar_lessons"), inst: "guitar", lang: "hindi", testId: "pick-hindi-guitar" },
+            { label: t("ui.everything"), inst: "all", lang: "all", testId: "pick-all" },
           ] as const).map((p) => {
             const on = inst === p.inst && lang === p.lang;
             return (
@@ -139,7 +142,7 @@ export function VideoHub() {
                 }}
                 className={cn("rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "border-accent bg-accent text-accent-fg" : "border-border hover:bg-surface-2")}
               >
-                {p.label}
+                {tx(p.label)}
               </button>
             );
           })}
@@ -147,27 +150,27 @@ export function VideoHub() {
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-            <Input aria-label="Search videos" placeholder="Search by topic, creator or title" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
+            <Input aria-label={t("ui.search_videos")} placeholder={t("ui.search_by_topic_creator_or_title")} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
           </div>
-          <Select aria-label="Instrument" value={inst} onChange={(e) => setInst(e.target.value as InstrumentFilter)}>
-            <option value="all">All instruments</option>
-            <option value="guitar">Guitar</option>
-            <option value="piano">Piano</option>
+          <Select aria-label={t("ui.instrument")} value={inst} onChange={(e) => setInst(e.target.value as InstrumentFilter)}>
+            <option value="all">{t("ui.all_instruments")}</option>
+            <option value="guitar">{t("shell.guitar")}</option>
+            <option value="piano">{t("shell.piano")}</option>
           </Select>
-          <Select aria-label="Language" value={lang} onChange={(e) => setLang(e.target.value as VideoLanguage | "all")} data-testid="video-language">
-            <option value="all">Hindi &amp; English</option>
-            <option value="hindi">Hindi only</option>
-            <option value="english">English only</option>
+          <Select aria-label={t("shell.language")} value={lang} onChange={(e) => setLang(e.target.value as VideoLanguage | "all")} data-testid="video-language">
+            <option value="all">{t("ui.hindi_english")}</option>
+            <option value="hindi">{t("ui.hindi_only")}</option>
+            <option value="english">{t("ui.english_only")}</option>
           </Select>
-          <Select aria-label="Level" value={level} onChange={(e) => setLevel(e.target.value as VideoLevel | "all")}>
-            <option value="all">All levels</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+          <Select aria-label={t("ui.level")} value={level} onChange={(e) => setLevel(e.target.value as VideoLevel | "all")}>
+            <option value="all">{t("ui.all_levels")}</option>
+            <option value="beginner">{t("ui.beginner")}</option>
+            <option value="intermediate">{t("ui.intermediate")}</option>
+            <option value="advanced">{t("ui.advanced")}</option>
           </Select>
         </div>
-        <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Category">
-          {[{ id: "all" as const, label: "All topics" }, ...VIDEO_CATEGORIES].map((c) => (
+        <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label={t("ui.category")}>
+          {[{ id: "all" as const, label: t("ui.all_topics") }, ...VIDEO_CATEGORIES].map((c) => (
             <button
               key={c.id}
               type="button"
@@ -175,30 +178,30 @@ export function VideoHub() {
               onClick={() => setCategory(c.id)}
               className={cn("shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors", category === c.id ? "border-accent bg-accent-soft text-accent" : "border-border text-muted hover:text-text")}
             >
-              {c.label}
+              {tx(c.label)}
             </button>
           ))}
         </div>
         <div className="flex flex-wrap gap-6">
-          <Switch label="Favourites only" checked={favOnly} onChange={setFavOnly} />
-          <Switch label="Hide watched" checked={hideWatched} onChange={setHideWatched} />
+          <Switch label={t("ui.favourites_only")} checked={favOnly} onChange={setFavOnly} />
+          <Switch label={t("ui.hide_watched")} checked={hideWatched} onChange={setHideWatched} />
         </div>
       </div>
 
       {filtered.length ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">{filtered.map(card)}</div>
       ) : (
-        <EmptyState title="No videos match" description="Try clearing a filter or searching for something broader." />
+        <EmptyState title={t("ui.no_videos_match")} description={t("ui.try_clearing_a_filter_or_searching_for_something")} />
       )}
 
       {searches.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-1 font-semibold">More on YouTube</h2>
-          <p className="mb-3 text-sm text-muted">These are YouTube searches — not verified videos. Check the creator before you follow along.</p>
+          <h2 className="mb-1 font-semibold">{t("ui.more_on_youtube")}</h2>
+          <p className="mb-3 text-sm text-muted">{t("ui.these_are_youtube_searches_not_verified_videos_c")}</p>
           <div className="flex flex-wrap gap-2">
             {searches.map((s) => (
               <a key={s.query} href={youtubeSearchUrl(s.query)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border-strong px-3 py-1.5 text-sm hover:bg-surface-2">
-                <Search className="h-3.5 w-3.5" /> {s.label} <Badge>search</Badge>
+                <Search className="h-3.5 w-3.5" /> {tx(s.label)} <Badge>{t("ui.search")}</Badge>
               </a>
             ))}
           </div>
@@ -209,6 +212,9 @@ export function VideoHub() {
 }
 
 function VideoCard({ video: v, category, favorite, watched, playing, onPlay, onClose }: { video: CuratedVideo; category: string; favorite: boolean; watched: boolean; playing: boolean; onPlay: () => void; onClose: () => void }) {
+  const t = useT();
+  const tx = useTx();
+  const uiLang = useLang();
   return (
     <Card className="flex flex-col overflow-hidden" data-testid={`video-${v.id}`}>
       <div className="relative aspect-video bg-surface-3">
@@ -222,12 +228,12 @@ function VideoCard({ video: v, category, favorite, watched, playing, onPlay, onC
               allowFullScreen
               referrerPolicy="strict-origin-when-cross-origin"
             />
-            <button type="button" onClick={onClose} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white" aria-label="Close video">
+            <button type="button" onClick={onClose} className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white" aria-label={t("ui.close_video")}>
               <X className="h-4 w-4" />
             </button>
           </>
         ) : (
-          <button type="button" onClick={onPlay} className="group absolute inset-0" aria-label={`Play “${v.title}” by ${v.creator}`}>
+          <button type="button" onClick={onPlay} className="group absolute inset-0" aria-label={t("ui.play_video_by", { title: v.title, creator: v.creator })}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={youtubeThumbnail(v.id)} alt="" loading="lazy" className="h-full w-full object-cover" />
             <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors group-hover:bg-black/30">
@@ -235,26 +241,26 @@ function VideoCard({ video: v, category, favorite, watched, playing, onPlay, onC
                 <Play className="ml-0.5 h-6 w-6" />
               </span>
             </span>
-            {watched && <span className="absolute left-2 top-2"><Badge tone="success" className="bg-success-soft/90">Watched</Badge></span>}
+            {watched && <span className="absolute left-2 top-2"><Badge tone="success" className="bg-success-soft/90">{t("ui.watched")}</Badge></span>}
           </button>
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
         <p className="line-clamp-2 font-semibold leading-snug">{v.title}</p>
         <p className="mt-0.5 text-sm text-muted">{v.creator}</p>
-        <p className="mt-2 text-sm text-muted">{v.description}</p>
+        <p className="mt-2 text-sm text-muted">{uiLang === "hi" ? (VIDEO_DESC_HI[v.id] ?? v.description) : v.description}</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Badge tone={v.instrument === "guitar" ? "guitar" : v.instrument === "piano" ? "piano" : "theory"}>{v.instrument === "both" ? "Guitar & piano" : v.instrument}</Badge>
-          {videoLanguage(v) === "hindi" && <Badge tone="accent">Hindi</Badge>}
-          <Badge>{v.level}</Badge>
-          <Badge>{category}</Badge>
+          <Badge tone={v.instrument === "guitar" ? "guitar" : v.instrument === "piano" ? "piano" : "theory"}>{v.instrument === "both" ? t("ui.guitar_piano") : t(v.instrument === "guitar" ? "shell.guitar" : "shell.piano")}</Badge>
+          {videoLanguage(v) === "hindi" && <Badge tone="accent">{t("ui.hindi")}</Badge>}
+          <Badge>{tx(v.level[0].toUpperCase() + v.level.slice(1))}</Badge>
+          <Badge>{tx(category)}</Badge>
         </div>
         <div className="mt-auto flex items-center gap-1 pt-3">
-          <Button size="sm" variant="ghost" aria-pressed={favorite} onClick={() => void videoRepo.set(v.id, { favorite: !favorite })} aria-label={favorite ? "Remove from favourites" : "Add to favourites"}>
-            <Heart className={cn("h-4 w-4", favorite && "fill-danger text-danger")} /> {favorite ? "Saved" : "Save"}
+          <Button size="sm" variant="ghost" aria-pressed={favorite} onClick={() => void videoRepo.set(v.id, { favorite: !favorite })} aria-label={favorite ? t("ui.remove_from_favourites") : t("ui.add_to_favourites")}>
+            <Heart className={cn("h-4 w-4", favorite && "fill-danger text-danger")} /> {favorite ? t("ui.saved") : t("common.save")}
           </Button>
           <Button size="sm" variant="ghost" aria-pressed={watched} onClick={() => void videoRepo.set(v.id, { watched: !watched })}>
-            {watched ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4" />} {watched ? "Watched" : "Mark watched"}
+            {watched ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4" />} {watched ? t("ui.watched") : t("ui.mark_watched")}
           </Button>
           <a href={youtubeWatchUrl(v.id)} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-medium text-muted hover:text-text sm:min-h-0 sm:py-1">
             YouTube <ExternalLink className="h-3.5 w-3.5" />

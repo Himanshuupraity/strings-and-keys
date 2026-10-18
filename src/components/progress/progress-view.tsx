@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/i18n";
+import { useT, useTx, lessonText, useLang } from "@/lib/i18n";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -24,6 +24,9 @@ const TRACKS: { track: Track; label: string; tone: "theory" | "guitar" | "piano"
 
 export function ProgressView() {
   const t = useT();
+  const lang = useLang();
+  const tr = useT();
+  const tx = useTx();
   const [prefs] = usePrefs();
   const { data, loading } = useLearnerData();
   const quizzes = useData(() => quizRepo.list(), ["quizAttempts"], []);
@@ -56,7 +59,7 @@ export function ProgressView() {
 
   return (
     <div>
-      <PageHeader eyebrow={t("eyebrow.progress")} title={t("progress.title")} description="Lesson completion and demonstrated proficiency are tracked separately — and separately for guitar, piano and shared theory." />
+      <PageHeader eyebrow={t("eyebrow.progress")} title={t("progress.title")} description={t("ui.lesson_completion_and_demonstrated_proficiency_a")} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {TRACKS.map((t) => {
@@ -65,42 +68,42 @@ export function ProgressView() {
           const mastered = ls.filter((l) => data.progress[l.id]?.status === "mastered").length;
           return (
             <Card key={t.track} className="p-4">
-              <p className="text-sm font-medium">{t.label}</p>
+              <p className="text-sm font-medium">{tx(t.label)}</p>
               <p className="mt-1 text-2xl font-semibold tabular-nums">{loading ? "–" : `${done}/${ls.length}`}</p>
-              <p className="mb-2 text-xs text-muted">completed · {mastered} mastered</p>
-              <ProgressBar value={ls.length ? done / ls.length : 0} tone={t.tone} label={`${t.label} completion`} />
+              <p className="mb-2 text-xs text-muted">{tr("ui.completed_mastered_n", { n: mastered })}</p>
+              <ProgressBar value={ls.length ? done / ls.length : 0} tone={t.tone} label={tr("ui.x_completion", { x: tx(t.label) })} />
             </Card>
           );
         })}
         <Card className="p-4">
-          <p className="text-sm font-medium">Practice</p>
+          <p className="text-sm font-medium">{t("nav.section.practice")}</p>
           <p className="mt-1 text-2xl font-semibold tabular-nums">{totalMinutes(data.sessions)} min</p>
-          <p className="text-xs text-muted">{practiceStreak(data.sessions)}-day streak · {data.sessions.length} sessions</p>
-          <p className="mt-2 text-xs text-muted">Guitar {totalMinutes(data.sessions, "guitar")} · Piano {totalMinutes(data.sessions, "piano")} min</p>
+          <p className="text-xs text-muted">{tr("ui.streak_sessions", { n: practiceStreak(data.sessions), s: data.sessions.length })}</p>
+          <p className="mt-2 text-xs text-muted">{tr("ui.guitar_piano_min", { g: totalMinutes(data.sessions, "guitar"), p: totalMinutes(data.sessions, "piano") })}</p>
         </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader icon={<Target className="h-5 w-5" />} title="Next best step" />
+          <CardHeader icon={<Target className="h-5 w-5" />} title={t("ui.next_best_step")} />
           <CardBody>
             {next ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-semibold">{next.title}</p>
-                  <p className="text-sm text-muted">Level {next.level} · {LEVEL_NAMES[next.level]} — {next.summary}</p>
+                  <p className="font-semibold">{lessonText(next, lang).title}</p>
+                  <p className="text-sm text-muted">{tr("ui.level_n_dot", { n: next.level, name: tx(LEVEL_NAMES[next.level]) })} — {lessonText(next, lang).summary}</p>
                 </div>
-                <Link href={`/lesson/${next.id}`} className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-fg hover:bg-accent-hover">Open lesson</Link>
+                <Link href={`/lesson/${next.id}`} className="rounded-xl bg-accent px-4 py-2 text-sm font-medium text-accent-fg hover:bg-accent-hover">{t("ui.open_lesson")}</Link>
               </div>
             ) : (
-              <p className="text-sm text-muted">All unlocked lessons are complete. Revise, practise songs or try the other instrument.</p>
+              <p className="text-sm text-muted">{t("ui.all_unlocked_lessons_are_complete_revise_practis")}</p>
             )}
             {weak.length > 0 && (
               <div className="mt-4 rounded-xl bg-warn-soft p-3 text-sm">
-                <p className="font-medium">Areas needing revision</p>
+                <p className="font-medium">{t("ui.areas_needing_revision")}</p>
                 <ul className="mt-1 list-inside list-disc text-muted">
                   {weak.slice(0, 4).map((w) => (
-                    <li key={w.skill}>{w.skill}: {Math.round(w.accuracy * 100)}% average over {w.attempts} measured attempts</li>
+                    <li key={w.skill}>{tr("ui.avg_over_attempts", { skill: w.skill, pct: Math.round(w.accuracy * 100), n: w.attempts })}</li>
                   ))}
                 </ul>
               </div>
@@ -108,11 +111,11 @@ export function ProgressView() {
           </CardBody>
         </Card>
         <Card>
-          <CardHeader icon={<Info className="h-5 w-5" />} title="How mastery works" />
+          <CardHeader icon={<Info className="h-5 w-5" />} title={t("ui.how_mastery_works")} />
           <CardBody>
             <ul className="space-y-2 text-sm text-muted">
               {MASTERY_EXPLANATION.map((m) => (
-                <li key={m} className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />{m}</li>
+                <li key={m} className="flex gap-2"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />{tx(m)}</li>
               ))}
             </ul>
           </CardBody>
@@ -120,26 +123,26 @@ export function ProgressView() {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Weekly report" description={`${Math.round(week.reduce((a, r) => a + r.guitar + r.piano, 0))} minutes in the last 7 days · ${week.filter((r) => r.guitar + r.piano > 0).length}/${data.goals.weeklyPracticeDays} practice-day goal`} action={<SourceTag source="measured" />} />
+        <CardHeader title={t("ui.weekly_report")} description={tr("ui.weekly_report_desc", { min: Math.round(week.reduce((a, r) => a + r.guitar + r.piano, 0)), days: week.filter((r) => r.guitar + r.piano > 0).length, goal: data.goals.weeklyPracticeDays })} action={<SourceTag source="measured" />} />
         <CardBody><WeeklyChart data={week} /></CardBody>
       </Card>
 
       <Card className="mt-6">
         <CardHeader
-          title="Lessons"
-          description="Status per lesson. Open any completed lesson to revise."
-          action={<Segmented<Track> label="Track" size="sm" value={track} onChange={setTrack} options={TRACKS.map((t) => ({ value: t.track, label: t.label }))} />}
+          title={t("ui.lessons")}
+          description={t("ui.status_per_lesson_open_any_completed_lesson_to_r")}
+          action={<Segmented<Track> label={t("ui.track")} size="sm" value={track} onChange={setTrack} options={TRACKS.map((t) => ({ value: t.track, label: t.label }))} />}
         />
         <CardBody className="space-y-5">
           {loading && <Skeleton className="h-40" />}
-          {!loading && trackLessons.length === 0 && <p className="text-sm text-muted">No lessons in this track yet.</p>}
+          {!loading && trackLessons.length === 0 && <p className="text-sm text-muted">{t("ui.no_lessons_in_this_track_yet")}</p>}
           {levels.map((lv) => {
             const ls = trackLessons.filter((l) => l.level === lv);
             const done = ls.filter((l) => isDone(data.progress[l.id])).length;
             return (
               <div key={lv}>
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-sm font-semibold">Level {lv} · {LEVEL_NAMES[lv]}</p>
+                  <p className="text-sm font-semibold">{tr("ui.level_n_dot", { n: lv, name: tx(LEVEL_NAMES[lv]) })}</p>
                   <span className="text-xs text-muted">{done}/{ls.length} {done === ls.length ? "· level complete" : ""}</span>
                 </div>
                 <ul className="grid gap-1.5 sm:grid-cols-2">
@@ -150,7 +153,7 @@ export function ProgressView() {
                       <li key={l.id}>
                         <Link href={`/lesson/${l.id}`} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-2">
                           {st === "mastered" ? <Medal className="h-4 w-4 text-accent" /> : st === "completed" ? <CheckCircle2 className="h-4 w-4 text-success" /> : st === "in-progress" ? <CircleDot className="h-4 w-4 text-piano" /> : <Circle className="h-4 w-4 text-subtle" />}
-                          <span className="flex-1 truncate">{l.title}</span>
+                          <span className="flex-1 truncate">{lessonText(l, lang).title}</span>
                           {p?.quizBest != null && <span className="text-xs tabular-nums text-muted">quiz {Math.round(p.quizBest * 100)}%</span>}
                           <span className="sr-only">{st}</span>
                         </Link>
@@ -166,16 +169,16 @@ export function ProgressView() {
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card>
-          <CardHeader title="Chord change drill history" description="Transitions per minute over time" />
+          <CardHeader title={t("ui.chord_change_drill_history")} description={t("ui.transitions_per_minute_over_time")} />
           <CardBody>
             {pairs.length === 0 ? (
-              <p className="text-sm text-muted">No timed drills yet. <Link href="/practice/chord-drill" className="underline">Try the 1-minute drill</Link>.</p>
+              <p className="text-sm text-muted">{t("ui.no_timed_drills_yet_2")} <Link href="/practice/chord-drill" className="underline">{t("ui.try_the_1_minute_drill")}</Link>.</p>
             ) : (
               <>
                 <div className="mb-3 flex flex-wrap gap-1.5">
                   {pairs.map(([k, rows]) => (
                     <button key={k} type="button" onClick={() => setPairSel(k)} aria-pressed={k === activePair} className={cn("rounded-full border px-2.5 py-1 text-xs", k === activePair ? "border-accent bg-accent-soft text-accent" : "border-border text-muted hover:bg-surface-2")}>
-                      {k} · best {Math.max(...rows.map((r) => r.transitions))}
+                      {tr("ui.pair_best", { pair: k, n: Math.max(...rows.map((r) => r.transitions)) })}
                     </button>
                   ))}
                 </div>
@@ -190,17 +193,17 @@ export function ProgressView() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="mt-2 text-xs text-muted">Self-reported drills count your own taps; audio-assisted drills count only confidently detected changes.</p>
+                <p className="mt-2 text-xs text-muted">{t("ui.self_reported_drills_count_your_own_taps_audio_a")}</p>
               </>
             )}
           </CardBody>
         </Card>
 
         <Card>
-          <CardHeader title="Recent exercise results" description="Measured = checked from the virtual instrument, MIDI or microphone" />
+          <CardHeader title={t("ui.recent_exercise_results")} description={t("ui.measured_checked_from_the_virtual_instrument_mid")} />
           <CardBody>
             {data.exercises.length === 0 ? (
-              <p className="text-sm text-muted">No exercise results yet.</p>
+              <p className="text-sm text-muted">{t("ui.no_exercise_results_yet")}</p>
             ) : (
               <ul className="divide-y divide-border">
                 {data.exercises.slice(0, 8).map((e) => (
@@ -215,16 +218,16 @@ export function ProgressView() {
                 ))}
               </ul>
             )}
-            <p className="mt-3 text-xs text-muted">{measured.length} measured results in total. Scores show what was checked, not your overall musicianship.</p>
+            <p className="mt-3 text-xs text-muted">{tr("ui.measured_total", { n: measured.length })}</p>
           </CardBody>
         </Card>
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Quiz attempts" />
+        <CardHeader title={t("ui.quiz_attempts")} />
         <CardBody>
           {quizzes.data.length === 0 ? (
-            <p className="text-sm text-muted">No quizzes taken yet.</p>
+            <p className="text-sm text-muted">{t("ui.no_quizzes_taken_yet")}</p>
           ) : (
             <ul className="divide-y divide-border">
               {quizzes.data.slice(0, 10).map((q) => (

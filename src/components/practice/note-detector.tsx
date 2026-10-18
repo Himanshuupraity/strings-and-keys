@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Info, Piano, RotateCcw, Volume2, XCircle } from "lucide-react";
@@ -17,6 +18,7 @@ import { exerciseRepo } from "@/lib/storage/repositories";
 type Verdict = { played: number; source: "mic" | "midi"; correct: boolean; cents?: number } | null;
 
 export function NoteDetector() {
+  const tr = useT();
   const [prefs] = usePrefs();
   const [target, setTarget] = useState(60);
   const [verdict, setVerdict] = useState<Verdict>(null);
@@ -64,13 +66,13 @@ export function NoteDetector() {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <div className="space-y-6">
         <Card>
-          <CardHeader title="Target note" description="Pick a key below (or press 'New target'), then play that note on your real piano or keyboard." action={<Badge tone="piano">{score.right}/{score.total} correct</Badge>} />
+          <CardHeader title={tr("ui.target_note")} description={tr("ui.pick_a_key_below_or_press_new_target_then_play_t")} action={<Badge tone="piano">{score.right}/{score.total} correct</Badge>} />
           <CardBody className="space-y-4">
             <div className="flex flex-wrap items-center gap-4">
               <div className="font-display text-6xl" data-testid="detector-target"><NoteText midi={target} withOctave /></div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="secondary" size="sm" onClick={() => void playPianoNote(target, 1)}><Volume2 className="h-4 w-4" /> Hear it</Button>
-                <Button variant="secondary" size="sm" onClick={newTarget}><RotateCcw className="h-4 w-4" /> New target</Button>
+                <Button variant="secondary" size="sm" onClick={() => void playPianoNote(target, 1)}><Volume2 className="h-4 w-4" /> {tr("ui.hear_it")}</Button>
+                <Button variant="secondary" size="sm" onClick={newTarget}><RotateCcw className="h-4 w-4" /> {tr("ui.new_target")}</Button>
               </div>
             </div>
             <PianoKeyboard low={48} high={84} highlight={{ [target]: "target", ...(verdict && !verdict.correct ? { [verdict.played]: "wrong" as const } : {}), ...(verdict?.correct ? { [target]: "correct" as const } : {}) }} pressed={midi.held} onNoteOn={(m) => { setTarget(m); setVerdict(null); }} labels="white" focusMidi={66} whiteKeyWidth={38} height={150} />
@@ -78,25 +80,25 @@ export function NoteDetector() {
         </Card>
 
         <Card>
-          <CardHeader title="What I heard" action={verdict && <SourceTag source="measured" />} />
+          <CardHeader title={tr("ui.what_i_heard")} action={verdict && <SourceTag source="measured" />} />
           <CardBody aria-live="polite">
             {!verdict ? (
-              <p className="text-muted">{mic.listening || midi.status === "connected" ? "Play one note and hold it for a moment…" : "Start listening with the microphone or connect a MIDI keyboard."}</p>
+              <p className="text-muted">{mic.listening || midi.status === "connected" ? tr("ui.play_one_note_and_hold_it_for_a_moment") : tr("ui.start_listening_with_the_microphone_or_connect_a")}</p>
             ) : (
               <div className={cn("flex items-start gap-3 rounded-xl p-4", verdict.correct ? "bg-success-soft" : "bg-danger-soft")}>
                 {verdict.correct ? <CheckCircle2 className="mt-0.5 h-6 w-6 text-success" /> : <XCircle className="mt-0.5 h-6 w-6 text-danger" />}
                 <div>
                   <p className="text-lg font-semibold" data-testid="detector-result">
-                    {verdict.correct ? "Correct! " : "Not quite. "}You played <NoteText midi={verdict.played} withOctave />.
+                    {tr(verdict.correct ? "ui.correct_you_played" : "ui.not_quite_you_played")} <NoteText midi={verdict.played} withOctave />.
                   </p>
                   {!verdict.correct && (
                     <p className="text-sm text-muted">
                       {mod12(verdict.played) === mod12(target)
-                        ? `Right note name, wrong octave — go ${diff > 0 ? "down" : "up"} ${Math.abs(diff / 12)} octave${Math.abs(diff) > 12 ? "s" : ""}.`
-                        : `That is ${Math.abs(diff)} semitone${Math.abs(diff) === 1 ? "" : "s"} ${diff > 0 ? "higher (to the right)" : "lower (to the left)"} than ${midiToName(target)}.`}
+                        ? tr(diff > 0 ? "ui.wrong_octave_down" : "ui.wrong_octave_up", { n: Math.abs(diff / 12) })
+                        : tr(diff > 0 ? "ui.semis_higher_right" : "ui.semis_lower_left", { n: Math.abs(diff), note: midiToName(target) })}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-muted">Source: {verdict.source === "midi" ? "MIDI keyboard (exact)" : `microphone pitch estimate${verdict.cents !== undefined ? `, ${Math.round(verdict.cents)} cents from equal temperament` : ""}`}</p>
+                  <p className="mt-1 text-xs text-muted">Source: {verdict.source === "midi" ? tr("ui.midi_keyboard_exact") : `microphone pitch estimate${verdict.cents !== undefined ? `, ${Math.round(verdict.cents)} cents from equal temperament` : ""}`}</p>
                 </div>
               </div>
             )}
@@ -106,29 +108,29 @@ export function NoteDetector() {
 
       <div className="space-y-4">
         <Card>
-          <CardHeader title="Input" />
+          <CardHeader title={tr("ui.input")} />
           <CardBody className="space-y-4">
             <MicButton status={mic.status} error={mic.error} onStart={() => void mic.start()} onStop={mic.stop} />
             <div className="border-t border-border pt-4">
               {midi.supported ? (
                 midi.status === "connected" ? (
-                  <p className="text-sm"><Badge tone="success">MIDI connected</Badge> {midi.devices.join(", ") || "Waiting for a device…"}</p>
+                  <p className="text-sm"><Badge tone="success">{tr("ui.midi_connected")}</Badge> {midi.devices.join(", ") || tr("ui.waiting_for_a_device")}</p>
                 ) : (
-                  <Button variant="secondary" onClick={() => void midi.connect()} loading={midi.status === "connecting"}><Piano className="h-4 w-4" /> Connect MIDI keyboard</Button>
+                  <Button variant="secondary" onClick={() => void midi.connect()} loading={midi.status === "connecting"}><Piano className="h-4 w-4" /> {tr("ui.connect_midi_keyboard")}</Button>
                 )
               ) : (
-                <p className="text-xs text-muted">Web MIDI isn&apos;t supported in this browser (try Chrome or Edge on desktop).</p>
+                <p className="text-xs text-muted">{tr("ui.web_midi_isn_t_supported_in_this_browser_try_chr")}</p>
               )}
               {midi.error && <p className="mt-2 text-xs text-danger">{midi.error}</p>}
             </div>
           </CardBody>
         </Card>
-        <Callout tone="warn" icon={<Info className="h-4 w-4" />} title="Microphone limits">
+        <Callout tone="warn" icon={<Info className="h-4 w-4" />} title={tr("ui.microphone_limits")}>
           <ul className="mt-1 list-disc space-y-1 pl-4">
-            <li>Play <strong>one note at a time</strong>; chords confuse single-note detection.</li>
-            <li>Piano notes are rich in overtones, so the mic occasionally hears the octave above. If the result is an octave off, play again a little softer.</li>
-            <li>Very low notes (below about A1) and very high notes are unreliable.</li>
-            <li>A <strong>MIDI keyboard</strong> gives exact results — use it when you can.</li>
+            <li>{tr("ui.one_note_at_a_time_li")}</li>
+            <li>{tr("ui.piano_notes_are_rich_in_overtones_so_the_mic_occ")}</li>
+            <li>{tr("ui.very_low_notes_below_about_a1_and_very_high_note")}</li>
+            <li>A <strong>{tr("ui.midi_keyboard")}</strong> {tr("ui.gives_exact_results_use_it_when_you_can")}</li>
           </ul>
         </Callout>
       </div>

@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import type { Visual } from "@/content/types";
 import { PianoKeyboard, type KeyTone } from "@/components/instruments/piano-keyboard";
@@ -9,6 +10,7 @@ import { Illustration } from "./illustrations";
 import { keyboardRange, toMidi } from "./utils";
 
 export function VisualRenderer({ visual, onInteract }: { visual: Visual; onInteract?: () => void }) {
+  const tr = useT();
   let body: React.ReactNode = null;
   switch (visual.type) {
     case "keyboard": {
@@ -38,7 +40,7 @@ export function VisualRenderer({ visual, onInteract }: { visual: Visual; onInter
       break;
     case "tab":
       body = (
-        <pre className="scrollbar-thin overflow-x-auto rounded-2xl border border-border bg-surface-2 p-4 font-mono text-sm leading-6 text-text" aria-label="Guitar tablature: top line is the high e string">
+        <pre className="scrollbar-thin overflow-x-auto rounded-2xl border border-border bg-surface-2 p-4 font-mono text-sm leading-6 text-text" aria-label={tr("ui.guitar_tablature_top_line_is_the_high_e_string")}>
           {visual.lines.join("\n")}
         </pre>
       );

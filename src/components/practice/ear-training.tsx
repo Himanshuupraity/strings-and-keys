@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx, useTm } from "@/lib/i18n";
 
 import { useState } from "react";
 import { ArrowDownUp, Flame, Music, Repeat, Volume2 } from "lucide-react";
@@ -36,6 +37,9 @@ async function playQuestion(q: EarQuestion) {
 }
 
 export function EarTraining() {
+  const tr = useT();
+  const tm = useTm();
+  const tx = useTx();
   const [prefs] = usePrefs();
   const [mode, setMode] = useState<EarMode>("high-low");
   const [level, setLevel] = useState<1 | 2 | 3>(1);
@@ -99,21 +103,21 @@ export function EarTraining() {
 
   return (
     <div className="space-y-6">
-      <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Ear training exercise">
+      <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label={tr("ui.ear_training_exercise")}>
         {MODES.map((m) => (
           <button key={m.id} type="button" role="tab" aria-selected={mode === m.id} onClick={() => changeMode(m.id)} className={cn("shrink-0 rounded-xl border px-3 py-2 text-left text-sm transition-colors", mode === m.id ? "border-accent bg-accent-soft text-accent" : "border-border bg-surface hover:bg-surface-2")}>
-            <span className="block font-medium">{m.label}</span>
-            <span className="block text-xs text-muted">{m.description}</span>
+            <span className="block font-medium">{tx(m.label)}</span>
+            <span className="block text-xs text-muted">{tx(m.description)}</span>
           </button>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
         <Card>
-          <CardHeader title={q.prompt} icon={<Music className="h-5 w-5" />} action={<Segmented label="Difficulty" size="sm" value={level} onChange={changeLevel} options={[{ value: 1, label: "Easy" }, { value: 2, label: "Medium" }, { value: 3, label: "Hard" }]} />} />
+          <CardHeader title={tm(q.promptMsg)} icon={<Music className="h-5 w-5" />} action={<Segmented label={tr("ui.difficulty")} size="sm" value={level} onChange={changeLevel} options={[{ value: 1, label: tr("ui.easy") }, { value: 2, label: tr("ui.medium") }, { value: 3, label: tr("ui.hard") }]} />} />
           <CardBody className="space-y-5">
-            <Button size="lg" onClick={() => void playQuestion(q)} data-testid="ear-play"><Volume2 className="h-5 w-5" /> {answer ? "Hear it again" : "Play"}</Button>
-            {mode === "swara" && <p className="text-sm text-muted">Your Sa is <strong>{pcName(prefs.tonicPc)}</strong> (change it in Settings).</p>}
+            <Button size="lg" onClick={() => void playQuestion(q)} data-testid="ear-play"><Volume2 className="h-5 w-5" /> {answer ? tr("ui.hear_it_again") : tr("ui.play")}</Button>
+            {mode === "swara" && <p className="text-sm text-muted">{tr("ui.your_sa_is")} <strong>{pcName(prefs.tonicPc)}</strong> {tr("ui.change_it_in_settings")}</p>}
             {q.options.length > 0 && (
               <div className="grid gap-2 sm:grid-cols-2">
                 {q.options.map((o) => (
@@ -128,34 +132,34 @@ export function EarTraining() {
                     )}
                   >
                     {mode === "high-low" && <ArrowDownUp className="mr-2 inline h-4 w-4" />}
-                    {o}
+                    {tx(o)}
                   </button>
                 ))}
               </div>
             )}
             {isKeyboardMode && (
               <div className="space-y-2">
-                <p className="text-sm text-muted">{mode === "melody" ? `Played ${played.length} of ${q.answerNotes!.length} notes.` : "Click the key you think it is."}</p>
+                <p className="text-sm text-muted">{mode === "melody" ? tr("ui.played_of_notes", { a: played.length, b: q.answerNotes!.length }) : tr("ui.click_the_key_you_think_it_is")}</p>
                 <PianoKeyboard low={60} high={72} labels={answer ? "white" : "none"} highlight={highlight} onNoteOn={onKey} whiteKeyWidth={46} height={150} focusMidi={66} />
               </div>
             )}
             {answer && (
               <div className={cn("rounded-xl p-4", correct ? "bg-success-soft" : "bg-danger-soft")} aria-live="polite">
-                <p className="font-semibold">{correct ? "Correct!" : `Not quite — the answer was ${q.answer}.`}</p>
-                <p className="text-sm text-muted">{q.explanation}</p>
-                <Button className="mt-3" onClick={nextQ}><Repeat className="h-4 w-4" /> Next question</Button>
+                <p className="font-semibold">{correct ? tr("ui.correct") : tr("ui.answer_was", { a: tx(q.answer) })}</p>
+                <p className="text-sm text-muted">{tm(q.explanationMsg)}</p>
+                <Button className="mt-3" onClick={nextQ}><Repeat className="h-4 w-4" /> {tr("ui.next_question")}</Button>
               </div>
             )}
           </CardBody>
         </Card>
 
         <Card className="h-fit">
-          <CardHeader title="Session" />
+          <CardHeader title={tr("ui.session")} />
           <CardBody className="space-y-3">
-            <div className="flex items-center justify-between"><span className="text-sm text-muted">Score</span><span className="text-xl font-semibold">{stats.right}/{stats.total}</span></div>
-            <div className="flex items-center justify-between"><span className="text-sm text-muted">Streak</span><Badge tone={stats.streak >= 3 ? "accent" : "neutral"}><Flame className="h-3 w-3" /> {stats.streak}</Badge></div>
-            <div className="flex items-center justify-between"><span className="text-sm text-muted">Best streak</span><span className="font-medium">{stats.best}</span></div>
-            <p className="pt-2 text-xs text-muted">Ear training improves slowly — 5 minutes a day beats an hour once a week.</p>
+            <div className="flex items-center justify-between"><span className="text-sm text-muted">{tr("ui.score")}</span><span className="text-xl font-semibold">{stats.right}/{stats.total}</span></div>
+            <div className="flex items-center justify-between"><span className="text-sm text-muted">{tr("dash.streak")}</span><Badge tone={stats.streak >= 3 ? "accent" : "neutral"}><Flame className="h-3 w-3" /> {stats.streak}</Badge></div>
+            <div className="flex items-center justify-between"><span className="text-sm text-muted">{tr("ui.best_streak")}</span><span className="font-medium">{stats.best}</span></div>
+            <p className="pt-2 text-xs text-muted">{tr("ui.ear_training_improves_slowly_5_minutes_a_day_bea")}</p>
           </CardBody>
         </Card>
       </div>

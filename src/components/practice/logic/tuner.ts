@@ -1,3 +1,4 @@
+import { EN, type MessageKey } from "@/lib/i18n/en";
 import { centsBetween, frequencyToMidiFloat, midiToFrequency } from "@/lib/music/notes";
 
 export type TuneState = "in-tune" | "flat" | "sharp";
@@ -29,16 +30,20 @@ export function classifyCents(cents: number, tolerance = IN_TUNE_CENTS): TuneSta
   return cents < 0 ? "flat" : "sharp";
 }
 
-/** Plain-language advice for a beginner. */
-export function tuningAdvice(cents: number): string {
+/** Plain-language advice for a beginner, as a translatable message (format it in the UI). */
+export function tuningAdviceMessage(cents: number): { key: MessageKey; vars?: Record<string, string>; amountKey?: MessageKey } {
   const s = classifyCents(cents);
-  if (s === "in-tune") return "In tune — nice! Move on to the next string.";
+  if (s === "in-tune") return { key: "tuner.inTune" };
   const abs = Math.abs(cents);
-  if (abs > 250) return cents < 0
-    ? "Far too low — you may be on the wrong string, or it's very slack. Tighten slowly and re-check."
-    : "Far too high — you may be on the wrong string. Loosen slowly so the string doesn't snap.";
-  const amount = abs > 50 ? "a fair bit" : abs > 15 ? "a little" : "very slightly";
-  return s === "flat" ? `Too low (flat). Tighten the string ${amount}.` : `Too high (sharp). Loosen the string ${amount}.`;
+  if (abs > 250) return { key: cents < 0 ? "tuner.farLow" : "tuner.farHigh" };
+  const amountKey: MessageKey = abs > 50 ? "tuner.amount.fair" : abs > 15 ? "tuner.amount.little" : "tuner.amount.slight";
+  return { key: s === "flat" ? "tuner.flat" : "tuner.sharp", amountKey };
+}
+
+/** English form of tuningAdviceMessage. */
+export function tuningAdvice(cents: number): string {
+  const m = tuningAdviceMessage(cents);
+  return EN[m.key].replace("{amount}", m.amountKey ? EN[m.amountKey] : "");
 }
 
 /** Map cents (-50..50, clamped) to a needle angle in degrees (-60..60). */

@@ -164,7 +164,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
           <CardBody className="space-y-3 pt-4">
             <div className="flex flex-wrap items-center gap-2">
               <Segmented<Mode>
-                label="Scrolling"
+                label={t("ui.scrolling")}
                 size="sm"
                 value={mode}
                 onChange={(m) => {
@@ -179,10 +179,10 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                 ]}
               />
               <div className="ml-auto flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Previous line" onClick={() => go(prevStop(parsed.lines, current))}>
+                <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={t("ui.previous_line")} onClick={() => go(prevStop(parsed.lines, current))}>
                   <ChevronUp className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Next line" onClick={() => go(nextStop(parsed.lines, current))} data-testid="sheet-next">
+                <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={t("ui.next_line")} onClick={() => go(nextStop(parsed.lines, current))} data-testid="sheet-next">
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </div>
@@ -198,7 +198,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                     </span>
                     {dbInfo && (
                       <span className="tabular-nums text-xs text-muted" data-testid="voice-db">
-                        Voice: {dbInfo.above >= 0 ? "+" : ""}{Math.round(dbInfo.above)} dB over the room · needs +{Math.round(dbInfo.need)}
+                        {t("ui.voice_db", { above: `${dbInfo.above >= 0 ? "+" : ""}${Math.round(dbInfo.above)}`, need: Math.round(dbInfo.need) })}
                       </span>
                     )}
                     <span className="relative h-2.5 w-40 overflow-hidden rounded-full bg-surface-3" aria-hidden title="Your voice level; the white line is how loud it needs to be">
@@ -208,13 +208,13 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                   </div>
                 )}
                 {noPause && (
-                  <Callout tone="warn" title="I can't hear any pauses">
-                    Is the video or other music playing out loud? Use headphones, turn the volume down, or lower the sensitivity.
+                  <Callout tone="warn" title={t("ui.i_can_t_hear_any_pauses")}>
+                    {t("ui.is_the_video_or_other_music_playing_out_loud_use")}
                   </Callout>
                 )}
                 <p className="text-xs text-muted">
                   <span className="sm:hidden">{t("sheet.shortHelp")}</span>
-                  <span className="hidden sm:inline">Sing (or say) the highlighted line, then pause briefly — the sheet moves to the next line. The bar shows your voice; it needs to pass the white line. Headphones work best when the video is playing.</span>
+                  <span className="hidden sm:inline">{t("ui.sheet_long_help")}</span>
                 </p>
                 <Slider className={cn(showSettings ? "block" : "hidden", "sm:block")} label={t("sheet.voiceSensitivity")} min={1.5} max={6} step={0.5} value={7.5 - sensitivity} onChange={(v) => setSensitivity(7.5 - v)} format={(v) => (v < 3 ? "Low" : v < 4.5 ? "Medium" : "High")} />
               </div>
@@ -243,25 +243,25 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
             <div className={cn(showSettings ? "flex" : "hidden", "flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3 text-sm sm:flex")}>
               <div className="flex items-center gap-1">
                 <span className="text-muted">{t("sheet.transpose")}</span>
-                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Transpose down" onClick={() => setTranspose((t) => t - 1)}><Minus className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("ui.transpose_down")} onClick={() => setTranspose((t) => t - 1)}><Minus className="h-3.5 w-3.5" /></Button>
                 <span className="w-16 text-center tabular-nums">{transpose > 0 ? `+${transpose}` : transpose} · {soundingKey}</span>
-                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Transpose up" onClick={() => setTranspose((t) => t + 1)}><Plus className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("ui.transpose_up")} onClick={() => setTranspose((t) => t + 1)}><Plus className="h-3.5 w-3.5" /></Button>
               </div>
               {prefs.instrument === "guitar" && (
                 <div className="flex items-center gap-1">
                   <span className="text-muted">{t("sheet.capo")}</span>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Capo down" onClick={() => setCapo((c) => Math.max(0, c - 1))}><Minus className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("ui.capo_down")} onClick={() => setCapo((c) => Math.max(0, c - 1))}><Minus className="h-3.5 w-3.5" /></Button>
                   <span className="w-6 text-center tabular-nums">{capo}</span>
-                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Capo up" onClick={() => setCapo((c) => Math.min(9, c + 1))}><Plus className="h-3.5 w-3.5" /></Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("ui.capo_up")} onClick={() => setCapo((c) => Math.min(9, c + 1))}><Plus className="h-3.5 w-3.5" /></Button>
                 </div>
               )}
               <div className="flex items-center gap-1">
                 <Type className="h-4 w-4 text-muted" aria-hidden />
-                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Smaller text" onClick={() => setFontSize((f) => Math.max(14, f - 2))}><Minus className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Larger text" onClick={() => setFontSize((f) => Math.min(36, f + 2))}><Plus className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("ui.smaller_text")} onClick={() => setFontSize((f) => Math.max(14, f - 2))}><Minus className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" className="h-7 w-7" aria-label={t("ui.larger_text")} onClick={() => setFontSize((f) => Math.min(36, f + 2))}><Plus className="h-3.5 w-3.5" /></Button>
               </div>
               <Segmented<Layout>
-                label="Layout"
+                label={t("ui.layout")}
                 size="sm"
                 value={layout}
                 onChange={setLayout}
@@ -270,7 +270,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                   { value: "flow", label: t("sheet.flowing"), testId: "layout-flow" },
                 ]}
               />
-              {capo > 0 && <Badge tone="guitar">Showing shapes for capo {capo} · sounds in {soundingKey}</Badge>}
+              {capo > 0 && <Badge tone="guitar">{t("ui.showing_capo_shapes", { n: capo, k: soundingKey })}</Badge>}
             </div>
           </CardBody>
         </Card>
@@ -295,8 +295,8 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
         {sheetId && (
           <Card>
             <CardBody className="pt-5">
-              <p className="mb-3 font-semibold">Your recordings of this song</p>
-              <RecordingsList sheetId={sheetId} showUsage={false} emptyHint="Tap Record above, sing or play along with the sheet, then listen back." />
+              <p className="mb-3 font-semibold">{t("ui.your_recordings_of_this_song")}</p>
+              <RecordingsList sheetId={sheetId} showUsage={false} emptyHint={t("ui.rec_empty_hint_sheet")} />
             </CardBody>
           </Card>
         )}
@@ -310,23 +310,23 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
               <iframe
                 className="aspect-video w-full"
                 src={`https://www.youtube-nocookie.com/embed/${vid}?rel=0`}
-                title={`${title} — YouTube video`}
+                title={t("ui.x_youtube_video", { title })}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             ) : (
-              <button type="button" onClick={() => setShowVideo(true)} className="relative block aspect-video w-full bg-black" aria-label="Load the YouTube video">
+              <button type="button" onClick={() => setShowVideo(true)} className="relative block aspect-video w-full bg-black" aria-label={t("ui.load_the_youtube_video")}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={`https://i.ytimg.com/vi/${vid}/hqdefault.jpg`} alt="" className="h-full w-full object-cover opacity-80" />
                 <span className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex items-center gap-2 rounded-full bg-danger px-4 py-2 text-sm font-semibold text-white"><Youtube className="h-4 w-4" /> Play video</span>
+                  <span className="flex items-center gap-2 rounded-full bg-danger px-4 py-2 text-sm font-semibold text-white"><Youtube className="h-4 w-4" /> {t("ui.play_video")}</span>
                 </span>
               </button>
             )}
-            <p className="px-4 py-2 text-xs text-muted">Video loads from YouTube only when you press play.</p>
+            <p className="px-4 py-2 text-xs text-muted">{t("ui.video_loads_from_youtube_only_when_you_press_pla")}</p>
           </Card>
         ) : (
-          <Callout tone="neutral" icon={<Youtube className="h-4 w-4 text-danger" />} title="Listen while you sing">Add the song&apos;s YouTube link (Edit) to play it right here.</Callout>
+          <Callout tone="neutral" icon={<Youtube className="h-4 w-4 text-danger" />} title={t("ui.listen_while_you_sing")}>{t("ui.add_youtube_link")}</Callout>
         )}
         <Card>
           <CardBody className="pt-4">
@@ -383,13 +383,13 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
     <div className="mb-8 rounded-2xl border-2 border-dashed border-accent/50 bg-accent-soft/40 p-4 sm:p-5" data-testid="inline-paste">
       <p className="font-semibold">{t("sheet.noLyrics")}</p>
       <ol className="mt-1 list-inside list-decimal text-sm text-muted">
-        <li>Open a lyrics-with-chords page for this song{findHref ? " (button below)" : ""} and copy it.</li>
-        <li>Press “Paste from clipboard” — or paste into the box — and the lyrics appear with chords above the words.</li>
+        <li>{t(findHref ? "ui.open_lyrics_page_btn" : "ui.open_lyrics_page")}</li>
+        <li>{t("ui.press_paste_from_clipboard_or_paste_into_the_box")}</li>
       </ol>
       <div className="mt-3 flex flex-wrap gap-2">
         {findHref && (
           <a href={findHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-surface-2">
-            Find on Ultimate Guitar ↗
+            {t("ui.find_on_ultimate_guitar")}
           </a>
         )}
         <Button
@@ -411,7 +411,7 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
         </Button>
       </div>
       <textarea
-        aria-label="Paste lyrics with chords"
+        aria-label={t("ui.paste_lyrics_with_chords")}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onPaste={(e) => {
@@ -422,7 +422,7 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
           }
         }}
         rows={4}
-        placeholder="…or click here and press Ctrl+V / ⌘V"
+        placeholder={t("ui.or_click_here_and_press_ctrl_v_v")}
         className="mt-3 w-full rounded-xl border border-border bg-surface p-3 font-mono text-sm focus:border-accent focus:outline-none"
         data-testid="inline-paste-text"
       />
@@ -491,6 +491,7 @@ function SheetRowMono({ line, active, past, onClick, refCb }: RowProps) {
 }
 
 function SheetRow({ line, active, past, onClick, refCb }: { line: SheetLine; active: boolean; past: boolean; onClick: () => void; refCb: (el: HTMLDivElement | null) => void }) {
+  const t = useT();
   if (line.kind === "blank") return <div className="h-4" ref={refCb} />;
   if (line.kind === "section") {
     return (
@@ -507,7 +508,7 @@ function SheetRow({ line, active, past, onClick, refCb }: { line: SheetLine; act
     return (
       <div ref={refCb} onClick={onClick} className={cn(base, "py-1.5")} data-active={active || undefined}>
         <span className="font-mono text-[0.85em] font-semibold text-guitar">{line.chords.join("   ")}</span>
-        <span className="ml-2 text-[0.6em] text-muted">instrumental</span>
+        <span className="ml-2 text-[0.6em] text-muted">{t("ui.instrumental")}</span>
       </div>
     );
   }

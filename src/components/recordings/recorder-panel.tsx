@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTx } from "@/lib/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { Circle, Mic, ShieldCheck, Square } from "lucide-react";
@@ -16,6 +17,8 @@ import { uid } from "@/lib/storage/db";
  * Recordings are saved to on-device storage only.
  */
 export function RecorderPanel({ sheetId, songTitle, compact = false, className }: { sheetId?: string; songTitle?: string; compact?: boolean; className?: string }) {
+  const tr = useT();
+  const tx = useTx();
   const rec = useRef<Recorder | null>(null);
   const [state, setState] = useState<"idle" | "countin" | "starting" | "recording" | "saving">("idle");
   const [mode, setMode] = useState<RecordMode>("instrument");
@@ -54,7 +57,7 @@ export function RecorderPanel({ sheetId, songTitle, compact = false, className }
     setError(null);
     const r = new Recorder();
     try {
-      await r.start(mode, () => toast.message(`Stopped at the ${MAX_RECORDING_SEC / 60}-minute limit.`));
+      await r.start(mode, () => toast.message(tr("ui.stopped_at_limit", { n: MAX_RECORDING_SEC / 60 })));
     } catch (e) {
       setError(describeMicError(e).message);
       setState("idle");
@@ -73,7 +76,7 @@ export function RecorderPanel({ sheetId, songTitle, compact = false, className }
 
   const start = () => {
     if (!recordingSupported()) {
-      setError("This browser can't record audio. Try the latest Chrome or Safari.");
+      setError(tr("ui.this_browser_can_t_record_audio_try_the_latest_c"));
       return;
     }
     if (countIn) {
@@ -94,7 +97,7 @@ export function RecorderPanel({ sheetId, songTitle, compact = false, className }
     rec.current = null;
     if (!result) {
       setState("idle");
-      toast.error("Nothing was recorded.");
+      toast.error(tr("ui.nothing_was_recorded"));
       return;
     }
     try {
@@ -102,9 +105,9 @@ export function RecorderPanel({ sheetId, songTitle, compact = false, className }
         { id: uid("rec_"), title: defaultTitle(songTitle, new Date()), sheetId, songTitle, createdAt: new Date().toISOString(), durationSec: result.durationSec, mimeType: result.mimeType, size: result.blob.size },
         result.blob,
       );
-      toast.success("Recording saved on this device");
+      toast.success(tr("ui.recording_saved_on_this_device"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't save the recording.");
+      toast.error(e instanceof Error ? e.message : tr("ui.couldn_t_save_the_recording"));
     }
     setState("idle");
     setElapsed(0);
@@ -138,26 +141,26 @@ export function RecorderPanel({ sheetId, songTitle, compact = false, className }
       {!compact && !recording && (
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <Segmented<RecordMode>
-            label="Recording style"
+            label={tr("ui.recording_style")}
             size="sm"
             value={mode}
             onChange={setMode}
             options={[
-              { value: "instrument", label: "Instrument (natural)", icon: <Mic className="h-3.5 w-3.5" /> },
-              { value: "voice", label: "Voice (cleaner)" },
+              { value: "instrument", label: tr("ui.instrument_natural"), icon: <Mic className="h-3.5 w-3.5" /> },
+              { value: "voice", label: tr("ui.voice_cleaner") },
             ]}
           />
           <div className="min-w-48">
-            <Switch checked={countIn} onChange={setCountIn} label="Count me in" description="One bar of clicks at 80 BPM before recording starts." />
+            <Switch checked={countIn} onChange={setCountIn} label={tr("ui.count_me_in")} description={tr("ui.one_bar_of_clicks_at_80_bpm_before_recording_sta")} />
           </div>
         </div>
       )}
       {!compact && (
         <p className="flex items-center gap-1.5 text-xs text-muted">
-          <ShieldCheck className="h-3.5 w-3.5" /> Recordings are saved only on this device — never uploaded or synced. Max {MAX_RECORDING_SEC / 60} minutes each.
+          <ShieldCheck className="h-3.5 w-3.5" /> {tr("ui.rec_local_only", { n: MAX_RECORDING_SEC / 60 })}
         </p>
       )}
-      {error && <Callout tone="warn" title="Couldn't start recording">{error}</Callout>}
+      {error && <Callout tone="warn" title={tr("ui.couldn_t_start_recording")}>{tx(error)}</Callout>}
     </div>
   );
 }

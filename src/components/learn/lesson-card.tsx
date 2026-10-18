@@ -1,6 +1,6 @@
 "use client";
 
-import { lessonText, useLang, useT } from "@/lib/i18n";
+import { lessonText, useLang, useT, useTx } from "@/lib/i18n";
 import Link from "next/link";
 import { CheckCircle2, Circle, Clock, Lock, PlayCircle, RotateCcw, Star } from "lucide-react";
 import { getLesson } from "@/content/curriculum";
@@ -17,39 +17,41 @@ const STATUS = {
 const TRACK_TONE = { theory: "theory", guitar: "guitar", piano: "piano" } as const;
 
 export function StatusBadge({ status }: { status: LessonView["status"] }) {
+  const tx = useTx();
   const s = STATUS[status];
   const Icon = s.icon;
   return (
     <Badge tone={s.tone} data-status={status}>
       <Icon className="h-3 w-3" aria-hidden />
-      {s.label}
+      {tx(s.label)}
     </Badge>
   );
 }
 
 export function LessonCard({ view, highlight }: { view: LessonView; highlight?: boolean }) {
   const t = useT();
+  const tx = useTx();
   const lang = useLang();
   const { lesson, status, unlocked, missing } = view;
   const text = lessonText(lesson, lang);
   const done = status === "completed" || status === "mastered";
-  const cta = !unlocked ? null : done ? { label: "Review", icon: RotateCcw } : status === "in-progress" ? { label: "Continue", icon: PlayCircle } : { label: "Start", icon: PlayCircle };
+  const cta = !unlocked ? null : done ? { label: t("ui.review"), icon: RotateCcw } : status === "in-progress" ? { label: t("common.continue"), icon: PlayCircle } : { label: t("common.start"), icon: PlayCircle };
 
   const body = (
     <>
       <div className="flex flex-wrap items-center gap-1.5">
         <Badge tone={TRACK_TONE[lesson.track]} className="capitalize">{lesson.track}</Badge>
-        {unlocked ? <StatusBadge status={status} /> : <Badge tone="neutral"><Lock className="h-3 w-3" aria-hidden /> Locked</Badge>}
+        {unlocked ? <StatusBadge status={status} /> : <Badge tone="neutral"><Lock className="h-3 w-3" aria-hidden /> {t("ui.locked")}</Badge>}
         <span className="ml-auto inline-flex items-center gap-1 text-xs text-muted">
           <Clock className="h-3 w-3" aria-hidden /> {lesson.minutes} min
         </span>
       </div>
       <h4 className="mt-2.5 font-semibold leading-snug">{text.title}</h4>
       <p className="mt-1 line-clamp-2 text-sm text-muted">{text.summary}</p>
-      {view.quizBest !== null && <p className="mt-2 text-xs text-muted">Best quiz score: {Math.round(view.quizBest * 100)}%</p>}
+      {view.quizBest !== null && <p className="mt-2 text-xs text-muted">{t("ui.best_quiz_score", { pct: Math.round(view.quizBest * 100) })}</p>}
       {!unlocked && missing.length > 0 && (
         <p className="mt-2 text-xs text-muted">
-          Complete first:{" "}
+          {t("ui.complete_first")}{" "}
           {missing.map((id, i) => {
             const pre = getLesson(id);
             return (
@@ -57,7 +59,7 @@ export function LessonCard({ view, highlight }: { view: LessonView; highlight?: 
                 {i > 0 && ", "}
                 {pre ? (
                   <Link href={`/lesson/${id}`} className="font-medium text-accent underline-offset-2 hover:underline">
-                    {pre.title}
+                    {lessonText(pre, lang).title}
                   </Link>
                 ) : (
                   <span className="font-medium">{id}</span>
@@ -82,7 +84,7 @@ export function LessonCard({ view, highlight }: { view: LessonView; highlight?: 
   );
 
   return unlocked ? (
-    <Link href={`/lesson/${lesson.id}`} className={cls} data-testid={`lesson-card-${lesson.id}`} aria-label={`${text.title} — ${STATUS[status].label}`}>
+    <Link href={`/lesson/${lesson.id}`} className={cls} data-testid={`lesson-card-${lesson.id}`} aria-label={`${text.title} — ${tx(STATUS[status].label)}`}>
       {body}
     </Link>
   ) : (

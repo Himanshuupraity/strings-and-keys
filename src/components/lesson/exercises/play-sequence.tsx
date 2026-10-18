@@ -1,4 +1,5 @@
 "use client";
+import { useT, useTm } from "@/lib/i18n";
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { Exercise } from "@/content/types";
@@ -13,6 +14,7 @@ import { mistakeSummary, sequenceAccuracy, startSequence, stepSequence, type Seq
 import type { InputMethod } from "@/lib/storage/schemas";
 import { Feedback, HintButton, InputSources, ResultPanel, type ExerciseProps } from "./common";
 import { keyboardRange, toMidi, type ExerciseOutcome } from "../utils";
+import { enText, type I18nMessage } from "@/lib/i18n/messages";
 
 type E = Extract<Exercise, { type: "play-sequence" }>;
 
@@ -21,18 +23,27 @@ export function preferredPosition(midi: number) {
   return positionsOfMidi(midi, 15).sort((a, b) => a.fret - b.fret || b.string - a.string)[0];
 }
 
-export function describeTarget(midi: number, instrument: "piano" | "guitar") {
+/** Where to find a target note, as a translatable message. */
+export function describeTargetMessage(midi: number, instrument: "piano" | "guitar"): I18nMessage | string {
   if (instrument === "guitar") {
     const p = preferredPosition(midi);
-    if (!p) return `${midiToName(midi)}`;
-    return `${midiToName(midi)} — string ${stringNumber(p.string)}, ${p.fret === 0 ? "open" : `fret ${p.fret}`}.`;
+    if (!p) return midiToName(midi);
+    return { key: p.fret === 0 ? "seqt.guitarOpen" : "seqt.guitarFret", vars: { note: midiToName(midi), s: stringNumber(p.string), f: p.fret } };
   }
-  const name = midiToName(midi);
-  if (midi === 60) return "Middle C — the white key just left of the two black keys in the middle (marked with a dot).";
-  return `${name} — ${isBlackKey(midi) ? "a black key" : "a white key"}${midi < 60 ? " to the left of middle C" : midi > 60 ? " to the right of middle C" : ""}.`;
+  if (midi === 60) return { key: "seqt.middleC" };
+  const black = isBlackKey(midi);
+  return { key: midi < 60 ? (black ? "seqt.blackLeft" : "seqt.whiteLeft") : black ? "seqt.blackRight" : "seqt.whiteRight", vars: { note: midiToName(midi) } };
 }
 
+export function describeTarget(midi: number, instrument: "piano" | "guitar") {
+  const m = describeTargetMessage(midi, instrument);
+  return typeof m === "string" ? m : enText(m);
+}
+
+
 export function PlaySequenceExercise({ exercise, instrument, onComplete, onActivity, passAccuracy }: ExerciseProps<E> & { passAccuracy?: number }) {
+  const tr = useT();
+  const tm = useTm();
   const targets = useMemo(() => exercise.notes.map(toMidi), [exercise.notes]);
   const [state, setState] = useState<SequenceState>(() => startSequence(targets, !!exercise.anyOctave));
   const [flash, setFlash] = useState<{ midi: number; kind: "correct" | "wrong"; source: NoteSource } | null>(null);
@@ -79,7 +90,8 @@ export function PlaySequenceExercise({ exercise, instrument, onComplete, onActiv
   };
 
   const current = state.done ? undefined : targets[state.index];
-  const hint = current !== undefined ? `Next: ${describeTarget(current, instrument)}` : null;
+  const target = current !== undefined ? describeTargetMessage(current, instrument) : null;
+  const hint = target !== null ? tr("ui.next_x", { x: typeof target === "string" ? target : tm(target) }) : null;
 
   // Visual state
   const range = keyboardRange(targets);
@@ -99,9 +111,9 @@ export function PlaySequenceExercise({ exercise, instrument, onComplete, onActiv
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="font-medium">{exercise.prompt}</p>
-        <Switch checked={showTargets} onChange={setShowTargets} label="Show target" />
+        <Switch checked={showTargets} onChange={setShowTargets} label={tr("ui.show_target")} />
       </div>
-      <ol className="flex flex-wrap gap-1.5" aria-label="Notes to play">
+      <ol className="flex flex-wrap gap-1.5" aria-label={tr("ui.notes_to_play")}>
         {targets.map((t, i) => (
           <li
             key={i}
@@ -120,7 +132,7 @@ export function PlaySequenceExercise({ exercise, instrument, onComplete, onActiv
         <Fretboard frets={12} marks={marks} onPlay={(p) => handle(p.midi, "virtual")} />
       )}
       <Feedback kind={flash?.kind ?? null}>
-        {flash && (flash.kind === "correct" ? `${midiToName(flash.midi)} — correct!` : `You played ${midiToName(flash.midi)}${flash.source === "mic" ? " (heard by the mic)" : ""}. ${current !== undefined ? (exercise.anyOctave ? `We're looking for ${midiToName(current).replace(/-?\d+$/, "")}.` : flash.midi < current ? "That's lower than the target — go higher." : "That's higher than the target — go lower.") : ""}`)}
+        {flash && (flash.kind === "correct" ? tr("ui.ps_correct_bang", { note: midiToName(flash.midi) }) : `${tr(flash.source === "mic" ? "ui.you_played_x_mic" : "ui.you_played_x", { note: midiToName(flash.midi) })} ${current !== undefined ? (exercise.anyOctave ? tr("ui.looking_for_x", { note: midiToName(current).replace(/-?\d+$/, "") }) : flash.midi < current ? tr("ui.that_s_lower_than_the_target_go_higher") : tr("ui.that_s_higher_than_the_target_go_lower")) : ""}`)}
       </Feedback>
       {outcome ? <ResultPanel outcome={outcome} onRetry={reset} passAccuracy={passAccuracy} extra={outcome.details ? <p>{outcome.details}</p> : null} /> : <HintButton hint={hint} />}
       <InputSources input={input} />

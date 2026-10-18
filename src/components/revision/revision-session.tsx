@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/i18n";
+import { useT, lessonText, useLang } from "@/lib/i18n";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CalendarClock, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
@@ -38,6 +38,7 @@ function resolve(items: RevisionItem[]): Resolved[] {
 
 export function RevisionSession() {
   const t = useT();
+  const lang = useLang();
   const hydrated = useHydrated();
   const [prefs] = usePrefs();
   const { data: all, loading } = useData(() => revisionRepo.all(), ["revision"], [] as RevisionItem[]);
@@ -72,7 +73,7 @@ export function RevisionSession() {
 
   if (!hydrated || loading) return <Skeleton className="h-80" />;
 
-  const header = <PageHeader eyebrow={t("eyebrow.revision")} title={t("revise.heading")} description="Questions and exercises you missed come back after a day, then less and less often as you get them right." />;
+  const header = <PageHeader eyebrow={t("eyebrow.revision")} title={t("revise.heading")} description={t("ui.questions_and_exercises_you_missed_come_back_aft")} />;
 
   // Session finished
   if (queueIds && pos >= queue.length && queue.length > 0) {
@@ -83,11 +84,11 @@ export function RevisionSession() {
         <Card>
           <CardBody className="space-y-4 pt-6 text-center">
             <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
-            <p className="text-xl font-semibold">Revision done: {right}/{results.length} right</p>
-            <p className="text-sm text-muted">Items you got right come back later; anything you missed comes back tomorrow.</p>
+            <p className="text-xl font-semibold">{t("ui.revision_done", { right, n: results.length })}</p>
+            <p className="text-sm text-muted">{t("ui.items_you_got_right_come_back_later_anything_you")}</p>
             <div className="flex flex-wrap justify-center gap-2">
-              <Link href="/dashboard" className="inline-flex h-11 items-center rounded-xl border border-border px-5 font-medium hover:bg-surface-2">Back to dashboard</Link>
-              {dueNow.length > 0 && <Button size="lg" onClick={() => { setQueueIds(dueNow.map((d) => d.item.id)); setPos(0); setResults([]); }}>Revise {dueNow.length} more</Button>}
+              <Link href="/dashboard" className="inline-flex h-11 items-center rounded-xl border border-border px-5 font-medium hover:bg-surface-2">{t("ui.back_to_dashboard")}</Link>
+              {dueNow.length > 0 && <Button size="lg" onClick={() => { setQueueIds(dueNow.map((d) => d.item.id)); setPos(0); setResults([]); }}>{t("ui.revise_n_more", { n: dueNow.length })}</Button>}
             </div>
           </CardBody>
         </Card>
@@ -101,19 +102,19 @@ export function RevisionSession() {
       <div className="mx-auto max-w-2xl">
         {header}
         {dueNow.length === 0 ? (
-          <EmptyState icon={<CheckCircle2 className="h-8 w-8 text-success" />} title="Nothing to revise today" description="When you miss a quiz question or a measured exercise, it shows up here a day later." action={<Link href="/learn" className="text-accent hover:underline">Continue learning</Link>} />
+          <EmptyState icon={<CheckCircle2 className="h-8 w-8 text-success" />} title={t("ui.nothing_to_revise_today")} description={t("ui.when_you_miss_a_quiz_question_or_a_measured_exer")} action={<Link href="/learn" className="text-accent hover:underline">{t("welcome.continueLearning")}</Link>} />
         ) : (
           <Card>
             <CardBody className="space-y-4 pt-6">
-              <p className="text-2xl font-semibold" data-testid="revision-due-count">{dueNow.length} to revise today</p>
+              <p className="text-2xl font-semibold" data-testid="revision-due-count">{t("ui.n_to_revise_today", { n: dueNow.length })}</p>
               <ul className="space-y-1 text-sm text-muted">
                 {dueNow.slice(0, 5).map((d) => (
-                  <li key={d.item.id} className="truncate">• {d.lesson.title} — {d.kind === "quiz" ? "quiz question" : "exercise"}</li>
+                  <li key={d.item.id} className="truncate">• {lessonText(d.lesson, lang).title} — {d.kind === "quiz" ? t("ui.quiz_question_lc") : t("ui.exercise_lc")}</li>
                 ))}
                 {dueNow.length > 5 && <li>…and {dueNow.length - 5} more</li>}
               </ul>
               <Button size="lg" className="w-full sm:w-auto" onClick={() => { setQueueIds(dueNow.map((d) => d.item.id)); setPos(0); setResults([]); }} data-testid="revision-start">
-                Start revision
+                {t("ui.start_revision")}
               </Button>
             </CardBody>
           </Card>
@@ -121,7 +122,7 @@ export function RevisionSession() {
         {upcoming.length > 0 && (
           <Card className="mt-6">
             <CardBody className="pt-5">
-              <p className="mb-2 flex items-center gap-2 font-semibold"><CalendarClock className="h-4 w-4 text-accent" /> Coming up (next 7 days)</p>
+              <p className="mb-2 flex items-center gap-2 font-semibold"><CalendarClock className="h-4 w-4 text-accent" /> {t("ui.coming_up_next_7_days")}</p>
               <ul className="divide-y divide-border text-sm">
                 {upcoming.map((i) => (
                   <li key={i.id} className="flex items-center justify-between gap-2 py-2">
@@ -146,12 +147,12 @@ export function RevisionSession() {
       {header}
       <div className="mb-3 flex items-center justify-between text-sm text-muted">
         <span>{pos + 1} of {queue.length}</span>
-        <Badge tone={current.kind === "quiz" ? "theory" : "accent"}>{current.kind === "quiz" ? "Quiz question" : "Exercise"}</Badge>
+        <Badge tone={current.kind === "quiz" ? "theory" : "accent"}>{current.kind === "quiz" ? t("ui.quiz_question") : "Exercise"}</Badge>
       </div>
-      <ProgressBar value={pos / queue.length} label="Revision progress" className="mb-4" />
+      <ProgressBar value={pos / queue.length} label={t("ui.revision_progress")} className="mb-4" />
       <Card>
         <CardBody className="space-y-4 pt-5">
-          <p className="text-xs text-muted">From: <Link href={`/lesson/${current.lesson.id}`} className="underline underline-offset-2">{current.lesson.title}</Link></p>
+          <p className="text-xs text-muted">{t("ui.from")} <Link href={`/lesson/${current.lesson.id}`} className="underline underline-offset-2">{current.lesson.title}</Link></p>
           {current.kind === "quiz" ? (
             <QuizCard key={current.item.id} question={current.question} instrument={inst} onAnswer={(c) => void answer(c)} />
           ) : (
@@ -168,7 +169,7 @@ export function RevisionSession() {
               />
               {!answered && (
                 <button type="button" onClick={() => void answer(false)} className="min-h-10 text-sm text-muted underline underline-offset-2">
-                  Skip — show it again tomorrow
+                  {t("ui.skip_show_it_again_tomorrow")}
                 </button>
               )}
             </div>
@@ -177,7 +178,7 @@ export function RevisionSession() {
             <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
               <p className={cn("flex items-center gap-1.5 text-sm font-medium", results[pos] ? "text-success" : "text-warn")}>
                 {results[pos] ? <CheckCircle2 className="h-4 w-4" /> : <RotateCcw className="h-4 w-4" />}
-                {results[pos] ? "Nice — this comes back later." : "No problem — it comes back tomorrow."}
+                {results[pos] ? t("ui.nice_this_comes_back_later") : t("ui.no_problem_it_comes_back_tomorrow")}
               </p>
               <Button size="lg" onClick={next} data-testid="revision-next">{pos === queue.length - 1 ? "Finish" : "Next"}</Button>
             </div>
@@ -189,13 +190,14 @@ export function RevisionSession() {
 }
 
 function QuizCard({ question: q, instrument, onAnswer }: { question: QuizQuestion; instrument: Inst; onAnswer: (correct: boolean) => void }) {
+  const t = useT();
   const [picked, setPicked] = useState<number | null>(null);
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">{q.question}</h3>
       {q.visual && <VisualRenderer visual={q.visual} />}
       {q.audio && <PlayExample audio={q.audio} instrument={instrument} />}
-      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Answers">
+      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label={t("ui.answers")}>
         {q.options.map((o, k) => {
           const isAns = k === q.answer;
           return (

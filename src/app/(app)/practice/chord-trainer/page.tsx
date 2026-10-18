@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.chord" description="Play the target chord and get feedback on missing and unwanted notes." />
+      <TPageHeader titleKey="tool.chord" descriptionKey="tool.desc.chord" />
       <ChordTrainer />
     </>
   );

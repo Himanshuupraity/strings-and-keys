@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useEffect, useRef, useState } from "react";
 import { Ear, Piano, RotateCcw, Shuffle, Volume2 } from "lucide-react";
@@ -33,6 +34,7 @@ type Result = {
 };
 
 export function ChordTrainer() {
+  const tr = useT();
   const [prefs] = usePrefs();
   const instrument = prefs.instrument;
   const list = instrument === "guitar" ? GUITAR_CHORDS : PIANO_CHORDS;
@@ -126,13 +128,13 @@ export function ChordTrainer() {
         <Card>
           <CardHeader
             title={<span className="font-display text-3xl">{chord}</span>}
-            description={<>Notes: <strong className="text-text">{tones.join(" – ")}</strong></>}
+            description={<>{tr("ui.notes")} <strong className="text-text">{tones.join(" – ")}</strong></>}
             action={
               <div className="flex gap-2">
-                <Select aria-label="Choose chord" value={chord} onChange={(e) => { setChord(e.target.value); setResult(null); }}>
+                <Select aria-label={tr("ui.choose_chord")} value={chord} onChange={(e) => { setChord(e.target.value); setResult(null); }}>
                   {list.map((c) => <option key={c}>{c}</option>)}
                 </Select>
-                <Button variant="secondary" size="icon" aria-label="Random chord" onClick={pick}><Shuffle className="h-4 w-4" /></Button>
+                <Button variant="secondary" size="icon" aria-label={tr("ui.random_chord")} onClick={pick}><Shuffle className="h-4 w-4" /></Button>
               </div>
             }
           />
@@ -141,7 +143,7 @@ export function ChordTrainer() {
               <div className="flex flex-wrap items-center gap-6">
                 <ChordDiagram chord={chord} size="lg" />
                 <div className="space-y-2 text-sm text-muted">
-                  {shape?.tips?.map((t) => <p key={t}>• {t}</p>) ?? <p>Fret each note cleanly just behind the fret wire.</p>}
+                  {shape?.tips?.map((t) => <p key={t}>• {t}</p>) ?? <p>{tr("ui.fret_each_note_cleanly_just_behind_the_fret_wire")}</p>}
                 </div>
               </div>
             ) : (
@@ -158,49 +160,49 @@ export function ChordTrainer() {
               />
             )}
             <div className="flex flex-wrap gap-2">
-              <Button variant="secondary" onClick={() => void (instrument === "guitar" ? strum(exampleNotes) : playPianoChord(exampleNotes))}><Volume2 className="h-4 w-4" /> Play example</Button>
-              <Button onClick={() => void listen()} loading={capturing} data-testid="chord-listen"><Ear className="h-4 w-4" /> {capturing ? "Listening… play now" : `Listen to my ${instrument === "guitar" ? "strum" : "chord"}`}</Button>
+              <Button variant="secondary" onClick={() => void (instrument === "guitar" ? strum(exampleNotes) : playPianoChord(exampleNotes))}><Volume2 className="h-4 w-4" /> {tr("ui.play_example")}</Button>
+              <Button onClick={() => void listen()} loading={capturing} data-testid="chord-listen"><Ear className="h-4 w-4" /> {capturing ? tr("ui.listening_play_now") : `Listen to my ${instrument === "guitar" ? "strum" : "chord"}`}</Button>
               {instrument === "piano" && virtualHeld.size > 0 && (
-                <Button variant="outline" onClick={() => { evaluate([...new Set([...virtualHeld].map(mod12))], "virtual", 1); setVirtualHeld(new Set()); }}>Check selected keys</Button>
+                <Button variant="outline" onClick={() => { evaluate([...new Set([...virtualHeld].map(mod12))], "virtual", 1); setVirtualHeld(new Set()); }}>{tr("ui.check_selected_keys")}</Button>
               )}
             </div>
-            {instrument === "piano" && <p className="text-xs text-muted">Tip: click keys on the virtual keyboard to select them, then “Check selected keys”. A MIDI keyboard is checked automatically when you hold two or more notes.</p>}
+            {instrument === "piano" && <p className="text-xs text-muted">{tr("ui.tip_click_keys_on_the_virtual_keyboard_to_select")}</p>}
           </CardBody>
         </Card>
 
         <Card aria-live="polite">
-          <CardHeader title="Result" action={result && <SourceTag source={result.source === "mic" && result.confidence < 0.5 ? "rules" : "measured"} />} />
+          <CardHeader title={tr("ui.result")} action={result && <SourceTag source={result.source === "mic" && result.confidence < 0.5 ? "rules" : "measured"} />} />
           <CardBody>
             {unclear && (
-              <Callout tone="warn" title="I couldn't hear that clearly">
+              <Callout tone="warn" title={tr("ui.i_couldn_t_hear_that_clearly")}>
                 Please {instrument === "guitar" ? "strum the chord again firmly and let it ring" : "play the chord again and hold it"} — closer to the microphone, in a quiet room. I won&apos;t guess when the signal is unclear.
               </Callout>
             )}
-            {!result && !unclear && <p className="text-muted">Play the chord and press “Listen”, or use a MIDI keyboard.</p>}
+            {!result && !unclear && <p className="text-muted">{tr("ui.play_the_chord_and_press_listen_or_use_a_midi_ke")}</p>}
             {result && (
               <div className="space-y-4">
                 <div className={cn("rounded-xl p-4", correct ? "bg-success-soft" : "bg-warn-soft")}>
-                  <p className="text-lg font-semibold">{correct ? `That sounds like ${chord}!` : result.coverage >= 0.66 ? "Close — check the notes below." : "Not quite yet."}</p>
+                  <p className="text-lg font-semibold">{correct ? `That sounds like ${chord}!` : result.coverage >= 0.66 ? tr("ui.close_check_the_notes_below") : tr("ui.not_quite_yet")}</p>
                   <p className="text-sm text-muted">
-                    {result.source === "midi" && "Measured exactly from your MIDI keyboard."}
-                    {result.source === "virtual" && "Checked from the keys you selected."}
-                    {result.source === "mic" && <>Estimated from microphone audio{result.guess ? ` (best guess: ${result.guess})` : ""}. Chord detection from audio is approximate.</>}
+                    {result.source === "midi" && tr("ui.measured_exactly_from_your_midi_keyboard")}
+                    {result.source === "virtual" && tr("ui.checked_from_the_keys_you_selected")}
+                    {result.source === "mic" && <>{result.guess ? tr("ui.estimated_from_mic_guess", { chord: result.guess }) : tr("ui.estimated_from_mic")}</>}
                   </p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div><p className="text-xs uppercase tracking-wide text-muted">Heard</p><p className="font-medium">{result.detected.map(toneName).join(", ") || "—"}</p></div>
-                  <div><p className="text-xs uppercase tracking-wide text-muted">Missing</p><p className="font-medium text-danger">{result.missing.map(toneName).join(", ") || "None"}</p></div>
-                  <div><p className="text-xs uppercase tracking-wide text-muted">Unwanted</p><p className="font-medium text-warn">{result.unwanted.map(toneName).join(", ") || "None"}</p></div>
+                  <div><p className="text-xs uppercase tracking-wide text-muted">{tr("ui.heard")}</p><p className="font-medium">{result.detected.map(toneName).join(", ") || "—"}</p></div>
+                  <div><p className="text-xs uppercase tracking-wide text-muted">{tr("ui.missing")}</p><p className="font-medium text-danger">{result.missing.map(toneName).join(", ") || "None"}</p></div>
+                  <div><p className="text-xs uppercase tracking-wide text-muted">{tr("ui.unwanted")}</p><p className="font-medium text-warn">{result.unwanted.map(toneName).join(", ") || "None"}</p></div>
                 </div>
                 {result.source === "mic" && (
                   <div>
-                    <div className="mb-1 flex justify-between text-xs text-muted"><span>Detection confidence</span><span>{Math.round(result.confidence * 100)}%</span></div>
-                    <ProgressBar value={result.confidence} tone={result.confidence > 0.6 ? "success" : "accent"} label="Detection confidence" />
+                    <div className="mb-1 flex justify-between text-xs text-muted"><span>{tr("ui.detection_confidence")}</span><span>{Math.round(result.confidence * 100)}%</span></div>
+                    <ProgressBar value={result.confidence} tone={result.confidence > 0.6 ? "success" : "accent"} label={tr("ui.detection_confidence")} />
                   </div>
                 )}
-                {result.missing.length > 0 && instrument === "guitar" && <p className="text-sm text-muted">A missing note on guitar usually means a finger is touching a neighbouring string or not pressing firmly. Play each string one at a time to find the culprit.</p>}
-                {result.unwanted.length > 0 && instrument === "guitar" && <p className="text-sm text-muted">Unwanted notes often come from strumming a string marked × — start your strum from the right string.</p>}
-                <Button variant="secondary" size="sm" onClick={() => { setResult(null); void listen(); }}><RotateCcw className="h-4 w-4" /> Try again</Button>
+                {result.missing.length > 0 && instrument === "guitar" && <p className="text-sm text-muted">{tr("ui.a_missing_note_on_guitar_usually_means_a_finger")}</p>}
+                {result.unwanted.length > 0 && instrument === "guitar" && <p className="text-sm text-muted">{tr("ui.unwanted_notes_often_come_from_strumming_a_strin")}</p>}
+                <Button variant="secondary" size="sm" onClick={() => { setResult(null); void listen(); }}><RotateCcw className="h-4 w-4" /> {tr("ui.try_again")}</Button>
               </div>
             )}
           </CardBody>
@@ -209,18 +211,18 @@ export function ChordTrainer() {
 
       <div className="space-y-4">
         <Card>
-          <CardHeader title="Input" />
+          <CardHeader title={tr("ui.input")} />
           <CardBody className="space-y-4">
-            <MicButton status={mic.status} error={mic.error} onStart={() => void mic.start()} onStop={mic.stop} label="Turn on microphone" />
+            <MicButton status={mic.status} error={mic.error} onStart={() => void mic.start()} onStop={mic.stop} label={tr("ui.turn_on_microphone")} />
             <div className="border-t border-border pt-4">
               {midi.supported ? (
-                midi.status === "connected" ? <Badge tone="success">MIDI: {midi.devices.join(", ") || "waiting for device"}</Badge> : <Button variant="secondary" onClick={() => void midi.connect()}><Piano className="h-4 w-4" /> Connect MIDI</Button>
-              ) : <p className="text-xs text-muted">Web MIDI isn&apos;t available in this browser.</p>}
+                midi.status === "connected" ? <Badge tone="success">MIDI: {midi.devices.join(", ") || "waiting for device"}</Badge> : <Button variant="secondary" onClick={() => void midi.connect()}><Piano className="h-4 w-4" /> {tr("ui.connect_midi")}</Button>
+              ) : <p className="text-xs text-muted">{tr("ui.web_midi_isn_t_available_in_this_browser_2")}</p>}
             </div>
           </CardBody>
         </Card>
-        <Callout tone="info" title="What the microphone can and can't tell">
-          It estimates which <em>notes</em> are sounding. It can&apos;t see your fingers, so it can&apos;t judge finger placement or pressure — use the chord diagram and your ears for that. MIDI keyboards give exact note data.
+        <Callout tone="info" title={tr("ui.what_the_microphone_can_and_can_t_tell")}>
+          {tr("ui.mic_can_tell")}
         </Callout>
       </div>
     </div>

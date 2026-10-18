@@ -1,6 +1,6 @@
 "use client";
 
-import { useT } from "@/lib/i18n";
+import { useT, useTx } from "@/lib/i18n";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, BookOpen, ClipboardCheck, Guitar, Music2, Piano, Sparkles } from "lucide-react";
@@ -23,6 +23,8 @@ const TRACK_META: Record<Track, { icon: typeof Guitar; tone: "guitar" | "piano" 
 
 export function LearnOverview() {
   const t = useT();
+  const tx = useTx();
+  const tl = t;
   const [prefs] = usePrefs();
   const { progress, placement, profile, loading } = useLearningData();
   const [scope, setScope] = useState<"path" | "all">("path");
@@ -38,11 +40,11 @@ export function LearnOverview() {
       <PageHeader
         eyebrow={t("learn.eyebrow")}
         title={t("learn.title")}
-        description="Short, structured lessons from absolute zero to advanced. Shared music theory counts for both guitar and piano; each instrument's progress is tracked separately."
+        description={t("ui.learn_desc")}
         actions={
           <Link href="/learn/diagnostic">
             <Button variant="secondary">
-              <ClipboardCheck className="h-4 w-4" /> Placement quiz
+              <ClipboardCheck className="h-4 w-4" /> {t("ui.placement_quiz")}
             </Button>
           </Link>
         }
@@ -62,18 +64,18 @@ export function LearnOverview() {
                 <span className={cn("flex h-10 w-10 items-center justify-center rounded-xl", meta.iconCls)}>
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
-                {active && <Badge tone={meta.tone}>Your current mode</Badge>}
-                {t === "theory" && <Badge tone="theory">Shared</Badge>}
+                {active && <Badge tone={meta.tone}>{tl("ui.your_current_mode")}</Badge>}
+                {t === "theory" && <Badge tone="theory">{tl("ui.shared")}</Badge>}
               </div>
-              <h3 className="mt-3 font-semibold">{COURSES[t].title}</h3>
-              <p className="mt-1 text-sm text-muted">{COURSES[t].description}</p>
+              <h3 className="mt-3 font-semibold">{tx(COURSES[t].title)}</h3>
+              <p className="mt-1 text-sm text-muted">{tx(COURSES[t].description)}</p>
               <div className="mt-4 flex items-center gap-3">
                 {loading ? <Skeleton className="h-2 flex-1" /> : <ProgressBar value={trackLessons.length ? done / trackLessons.length : 0} tone={meta.tone} label={`${t} progress`} />}
                 <span className="whitespace-nowrap text-xs text-muted">{done}/{trackLessons.length}</span>
               </div>
               {t !== "theory" && (
                 <Link href={meta.href} className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
-                  Open course <ArrowRight className="h-4 w-4" />
+                  {tl("ui.open_course")} <ArrowRight className="h-4 w-4" />
                 </Link>
               )}
             </Card>
@@ -85,23 +87,23 @@ export function LearnOverview() {
       <div className="mt-6 grid gap-4 lg:grid-cols-[2fr_1fr]">
         <Card className="p-5">
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-accent">
-            <Sparkles className="h-4 w-4" /> Recommended next lesson
+            <Sparkles className="h-4 w-4" /> {t("dash.recommended")}
           </div>
-          {loading ? <Skeleton className="h-28" /> : next ? <LessonCard view={lessonView(next, progress, placement)} highlight /> : <p className="text-sm text-muted">You’ve completed everything available on this path. Revise any lesson below, or switch instruments.</p>}
+          {loading ? <Skeleton className="h-28" /> : next ? <LessonCard view={lessonView(next, progress, placement)} highlight /> : <p className="text-sm text-muted">{t("ui.you_ve_completed_everything_available_on_this_pa")}</p>}
         </Card>
         <Card className="p-5">
           <div className="mb-2 flex items-center gap-2 font-semibold">
-            <ClipboardCheck className="h-4 w-4 text-accent" /> Not a total beginner?
+            <ClipboardCheck className="h-4 w-4 text-accent" /> {t("ui.not_a_total_beginner")}
           </div>
-          <p className="text-sm text-muted">Take a short placement quiz. It unlocks earlier levels you already know — you can still revise them any time.</p>
+          <p className="text-sm text-muted">{t("ui.take_a_short_placement_quiz_it_unlocks_earlier_l")}</p>
           {profile && (profile.placement.theory || profile.placement.guitar || profile.placement.piano) ? (
             <p className="mt-2 text-xs text-muted">
-              Current placement — theory: L{profile.placement.theory}, guitar: L{profile.placement.guitar}, piano: L{profile.placement.piano}
+              {t("ui.current_placement", { theory: profile.placement.theory, guitar: profile.placement.guitar, piano: profile.placement.piano })}
             </p>
           ) : null}
           <Link href="/learn/diagnostic" className="mt-3 inline-block">
             <Button size="sm">
-              Take the quiz <ArrowRight className="h-4 w-4" />
+              {t("ui.take_the_quiz")} <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </Card>
@@ -112,18 +114,18 @@ export function LearnOverview() {
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-xl font-semibold">
-              <BookOpen className="h-5 w-5 text-accent" /> Level map
+              <BookOpen className="h-5 w-5 text-accent" /> {t("ui.level_map")}
             </h2>
             <CompletionCriteria />
           </div>
           <Segmented
-            label="Which lessons to show"
+            label={t("ui.which_lessons_to_show")}
             size="sm"
             value={scope}
             onChange={setScope}
             options={[
               { value: "path", label: `My ${instrument} path` },
-              { value: "all", label: "All tracks" },
+              { value: "all", label: t("ui.all_tracks") },
             ]}
           />
         </div>
@@ -134,7 +136,7 @@ export function LearnOverview() {
             ))}
           </div>
         ) : levels.length === 0 ? (
-          <Callout title="Lessons are loading into the curriculum">No lessons found for this path yet.</Callout>
+          <Callout title={t("ui.lessons_are_loading_into_the_curriculum")}>{t("ui.no_lessons_found_for_this_path_yet")}</Callout>
         ) : (
           <div className="space-y-3">
             {levels.map((s) => (
@@ -143,10 +145,10 @@ export function LearnOverview() {
           </div>
         )}
         <details className="mt-6 rounded-xl border border-border bg-surface p-4 text-sm">
-          <summary className="cursor-pointer font-medium">How completion and mastery work</summary>
+          <summary className="cursor-pointer font-medium">{t("ui.how_completion_and_mastery_work")}</summary>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-muted">
             {MASTERY_EXPLANATION.map((m) => (
-              <li key={m}>{m}</li>
+              <li key={m}>{tx(m)}</li>
             ))}
           </ul>
         </details>

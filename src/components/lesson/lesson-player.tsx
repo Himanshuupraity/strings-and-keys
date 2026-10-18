@@ -13,7 +13,7 @@ import { LESSONS, getLesson } from "@/content/curriculum";
 import { Badge, Button, Callout, Card, ProgressBar, Skeleton, cn } from "@/components/ui";
 import { useData } from "@/hooks/use-data";
 import { useHydrated, usePrefs } from "@/hooks/use-prefs";
-import { lessonText, useLang, useT } from "@/lib/i18n";
+import { lessonText, useLang, useT, useTx } from "@/lib/i18n";
 import { usePracticeLog } from "@/hooks/use-practice-log";
 import { exerciseRepo, profileRepo, progressRepo } from "@/lib/storage/repositories";
 import { isDone, isUnlocked, MASTERY_EXPLANATION, masteryStepIds, nextLesson } from "@/lib/progress/engine";
@@ -64,6 +64,7 @@ function hintForExplain(step: LessonStep, lesson: Lesson): string | null {
 
 export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const t = useT();
+  const tx = useTx();
   const lang = useLang();
   const lesson = getLesson(lessonId)!;
   const [prefs] = usePrefs();
@@ -142,12 +143,12 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
         measured: o.measured,
         details: o.details,
       });
-      if (step.mastery && o.accuracy >= (step.passAccuracy ?? 0.8)) toast.success("Mastery evidence saved for this lesson.");
+      if (step.mastery && o.accuracy >= (step.passAccuracy ?? 0.8)) toast.success(t("ui.mastery_evidence_saved_for_this_lesson"));
       // Spaced revision: missed mastery exercises come back later; passing a due one counts as a review.
       const rev = exerciseUpdate(lesson, step, o, await revisionRepo.map());
       if (rev) await revisionRepo.saveMany([rev]);
     } catch {
-      toast.error("Couldn't save this result. You can keep practising.");
+      toast.error(t("ui.couldn_t_save_this_result_you_can_keep_practisin"));
     }
   };
 
@@ -164,30 +165,30 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   const header = (
     <div className="mb-6 space-y-3">
       <Link href={`/learn${lesson.track === "theory" ? "" : `/${lesson.track}`}`} className="-ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
-        <ChevronLeft className="h-4 w-4" /> {lesson.track === "theory" ? "Curriculum" : lesson.track === "guitar" ? "Guitar course" : "Piano course"}
+        <ChevronLeft className="h-4 w-4" /> {lesson.track === "theory" ? "Curriculum" : lesson.track === "guitar" ? t("ui.guitar_course") : t("ui.piano_course")}
       </Link>
       <div className="flex flex-wrap items-center gap-2">
-        <Badge tone={TRACK_TONE[lesson.track]}>{lesson.track === "theory" ? "Music theory" : lesson.track === "guitar" ? "Guitar" : "Piano"}</Badge>
+        <Badge tone={TRACK_TONE[lesson.track]}>{lesson.track === "theory" ? t("data.vc.theory") : lesson.track === "guitar" ? "Guitar" : "Piano"}</Badge>
         <Badge>
-          Level {lesson.level} · {LEVEL_NAMES[lesson.level]}
+          Level {lesson.level} · {tx(LEVEL_NAMES[lesson.level])}
         </Badge>
         <Badge>
           <Clock className="h-3 w-3" /> {lesson.minutes} min
         </Badge>
         {progress?.status === "mastered" && (
           <Badge tone="success">
-            <Trophy className="h-3 w-3" /> Mastered
+            <Trophy className="h-3 w-3" /> {t("dash.mastered")}
           </Badge>
         )}
         {progress?.status === "completed" && (
           <Badge tone="success">
-            <CheckCircle2 className="h-3 w-3" /> Completed
+            <CheckCircle2 className="h-3 w-3" /> {t("ui.completed")}
           </Badge>
         )}
       </div>
       <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{lessonText(lesson, lang).title}</h1>
       <p className="max-w-2xl text-muted">{lessonText(lesson, lang).summary}</p>
-      {unlocked && <ProgressBar value={completion} tone={lesson.track === "theory" ? "theory" : lesson.track} label="Lesson progress" className="max-w-md" />}
+      {unlocked && <ProgressBar value={completion} tone={lesson.track === "theory" ? "theory" : lesson.track} label={t("ui.lesson_progress")} className="max-w-md" />}
     </div>
   );
 
@@ -200,7 +201,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             <Lock className="mt-1 h-5 w-5 text-muted" />
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">{t("lesson.locked")}</h2>
-              <p className="text-sm text-muted">Finish these lessons first (complete their steps and pass their quizzes). Already know this material? Take the placement quiz to skip ahead.</p>
+              <p className="text-sm text-muted">{t("ui.finish_these_lessons_first_complete_their_steps")}</p>
               <ul className="space-y-2">
                 {lesson.prerequisites.map((id) => {
                   const p = getLesson(id);
@@ -217,10 +218,10 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               </ul>
               <div className="flex flex-wrap gap-2">
                 <Link href="/learn/diagnostic" className="inline-flex h-10 items-center rounded-xl border border-border-strong px-4 text-sm font-medium hover:bg-surface-2">
-                  Take the placement quiz
+                  {t("ui.take_the_placement_quiz")}
                 </Link>
                 <Link href="/learn" className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium text-muted hover:bg-surface-2">
-                  Back to curriculum
+                  {t("ui.back_to_curriculum")}
                 </Link>
               </div>
             </div>
@@ -231,7 +232,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
   }
 
   const rail = (
-    <nav aria-label="Lesson steps" className="lg:sticky lg:top-24">
+    <nav aria-label={t("ui.lesson_steps")} className="lg:sticky lg:top-24">
       <ol className="scrollbar-thin flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:gap-1 lg:overflow-visible">
         {lesson.steps.map((s, i) => {
           const Icon = KIND_META[s.kind].icon;
@@ -262,14 +263,14 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               <span className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-full", (progress?.quizBest ?? 0) >= lesson.passScore ? "bg-success text-white dark:text-black" : "bg-surface-3")}>
                 <MessageCircleQuestion className="h-3.5 w-3.5" />
               </span>
-              Quiz
+              {t("lesson.quiz")}
             </button>
           </li>
         )}
       </ol>
       {lesson.glossary && lesson.glossary.length > 0 && (
         <details className="mt-4 hidden rounded-xl border border-border bg-surface p-3 lg:block">
-          <summary className="cursor-pointer text-sm font-medium">Words in this lesson</summary>
+          <summary className="cursor-pointer text-sm font-medium">{t("ui.words_in_this_lesson")}</summary>
           <dl className="mt-2 space-y-2 text-sm">
             {lesson.glossary.map((g) => (
               <div key={g.term}>
@@ -300,14 +301,14 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
       <Card className="p-5 sm:p-7" key={step.id}>
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge tone={step.kind === "exercise" ? "accent" : step.kind === "self-check" ? "warn" : "neutral"}>
-            <meta.icon className="h-3 w-3" /> {meta.label}
+            <meta.icon className="h-3 w-3" /> {tx(meta.label)}
           </Badge>
           <span className="text-xs text-subtle">
             {t("lesson.step", { n: view.index + 1, total: lesson.steps.length })}
           </span>
           {isExercise && step.mastery && (
-            <Badge tone="success" title="Passing this measured exercise counts as demonstrated proficiency">
-              <Trophy className="h-3 w-3" /> Mastery check · {Math.round((step.passAccuracy ?? 0.8) * 100)}%
+            <Badge tone="success" title={t("ui.passing_this_measured_exercise_counts_as_demonst")}>
+              <Trophy className="h-3 w-3" /> {t("ui.mastery_check_pct", { pct: Math.round((step.passAccuracy ?? 0.8) * 100) })}
             </Badge>
           )}
           {best !== undefined && <span className="text-xs text-muted">Best: {Math.round(best * 100)}%</span>}
@@ -319,7 +320,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           <div className="mt-4 rounded-xl border border-border bg-surface-2 p-4 text-sm">
             <p className="mb-1 flex items-center gap-1.5 font-medium">
               {step.hinglish ? <Languages className="h-4 w-4 text-accent" /> : <Sparkles className="h-4 w-4 text-accent" />}
-              {step.hinglish ? "Hinglish mein samjhiye" : "In other words"}
+              {step.hinglish ? t("ui.hinglish_mein_samjhiye") : t("ui.in_other_words")}
             </p>
             <RichText text={altText} />
           </div>
@@ -364,7 +365,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
                 );
               })}
             </ul>
-            <p className="text-xs text-muted">Be honest — this helps your plan, but it never counts as measured proficiency. It&apos;s fine to leave items unticked and come back later.</p>
+            <p className="text-xs text-muted">{t("ui.be_honest")}</p>
             {!done && (
               <Button
                 variant="secondary"
@@ -395,9 +396,9 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
       <Card className="p-5 sm:p-7">
         <div className="mb-4 flex items-center gap-2">
           <Badge tone="accent">
-            <MessageCircleQuestion className="h-3 w-3" /> Quiz
+            <MessageCircleQuestion className="h-3 w-3" /> {t("lesson.quiz")}
           </Badge>
-          <span className="text-xs text-subtle">Pass mark {Math.round(lesson.passScore * 100)}%</span>
+          <span className="text-xs text-subtle">{t("ui.pass_mark", { pct: Math.round(lesson.passScore * 100) })}</span>
         </div>
         <LessonQuiz
           lesson={lesson}
@@ -409,7 +410,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               await progressRepo.recordQuiz(lesson, score, total, wrong);
               await revisionRepo.saveMany(quizUpdates(lesson, wrong, await revisionRepo.map()));
             } catch {
-              toast.error("Couldn't save your quiz result.");
+              toast.error(t("ui.couldn_t_save_your_quiz_result"));
             }
           }}
         />
@@ -418,7 +419,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             <ArrowLeft className="h-4 w-4" /> {t("lesson.back")} to steps
           </Button>
           <Button onClick={() => go({ kind: "done" })} data-testid="lesson-finish">
-            Lesson summary <ArrowRight className="h-4 w-4" />
+            {t("ui.lesson_summary")} <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </Card>
@@ -435,20 +436,20 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             {status === "mastered" ? <Trophy className="h-7 w-7" /> : status === "completed" ? <GraduationCap className="h-7 w-7" /> : <ListChecks className="h-7 w-7" />}
           </div>
           <div>
-            <h2 className="text-2xl font-semibold">{status === "mastered" ? "Lesson mastered!" : status === "completed" ? "Lesson completed" : "Almost there"}</h2>
+            <h2 className="text-2xl font-semibold">{status === "mastered" ? t("ui.lesson_mastered") : status === "completed" ? t("ui.lesson_completed") : t("ui.almost_there")}</h2>
             <p className="mt-1 text-muted">
               {status === "mastered"
-                ? "You finished every step, passed the quiz and demonstrated the skill in the measured exercises."
+                ? t("ui.you_finished_every_step_passed_the_quiz_and_demo")
                 : status === "completed"
-                  ? "You finished the steps and passed the quiz. Pass the mastery checks to show proficiency — you can do that any time."
-                  : "Finish the remaining items below to complete this lesson."}
+                  ? t("ui.you_finished_the_steps_and_passed_the_quiz_pass")
+                  : t("ui.finish_the_remaining_items_below_to_complete_thi")}
             </p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-border p-4">
-            <p className="text-sm font-medium">Completion</p>
+            <p className="text-sm font-medium">{t("ui.completion")}</p>
             <ul className="mt-2 space-y-1.5 text-sm">
               <li className="flex items-center gap-2">
                 {missingSteps.length === 0 ? <CheckCircle2 className="h-4 w-4 text-success" /> : <span className="h-4 w-4 rounded-full border-2 border-border-strong" />}
@@ -457,7 +458,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
               {lesson.quiz.length > 0 && (
                 <li className="flex items-center gap-2">
                   {quizOk ? <CheckCircle2 className="h-4 w-4 text-success" /> : <span className="h-4 w-4 rounded-full border-2 border-border-strong" />}
-                  Quiz {progress?.quizBest !== null && progress?.quizBest !== undefined ? `(best ${Math.round(progress.quizBest * 100)}%)` : "(not taken)"}
+                  {progress?.quizBest !== null && progress?.quizBest !== undefined ? t("ui.quiz_best", { pct: Math.round(progress.quizBest * 100) }) : t("ui.quiz_not_taken")}
                 </li>
               )}
             </ul>
@@ -472,9 +473,9 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             )}
           </div>
           <div className="rounded-xl border border-border p-4">
-            <p className="text-sm font-medium">Mastery checks (measured)</p>
+            <p className="text-sm font-medium">{t("ui.mastery_checks_measured")}</p>
             {mastery.length === 0 ? (
-              <p className="mt-2 text-sm text-muted">This lesson has no measured mastery check.</p>
+              <p className="mt-2 text-sm text-muted">{t("ui.this_lesson_has_no_measured_mastery_check")}</p>
             ) : (
               <ul className="mt-2 space-y-1.5 text-sm">
                 {mastery.map((m) => {
@@ -498,10 +499,10 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           </div>
         </div>
 
-        <Callout className="mt-5" title="How mastery works">
+        <Callout className="mt-5" title={t("ui.how_mastery_works")}>
           <ul className="list-disc space-y-1 pl-4">
             {MASTERY_EXPLANATION.map((t) => (
-              <li key={t}>{t}</li>
+              <li key={t}>{tx(t)}</li>
             ))}
           </ul>
         </Callout>
@@ -513,14 +514,14 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
             </Link>
           ) : (
             <Link href="/learn" className="inline-flex h-10 items-center rounded-xl bg-accent px-4 text-sm font-medium text-accent-fg">
-              Back to curriculum
+              {t("ui.back_to_curriculum")}
             </Link>
           )}
           <Button variant="secondary" onClick={() => go({ kind: "step", index: 0 })}>
-            <RotateCcw className="h-4 w-4" /> Revise from the start
+            <RotateCcw className="h-4 w-4" /> {t("ui.revise_from_the_start")}
           </Button>
           <Link href="/dashboard" className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-medium text-muted hover:bg-surface-2">
-            Dashboard
+            {t("nav./dashboard")}
           </Link>
         </div>
       </Card>

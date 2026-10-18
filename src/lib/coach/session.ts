@@ -1,7 +1,8 @@
 import { shapeMidi, easiestShape } from "@/lib/music/chords";
 import { midiToName } from "@/lib/music/notes";
-import { mistakeSummary, sequenceAccuracy, startSequence, stepSequence, type SequenceState } from "@/lib/exercises/sequence";
+import { mistakeSummaryMessage, sequenceAccuracy, startSequence, stepSequence, type SequenceState } from "@/lib/exercises/sequence";
 import { analyzeChord, analyzeNote, uncertainFeedback, type Feedback } from "./analysis";
+import { enText, type I18nMessage } from "@/lib/i18n/messages";
 
 /**
  * The listening-teacher loop as a pure state machine:
@@ -300,11 +301,13 @@ export function coachReducer(s: CoachSessionState, e: CoachEvent): CoachSessionS
         return { ...s, seq: step.state, played, feedback: fb, lastInput: e.source };
       }
       const accuracy = sequenceAccuracy(step.state);
-      const summary = mistakeSummary(step.state, (m) => midiToName(m));
+      const summary = mistakeSummaryMessage(step.state, (m) => midiToName(m));
       const success = accuracy >= SUCCESS;
-      const fb: Feedback = success
-        ? { verdict: "correct", title: accuracy === 1 ? "Perfect — every note right first time!" : `Well done — ${Math.round(accuracy * 100)}% right first time`, detail: summary ?? "You played the whole sequence in order." }
-        : { verdict: "wrong", title: `You finished — ${Math.round(accuracy * 100)}% right first time`, detail: summary ?? "A few notes needed a second try.", tip: "Let's hear it again slowly, then repeat. Accuracy first, speed later." };
+      const pct = Math.round(accuracy * 100);
+      const titleMsg: I18nMessage = success ? (accuracy === 1 ? { key: "seq.perfect" } : { key: "seq.wellDone", vars: { pct } }) : { key: "seq.finished", vars: { pct } };
+      const detailMsg: I18nMessage = summary ?? { key: success ? "seq.wholeInOrder" : "seq.fewSecond" };
+      const tipMsg: I18nMessage | undefined = success ? undefined : { key: "seq.hearAgain" };
+      const fb: Feedback = { verdict: success ? "correct" : "wrong", title: enText(titleMsg), detail: enText(detailMsg), tip: tipMsg && enText(tipMsg), titleMsg, detailMsg, tipMsg };
       return finishAttempt({ ...s, seq: step.state, played }, ex, accuracy, fb, success, e.source);
     }
     case "CHORD": {

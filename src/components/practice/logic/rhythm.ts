@@ -1,4 +1,5 @@
 import { GUITAR_STRUMS, TAALS, type TaalId } from "@/lib/music/taal";
+import { enText, type I18nMessage } from "@/lib/i18n/messages";
 
 /**
  * Rhythm trainer patterns. `hits` are beat offsets (in beats, quarter = 1) within ONE bar;
@@ -61,16 +62,21 @@ export function patternDuration(p: RhythmPattern, bpm = p.bpm): number {
   return (p.bars * p.beatsPerBar * 60) / bpm;
 }
 
-/** Feedback text from a timing score. */
-export function rhythmFeedback(r: { hitCount: number; missed: number; extra: number; early: number; late: number; meanAbsMs: number | null }, total: number): string {
-  if (r.hitCount === 0) return "No taps matched the beat. Listen to the count-in, then tap with the clicks.";
-  const parts: string[] = [];
-  if (r.hitCount === total && r.extra === 0) parts.push("You hit every note!");
-  else parts.push(`${r.hitCount} of ${total} notes hit.`);
-  if (r.missed) parts.push(`${r.missed} missed.`);
-  if (r.extra) parts.push(`${r.extra} extra tap${r.extra > 1 ? "s" : ""} — watch the rests.`);
-  if (r.early > r.late && r.early >= 2) parts.push("You tend to rush (tap early). Relax and wait for the beat.");
-  else if (r.late > r.early && r.late >= 2) parts.push("You tend to drag (tap late). Anticipate the beat slightly.");
-  if (r.meanAbsMs !== null) parts.push(`Average timing error: ${Math.round(r.meanAbsMs)} ms.`);
-  return parts.join(" ");
+/** Feedback from a timing score, as translatable messages (format each one in the UI). */
+export function rhythmFeedbackMessages(r: { hitCount: number; missed: number; extra: number; early: number; late: number; meanAbsMs: number | null }, total: number): I18nMessage[] {
+  if (r.hitCount === 0) return [{ key: "rhythm.noHits" }];
+  const parts: I18nMessage[] = [];
+  if (r.hitCount === total && r.extra === 0) parts.push({ key: "rhythm.allHit" });
+  else parts.push({ key: "rhythm.hitOf", vars: { hit: r.hitCount, total } });
+  if (r.missed) parts.push({ key: "rhythm.missed", vars: { n: r.missed } });
+  if (r.extra) parts.push({ key: r.extra > 1 ? "rhythm.extraN" : "rhythm.extra1", vars: { n: r.extra } });
+  if (r.early > r.late && r.early >= 2) parts.push({ key: "rhythm.rush" });
+  else if (r.late > r.early && r.late >= 2) parts.push({ key: "rhythm.drag" });
+  if (r.meanAbsMs !== null) parts.push({ key: "rhythm.avgError", vars: { ms: Math.round(r.meanAbsMs) } });
+  return parts;
+}
+
+/** English feedback text from a timing score. */
+export function rhythmFeedback(r: Parameters<typeof rhythmFeedbackMessages>[0], total: number): string {
+  return rhythmFeedbackMessages(r, total).map(enText).join(" ");
 }

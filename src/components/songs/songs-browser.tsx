@@ -83,7 +83,7 @@ export function SongsBrowser() {
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="scrollbar-thin -mx-1 overflow-x-auto px-1">
           <Segmented<Tab>
-            label="Song collection"
+            label={t("ui.song_collection")}
             value={tab}
             onChange={setTab}
             options={[
@@ -96,10 +96,10 @@ export function SongsBrowser() {
         <div className="flex gap-2">
           <div className="relative flex-1 lg:w-64">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />
-            <Input aria-label="Search songs" placeholder={t("songs.search")} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
+            <Input aria-label={t("ui.search_songs")} placeholder={t("songs.search")} value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
           </div>
           {tab !== "mine" && (
-            <Select aria-label="Maximum difficulty" value={maxDiff} onChange={(e) => setMaxDiff(Number(e.target.value))}>
+            <Select aria-label={t("ui.maximum_difficulty")} value={maxDiff} onChange={(e) => setMaxDiff(Number(e.target.value))}>
               <option value={5}>{t("songs.anyLevel")}</option>
               <option value={1}>{t("songs.easiest")}</option>
               <option value={2}>{t("songs.upTo2")}</option>
@@ -110,7 +110,7 @@ export function SongsBrowser() {
       </div>
 
       {tab === "hindi" && decades.length > 0 && (
-        <div className="-mt-3 mb-6 flex flex-wrap gap-1.5" role="group" aria-label="Filter by decade">
+        <div className="-mt-3 mb-6 flex flex-wrap gap-1.5" role="group" aria-label={t("ui.filter_by_decade")}>
           {[null, ...decades].map((d) => (
             <button
               key={d ?? "all"}
@@ -169,9 +169,9 @@ export function SongsBrowser() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="font-semibold">{s.title}</p>
-                      <p className="text-sm text-muted">{s.artist || "Unknown artist"}</p>
+                      <p className="text-sm text-muted">{s.artist || t("ui.unknown_artist")}</p>
                     </div>
-                    <Badge tone="piano">{s.sheet ? "Lyrics + chords" : "User-provided"}</Badge>
+                    <Badge tone="piano">{s.sheet ? t("ui.lyrics_chords") : "User-provided"}</Badge>
                   </div>
                   <p className="mt-3 truncate font-mono text-xs text-muted">{songChords({ sections: s.sections }).join(" · ")}</p>
                 </Card>
@@ -179,13 +179,13 @@ export function SongsBrowser() {
             ))}
           </div>
         ) : (
-          <EmptyState icon={<Music2 className="h-8 w-8" />} title={custom.loading ? "Loading…" : "No songs yet"} description="Paste any song's lyrics with chords, then sing along while the sheet follows your voice." action={<Link href="/songs/sheet?new=1" className="text-accent hover:underline">Paste your first song</Link>} />
+          <EmptyState icon={<Music2 className="h-8 w-8" />} title={custom.loading ? "Loading…" : t("ui.no_songs_yet")} description={t("ui.paste_any_song_s_lyrics_with_chords_then_sing_al")} action={<Link href="/songs/sheet?new=1" className="text-accent hover:underline">{t("ui.paste_your_first_song")}</Link>} />
         )
       ) : (
         <div className="space-y-8">
           <section>
-            <h2 className="font-semibold">Classic tunes</h2>
-            <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">Simple public-domain melodies — handy for practising reading and finger patterns.</p>
+            <h2 className="font-semibold">{t("ui.classic_tunes")}</h2>
+            <p className="mb-3 mt-1 max-w-3xl text-sm text-muted">{t("ui.simple_public_domain_melodies_handy_for_practisi")}</p>
             {english.length ? grid(english) : <EmptyState title={t("songs.noMatch")} description={t("songs.noMatchHint")} />}
           </section>
         </div>
@@ -195,6 +195,7 @@ export function SongsBrowser() {
 }
 
 function SongCard({ song, saved, minutes, status }: { song: Song; saved: boolean; minutes: number; status: SongStatus }) {
+  const t = useT();
   const chords = songChords(song);
   return (
     <Link href={`/songs/${song.id}`} className="group" data-testid={`song-card-${song.id}`}>
@@ -205,19 +206,19 @@ function SongCard({ song, saved, minutes, status }: { song: Song; saved: boolean
             <p className="truncate text-sm text-muted">{song.artist}</p>
             {song.film && <p className="truncate text-xs text-subtle">{song.film}{song.year ? ` (${song.year})` : ""}</p>}
           </div>
-          {saved && <BookmarkCheck className="h-5 w-5 shrink-0 text-accent" aria-label="Saved" />}
+          {saved && <BookmarkCheck className="h-5 w-5 shrink-0 text-accent" aria-label={t("ui.saved")} />}
         </div>
         {song.styleNote && <p className="mt-2 text-xs text-accent">{song.styleNote}</p>}
-        {song.sourceCapo ? <p className="mt-2 text-xs text-muted">Capo {song.sourceCapo} · easy shapes</p> : null}
+        {song.sourceCapo ? <p className="mt-2 text-xs text-muted">{t("ui.capo_easy_shapes", { n: song.sourceCapo })}</p> : null}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Badge tone={song.source === "public-domain" ? "theory" : song.source === "chord-chart" ? "guitar" : "accent"}>{song.source === "public-domain" ? "Public domain" : song.source === "chord-chart" ? "Chord chart" : "Original"}</Badge>
-          <Badge>Key {song.key}</Badge>
+          <Badge tone={song.source === "public-domain" ? "theory" : song.source === "chord-chart" ? "guitar" : "accent"}>{song.source === "public-domain" ? t("ui.public_domain") : song.source === "chord-chart" ? t("ui.chord_chart") : t("ui.original_word")}</Badge>
+          <Badge>{t("ui.key_x", { k: song.key })}</Badge>
           <Difficulty n={song.difficulty} />
           <SongStatusChip status={status} />
         </div>
         <p className="mt-3 font-mono text-xs text-muted">{chords.join(" · ")}</p>
         <div className="mt-auto flex items-center justify-between pt-3 text-xs text-muted">
-          <span>{song.sections.some((s) => s.melody) ? "Melody + chords" : "Chords only"}</span>
+          <span>{song.sections.some((s) => s.melody) ? t("ui.melody_chords") : t("ui.chords_only")}</span>
           {minutes > 0 && <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {minutes} min</span>}
         </div>
       </Card>

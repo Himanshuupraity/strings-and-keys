@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { easiestShape, shapeMidi, type GuitarShape } from "@/lib/music/chords";
 import { strum } from "@/lib/audio/engine";
@@ -29,6 +30,7 @@ export function ChordDiagram({
   className?: string;
   highlight?: boolean;
 }) {
+  const tr = useT();
   const shape = shapeProp ?? (chord ? easiestShape(chord) : undefined);
   const scale = size === "sm" ? 0.75 : size === "lg" ? 1.25 : 1;
   const name = title ?? shape?.chord ?? chord ?? "";
@@ -37,7 +39,7 @@ export function ChordDiagram({
     return (
       <div className={cn("flex w-32 flex-col items-center rounded-xl border border-dashed border-border-strong p-3 text-center text-xs text-muted", className)}>
         <span className="text-base font-semibold text-text">{name}</span>
-        No diagram available
+        {tr("ui.no_diagram_available")}
       </div>
     );
   }
@@ -56,7 +58,7 @@ export function ChordDiagram({
   const xOf = (s: number) => left + s * sx;
   const yOf = (f: number) => topY + (f - startFret + 0.5) * fy;
 
-  const label = `${name} chord: ${shape.frets.map((f, i) => `string ${6 - i} ${f < 0 ? "muted" : f === 0 ? "open" : "fret " + f}${shape.fingers[i] > 0 ? " finger " + shape.fingers[i] : ""}`).join(", ")}${capo ? `, with capo on fret ${capo}` : ""}`;
+  const label = tr("ui.cd_label", { name, parts: [...shape.frets.map((f, i) => tr(f < 0 ? "ui.cd_string_muted" : f === 0 ? "ui.cd_string_open" : "ui.cd_string_fret", { s: 6 - i, f }) + (shape.fingers[i] > 0 ? ` ${tr("ui.cd_finger", { n: shape.fingers[i] })}` : "")), ...(capo ? [tr("ui.cd_with_capo", { n: capo })] : [])].join(", ") });
 
   const content = (
     <svg viewBox={`0 0 ${W} ${H}`} width={W * scale} height={H * scale} role="img" aria-label={label}>
@@ -110,7 +112,7 @@ export function ChordDiagram({
       </div>
       {subtitle && <span className="text-[11px] text-muted">{subtitle}</span>}
       {playable ? (
-        <button type="button" className="rounded-lg hover:bg-surface-2" onClick={() => void strum(shapeMidi(shape, capo))} aria-label={`Play ${name}${capo ? ` with capo ${capo}` : ""}`} title="Click to hear it">
+        <button type="button" className="rounded-lg hover:bg-surface-2" onClick={() => void strum(shapeMidi(shape, capo))} aria-label={`Play ${name}${capo ? ` with capo ${capo}` : ""}`} title={tr("ui.click_to_hear_it")}>
           {content}
         </button>
       ) : (

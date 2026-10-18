@@ -1,10 +1,12 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { needleAngle, classifyCents } from "@/components/practice/logic/tuner";
 import { cn } from "@/components/ui";
 
 /** Semicircular cents gauge with a smoothly animated needle. */
 export function TunerGauge({ cents, active, className }: { cents: number | null; active: boolean; className?: string }) {
+  const tr = useT();
   const angle = cents === null ? 0 : needleAngle(cents);
   const state = cents === null ? null : classifyCents(cents);
   const color = state === "in-tune" ? "var(--success)" : state ? "var(--warn)" : "var(--subtle)";
@@ -20,7 +22,7 @@ export function TunerGauge({ cents, active, className }: { cents: number | null;
   const [zx1, zy1] = pt(-6, r);
   const [zx2, zy2] = pt(6, r);
   return (
-    <svg viewBox="0 0 300 180" className={cn("w-full max-w-md", className)} role="img" aria-label={cents === null ? "Tuning gauge, no pitch" : `Tuning gauge: ${Math.round(cents)} cents ${state}`}>
+    <svg viewBox="0 0 300 180" className={cn("w-full max-w-md", className)} role="img" aria-label={cents === null ? tr("ui.tuning_gauge_no_pitch") : tr("ui.tuning_gauge_cents", { cents: Math.round(cents), state: state ?? "" })}>
       <path d={`M ${pt(-60, r).join(" ")} A ${r} ${r} 0 0 1 ${pt(60, r).join(" ")}`} fill="none" stroke="var(--surface-3)" strokeWidth={14} strokeLinecap="round" />
       <path d={`M ${zx1} ${zy1} A ${r} ${r} 0 0 1 ${zx2} ${zy2}`} fill="none" stroke="var(--success)" strokeWidth={14} opacity={0.6} />
       {ticks.map((t) => {
@@ -38,8 +40,8 @@ export function TunerGauge({ cents, active, className }: { cents: number | null;
           </g>
         );
       })}
-      <text x={pt(-60, r + 2)[0] - 4} y={170} fontSize={12} fill="var(--muted)" textAnchor="middle">♭ flat</text>
-      <text x={pt(60, r + 2)[0] + 4} y={170} fontSize={12} fill="var(--muted)" textAnchor="middle">sharp ♯</text>
+      <text x={pt(-60, r + 2)[0] - 4} y={170} fontSize={12} fill="var(--muted)" textAnchor="middle">{tr("ui.flat")}</text>
+      <text x={pt(60, r + 2)[0] + 4} y={170} fontSize={12} fill="var(--muted)" textAnchor="middle">{tr("ui.sharp")}</text>
       <g style={{ transform: `rotate(${angle}deg)`, transformOrigin: `${cx}px ${cy}px`, transition: "transform 140ms ease-out" }} opacity={active ? 1 : 0.35}>
         <line x1={cx} y1={cy} x2={cx} y2={cy - r + 8} stroke={color} strokeWidth={4} strokeLinecap="round" />
       </g>

@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -30,6 +31,7 @@ F        G         Am
 Or write chords inline like [C]this`;
 
 export function SheetPage() {
+  const tr = useT();
   const params = useSearchParams();
   const router = useRouter();
   const id = params.get("id");
@@ -52,31 +54,31 @@ export function SheetPage() {
   }
   if (song === undefined) return <Skeleton className="h-96" />;
   if (!song || !song.sheet) {
-    return <EmptyState title="Song sheet not found" description="It may have been deleted, or it was saved on another device/profile." action={<Link href="/songs/sheet?new=1" className="text-accent hover:underline">Paste a new song</Link>} />;
+    return <EmptyState title={tr("ui.song_sheet_not_found")} description={tr("ui.it_may_have_been_deleted_or_it_was_saved_on_anot")} action={<Link href="/songs/sheet?new=1" className="text-accent hover:underline">{tr("ui.paste_a_new_song")}</Link>} />;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Link href="/songs" className="-ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
-          <ChevronLeft className="h-4 w-4" /> All songs
+          <ChevronLeft className="h-4 w-4" /> {tr("common.allSongs")}
         </Link>
         <div className="flex flex-wrap gap-2">
           {song.sourceUrl && (
             <a href={song.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2" data-testid="open-source">
-              <ExternalLink className="h-4 w-4" /> Open original
+              <ExternalLink className="h-4 w-4" /> {tr("ui.open_original")}
             </a>
           )}
           <Link href={`/songs/custom?id=${song.id}`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2">
-            <SlidersHorizontal className="h-4 w-4" /> Practice tools
+            <SlidersHorizontal className="h-4 w-4" /> {tr("ui.practice_tools")}
           </Link>
           <Link href={`/songs/sheet?id=${song.id}&edit=1`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2" data-testid="sheet-edit">
-            <Pencil className="h-4 w-4" /> Edit
+            <Pencil className="h-4 w-4" /> {tr("common.edit")}
           </Link>
           <Button
             size="sm"
             variant="ghost"
-            aria-label="Delete this song"
+            aria-label={tr("ui.delete_this_song")}
             onClick={async () => {
               if (!window.confirm(`Delete “${song.title}”?`)) return;
               await customSongRepo.remove(song.id);
@@ -98,7 +100,7 @@ export function SheetPage() {
         onPasteLyrics={async (text) => {
           const parsed = parseSheet(text);
           if (!uniqueChords(parsed.lines).length) {
-            toast.error("No chords found in what you pasted. Copy a version with chords above the words.");
+            toast.error(tr("ui.no_chords_found_in_what_you_pasted_copy_a_versio"));
             return;
           }
           const saved = await customSongRepo.save({
@@ -108,7 +110,7 @@ export function SheetPage() {
             sheet: text.slice(0, 30000),
           });
           setLoaded({ id: saved.id, song: saved });
-          toast.success("Lyrics added");
+          toast.success(tr("ui.lyrics_added"));
         }}
       />
     </div>
@@ -116,6 +118,7 @@ export function SheetPage() {
 }
 
 function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s: CustomSong) => void }) {
+  const tr = useT();
   const params = useSearchParams();
   const chart = params.get("chart") ? getSong(params.get("chart")!) : undefined;
   const catalogue = params.get("from") ? getCatalogueSong(params.get("from")!) : undefined;
@@ -139,10 +142,10 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
   const finalArtist = artist.trim() || parsed.artist || "";
 
   const save = async () => {
-    if (!finalTitle) return toast.error("Give the song a title.");
-    if (!chords.length) return toast.error("No chords found. Put chords on their own line above the words, or inline like [Am].");
-    if (!ytOk) return toast.error("That doesn't look like a YouTube link.");
-    if (!sourceOk) return toast.error("The source page should be a web link starting with https://");
+    if (!finalTitle) return toast.error(tr("ui.give_the_song_a_title"));
+    if (!chords.length) return toast.error(tr("ui.no_chords_found_put_chords_on_their_own_line_abo"));
+    if (!ytOk) return toast.error(tr("ui.that_doesn_t_look_like_a_youtube_link"));
+    if (!sourceOk) return toast.error(tr("ui.the_source_page_should_be_a_web_link_starting_wi"));
     setSaving(true);
     try {
       const secs = sheetSections(parsed.lines).map((s, i) => ({ id: `s${i}`, name: s.name, bars: s.bars }));
@@ -162,10 +165,10 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
         youtube: youtube.trim() || undefined,
         sourceUrl: sourceUrl.trim() || undefined,
       });
-      toast.success("Song saved to your profile");
+      toast.success(tr("ui.song_saved_to_your_profile"));
       onSaved(saved);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't save the song.");
+      toast.error(e instanceof Error ? e.message : tr("ui.couldn_t_save_the_song"));
       setSaving(false);
     }
   };
@@ -173,33 +176,33 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <Link href="/songs" className="-ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
-        <ChevronLeft className="h-4 w-4" /> All songs
+        <ChevronLeft className="h-4 w-4" /> {tr("common.allSongs")}
       </Link>
       <div>
-        <h1 className="font-display text-4xl tracking-tight">{existing ? "Edit song sheet" : "Add a song with lyrics & chords"}</h1>
-        <p className="mt-2 text-muted">Paste the lyrics with chords from any chord site or songbook you use (or type them). Then sing along with the chords above the words, and let the sheet follow your voice.</p>
+        <h1 className="font-display text-4xl tracking-tight">{existing ? tr("ui.edit_song_sheet") : tr("ui.add_a_song_with_lyrics_chords")}</h1>
+        <p className="mt-2 text-muted">{tr("ui.paste_the_lyrics_with_chords_from_any_chord_site")}</p>
       </div>
       {chart && (
         <Callout tone="info" title={`Chords for ${chart.title} are filled in`}>
-          Easiest: tap “Find lyrics with chords”, copy the whole lyrics-and-chords page for this song, then “Paste from clipboard” to replace this chords-only outline.
+          {tr("ui.easiest_tap_find_lyrics_with_chords_copy_the_who")}
         </Callout>
       )}
       <Card>
-        <CardHeader title="Song details" />
+        <CardHeader title={tr("ui.song_details")} />
         <CardBody className="grid gap-4 sm:grid-cols-2">
-          <Field label="Title" htmlFor="sheet-title">
-            <Input id="sheet-title" value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} placeholder={parsed.title ?? "Song title"} />
+          <Field label={tr("ui.title")} htmlFor="sheet-title">
+            <Input id="sheet-title" value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} placeholder={parsed.title ?? tr("ui.song_title")} />
           </Field>
-          <Field label="Singer / artist" htmlFor="sheet-artist">
-            <Input id="sheet-artist" value={artist} maxLength={80} onChange={(e) => setArtist(e.target.value)} placeholder="Optional" />
+          <Field label={tr("ui.singer_artist")} htmlFor="sheet-artist">
+            <Input id="sheet-artist" value={artist} maxLength={80} onChange={(e) => setArtist(e.target.value)} placeholder={tr("ui.optional")} />
           </Field>
           <div className="sm:col-span-2">
-            <Field label="YouTube link (optional)" htmlFor="sheet-yt" hint={ytOk ? "Paste the song's official video link to play it beside the lyrics." : "That doesn't look like a YouTube link."}>
+            <Field label={tr("ui.youtube_link_optional")} htmlFor="sheet-yt" hint={ytOk ? tr("ui.paste_the_song_s_official_video_link_to_play_it") : tr("ui.that_doesn_t_look_like_a_youtube_link")}>
               <Input id="sheet-yt" value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" aria-invalid={!ytOk} />
             </Field>
           </div>
           <div className="sm:col-span-2">
-            <Field label="Source page (optional)" htmlFor="sheet-src" hint={sourceOk ? "Where you copied the lyrics & chords from (e.g. an Ultimate Guitar page) — saved so you can open it again." : "Use a full web link starting with https://"}>
+            <Field label={tr("ui.source_page_optional")} htmlFor="sheet-src" hint={sourceOk ? tr("ui.where_you_copied_the_lyrics_chords_from_e_g_an_u") : tr("ui.use_a_full_web_link_starting_with_https")}>
               <Input id="sheet-src" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://tabs.ultimate-guitar.com/…" aria-invalid={!sourceOk} />
             </Field>
           </div>
@@ -208,16 +211,16 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
       <Card>
         <CardHeader
           icon={<ClipboardPaste className="h-5 w-5" />}
-          title="Lyrics & chords"
-          description="Chords on their own line above the words (spacing is kept), or inline like [Am]. Section names like [Chorus] or “Verse:” are optional."
+          title={tr("ui.lyrics_chords_2")}
+          description={tr("ui.chords_on_their_own_line_above_the_words_spacing")}
         />
         <CardBody className="space-y-3">
           <div className="flex flex-wrap gap-2">
             <a href={ultimateGuitarSearch(finalTitle || "song")} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium hover:bg-surface-2" data-testid="editor-find-ug">
-              <Search className="h-4 w-4 text-guitar" /> 1. Find on Ultimate Guitar <ExternalLink className="h-3.5 w-3.5 text-muted" />
+              <Search className="h-4 w-4 text-guitar" /> {tr("ui.1_find_on_ultimate_guitar")} <ExternalLink className="h-3.5 w-3.5 text-muted" />
             </a>
             <a href={lyricsChordsSearch(finalTitle || "song", finalArtist)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium hover:bg-surface-2" data-testid="editor-find-lyrics">
-              <Search className="h-4 w-4 text-muted" /> or search the web <ExternalLink className="h-3.5 w-3.5 text-muted" />
+              <Search className="h-4 w-4 text-muted" /> {tr("ui.or_search_the_web")} <ExternalLink className="h-3.5 w-3.5 text-muted" />
             </a>
             <Button
               size="sm"
@@ -227,19 +230,19 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
               onClick={async () => {
                 try {
                   const clip = await navigator.clipboard.readText();
-                  if (!clip.trim()) return toast.message("Your clipboard is empty — copy the lyrics with chords first.");
+                  if (!clip.trim()) return toast.message(tr("ui.your_clipboard_is_empty_copy_the_lyrics_with_cho"));
                   setText(clip);
-                  toast.success("Pasted. Check the preview below.");
+                  toast.success(tr("ui.pasted_check_the_preview_below"));
                 } catch {
-                  toast.message("Your browser blocked clipboard access — click in the box below and press Ctrl+V (⌘V on Mac).");
+                  toast.message(tr("ui.your_browser_blocked_clipboard_access_click_in_t"));
                 }
               }}
             >
-              <ClipboardPaste className="h-4 w-4" /> 2. Paste from clipboard
+              <ClipboardPaste className="h-4 w-4" /> {tr("ui.2_paste_from_clipboard")}
             </Button>
           </div>
           <textarea
-            aria-label="Lyrics and chords"
+            aria-label={tr("ui.lyrics_and_chords")}
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={18}
@@ -249,10 +252,10 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
             data-testid="sheet-text"
           />
           <div className="flex flex-wrap items-center gap-2 text-sm" aria-live="polite">
-            <Badge tone={chords.length ? "success" : "neutral"}>{chords.length} chord{chords.length === 1 ? "" : "s"}{chords.length ? `: ${chords.slice(0, 8).join(" ")}${chords.length > 8 ? "…" : ""}` : ""}</Badge>
-            <Badge>{lyricLines} lyric line{lyricLines === 1 ? "" : "s"}</Badge>
-            {sections > 0 && <Badge>{sections} section{sections === 1 ? "" : "s"}</Badge>}
-            {chords.length > 0 && <Badge tone="theory">Key looks like {guessKey(parsed.lines)}</Badge>}
+            <Badge tone={chords.length ? "success" : "neutral"}>{tr(chords.length === 1 ? "ui.one_chord_badge" : "ui.n_chords_badge", { n: chords.length })}{chords.length ? `: ${chords.slice(0, 8).join(" ")}${chords.length > 8 ? "…" : ""}` : ""}</Badge>
+            <Badge>{tr(lyricLines === 1 ? "ui.one_lyric_line" : "ui.n_lyric_lines", { n: lyricLines })}</Badge>
+            {sections > 0 && <Badge>{tr(sections === 1 ? "ui.one_section" : "ui.n_sections", { n: sections })}</Badge>}
+            {chords.length > 0 && <Badge tone="theory">{tr("ui.key_looks_like", { k: guessKey(parsed.lines) })}</Badge>}
           </div>
           <p className="text-xs text-muted">
             For your personal practice. The song stays in your profile; it isn&apos;t shared or published. Keep in mind profiles have no password, so anyone using this site can open any profile.
@@ -260,8 +263,8 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
         </CardBody>
       </Card>
       <div className="flex gap-2">
-        <Button onClick={() => void save()} loading={saving} data-testid="sheet-save">Save & open</Button>
-        <Link href="/songs" className="inline-flex h-10 items-center rounded-xl px-4 text-sm text-muted hover:bg-surface-2">Cancel</Link>
+        <Button onClick={() => void save()} loading={saving} data-testid="sheet-save">{tr("ui.save_open")}</Button>
+        <Link href="/songs" className="inline-flex h-10 items-center rounded-xl px-4 text-sm text-muted hover:bg-surface-2">{tr("common.cancel")}</Link>
       </div>
     </div>
   );

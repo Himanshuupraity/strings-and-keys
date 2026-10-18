@@ -1,4 +1,5 @@
 "use client";
+import { useT } from "@/lib/i18n";
 
 import { useState } from "react";
 import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
@@ -10,6 +11,7 @@ import type { Inst } from "./utils";
 
 /** One question at a time with immediate feedback and explanations. */
 export function LessonQuiz({ lesson, instrument, best, onFinish, onActivity }: { lesson: Lesson; instrument: Inst; best: number | null; onFinish: (score: number, total: number, wrongIds: string[]) => void; onActivity?: () => void }) {
+  const tr = useT();
   const [i, setI] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [wrong, setWrong] = useState<string[]>([]);
@@ -31,26 +33,26 @@ export function LessonQuiz({ lesson, instrument, best, onFinish, onActivity }: {
     const passed = frac >= lesson.passScore;
     return (
       <div className="space-y-4" data-testid="quiz-result">
-        <Callout tone={passed ? "success" : "warn"} title={passed ? `Quiz passed: ${score}/${total}` : `${score}/${total} — you need ${Math.ceil(lesson.passScore * total)} to pass`} icon={passed ? <CheckCircle2 className="h-5 w-5 text-success" /> : <RotateCcw className="h-5 w-5 text-warn" />}>
-          {passed ? "Great work. Your best score is saved." : "Review the explanations and try again — retries are unlimited and your best score counts."}
+        <Callout tone={passed ? "success" : "warn"} title={passed ? tr("ui.quiz_passed", { score, total }) : tr("ui.quiz_need", { score, total, need: Math.ceil(lesson.passScore * total) })} icon={passed ? <CheckCircle2 className="h-5 w-5 text-success" /> : <RotateCcw className="h-5 w-5 text-warn" />}>
+          {passed ? tr("ui.great_work_your_best_score_is_saved") : tr("ui.review_the_explanations_and_try_again_retries_ar")}
         </Callout>
         {wrong.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Worth reviewing:</p>
+            <p className="text-sm font-medium">{tr("ui.worth_reviewing")}</p>
             {lesson.quiz
               .filter((qq) => wrong.includes(qq.id))
               .map((qq) => (
                 <div key={qq.id} className="rounded-xl border border-border bg-surface-2 p-3 text-sm">
                   <p className="font-medium">{qq.question}</p>
                   <p className="mt-1 text-muted">
-                    Answer: <strong className="text-text">{qq.options[qq.answer]}</strong> — {qq.explanation}
+                    {tr("ui.answer")} <strong className="text-text">{qq.options[qq.answer]}</strong> — {qq.explanation}
                   </p>
                 </div>
               ))}
           </div>
         )}
         <Button variant="secondary" onClick={restart}>
-          <RotateCcw className="h-4 w-4" /> Retake quiz
+          <RotateCcw className="h-4 w-4" /> {tr("ui.retake_quiz")}
         </Button>
       </div>
     );
@@ -80,13 +82,13 @@ export function LessonQuiz({ lesson, instrument, best, onFinish, onActivity }: {
         <span>
           Question {i + 1} of {total}
         </span>
-        {best !== null && <span>Best so far: {Math.round(best * 100)}%</span>}
+        {best !== null && <span>{tr("ui.best_so_far", { pct: Math.round(best * 100) })}</span>}
       </div>
-      <ProgressBar value={i / total} label="Quiz progress" />
+      <ProgressBar value={i / total} label={tr("ui.quiz_progress")} />
       <h3 className="text-lg font-semibold">{q.question}</h3>
       {q.visual && <VisualRenderer visual={q.visual} />}
       {q.audio && <PlayExample audio={q.audio} instrument={instrument} />}
-      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Answers">
+      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label={tr("ui.answers")}>
         {q.options.map((o, k) => {
           const isAns = k === q.answer;
           return (
@@ -111,10 +113,10 @@ export function LessonQuiz({ lesson, instrument, best, onFinish, onActivity }: {
       {picked !== null && (
         <div aria-live="polite" className="space-y-3">
           <p className={cn("text-sm", picked === q.answer ? "text-success" : "text-danger")}>
-            <strong>{picked === q.answer ? "Correct." : "Not quite."}</strong> <span className="text-muted">{q.explanation}</span>
+            <strong>{picked === q.answer ? "Correct." : tr("ui.not_quite")}</strong> <span className="text-muted">{q.explanation}</span>
           </p>
           <Button onClick={next} data-testid="quiz-next">
-            {i === total - 1 ? "See result" : "Next question"}
+            {i === total - 1 ? tr("ui.see_result") : tr("ui.next_question")}
           </Button>
         </div>
       )}

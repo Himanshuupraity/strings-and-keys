@@ -1,3 +1,4 @@
+import type { I18nMessage } from "@/lib/i18n/messages";
 import { chordPitchClasses, parseChord, shapesForChord } from "@/lib/music/chords";
 import { mod12 } from "@/lib/music/notes";
 import type { ChordDrillResult } from "@/lib/storage/schemas";
@@ -233,17 +234,17 @@ export function weeklyStats(results: Pick<ChordDrillResult, "date" | "transition
   return { drills: recent.length, transitions: recent.reduce((a, r) => a + r.transitions, 0) };
 }
 
-/** Improvement suggestions based on score and mode. */
-export function drillSuggestions(transitions: number, previousBest: number | undefined, mode: "self" | "audio", ambiguousFrames = 0): string[] {
-  const out: string[] = [];
-  if (transitions < 15) out.push("Slow and clean beats fast and messy. Try the untimed mode and say each finger's job out loud.");
-  else if (transitions < 30) out.push("Nice steady work. Look for 'anchor' fingers that can stay on (or slide along) a string between the two chords.");
-  else if (transitions < 50) out.push("Good speed! Now check every string rings clearly — strum once after each change and listen.");
-  else out.push("Excellent! Try a harder pair, or play this one with a metronome at a steady tempo.");
-  if (previousBest !== undefined && transitions > previousBest) out.push(`New personal best — up ${transitions - previousBest} from ${previousBest}.`);
-  else if (previousBest !== undefined && transitions < previousBest) out.push("Below your best today — that's normal. Consistency over days matters more than one score.");
-  if (mode === "audio" && ambiguousFrames > 30) out.push("The microphone heard a lot of unclear sound. Strum all the chord's strings firmly once after each change, in a quiet room.");
-  out.push("Stop and rest if your fingertips or wrist hurt.");
+/** Improvement suggestions based on score and mode (translatable messages; format them in the UI). */
+export function drillSuggestions(transitions: number, previousBest: number | undefined, mode: "self" | "audio", ambiguousFrames = 0): I18nMessage[] {
+  const out: I18nMessage[] = [];
+  if (transitions < 15) out.push({ key: "drill.slowClean" });
+  else if (transitions < 30) out.push({ key: "drill.steady" });
+  else if (transitions < 50) out.push({ key: "drill.goodSpeed" });
+  else out.push({ key: "drill.excellent" });
+  if (previousBest !== undefined && transitions > previousBest) out.push({ key: "drill.newBest", vars: { up: transitions - previousBest, prev: previousBest } });
+  else if (previousBest !== undefined && transitions < previousBest) out.push({ key: "drill.belowBest" });
+  if (mode === "audio" && ambiguousFrames > 30) out.push({ key: "drill.unclearMic" });
+  out.push({ key: "drill.rest" });
   return out;
 }
 

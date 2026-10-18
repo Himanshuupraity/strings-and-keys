@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <>
       <BackToPractice />
-      <TPageHeader titleKey="tool.rhythm" description="Tap along with rhythm patterns and see exactly how early or late each hit was." />
+      <TPageHeader titleKey="tool.rhythm" descriptionKey="tool.desc.rhythm" />
       <RhythmTrainer />
     </>
   );
