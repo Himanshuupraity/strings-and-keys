@@ -3,7 +3,11 @@ import { seedPrefs } from "./helpers";
 
 test("new user completes onboarding and lands on the first lesson", async ({ page }) => {
   await page.goto("/onboarding");
+  // First visit: the app asks for a name before anything else.
+  await page.getByTestId("learner-name").fill("Asha");
+  await page.getByTestId("learner-continue").click();
   await expect(page.getByTestId("onboarding")).toBeVisible();
+  await expect(page.getByText("Welcome, Asha!")).toBeVisible();
   await page.getByTestId("ob-next").click(); // welcome
   await page.getByTestId("ob-piano").click();
   for (let i = 0; i < 10; i++) {

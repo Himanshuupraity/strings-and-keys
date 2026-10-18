@@ -5,6 +5,7 @@ import { Toaster, toast } from "sonner";
 import { usePrefs } from "@/hooks/use-prefs";
 import { onStorageError } from "@/lib/storage/db";
 import { setMasterVolume } from "@/lib/audio/engine";
+import { startSync } from "@/lib/learner/sync";
 
 /** Applies theme + volume prefs and wires global toasts. */
 export function Providers({ children }: { children: ReactNode }) {
@@ -31,6 +32,9 @@ export function Providers({ children }: { children: ReactNode }) {
       toast.warning("Browser storage isn't available, so progress is only kept until you close this tab.", { duration: 8000 });
     });
   }, []);
+
+  // Cloud sync of the learner's progress (no-op until Supabase is configured and a name is chosen).
+  useEffect(() => startSync(), []);
 
   useEffect(() => {
     // Offline app shell (production only, so development hot-reload isn't cached).

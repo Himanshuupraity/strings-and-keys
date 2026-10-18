@@ -2,7 +2,7 @@
 
 A guitar and piano academy for absolute beginners through to advanced players. It has structured lessons, playable instruments, a real microphone tuner, a practice toolkit, a song lab and an honest listening coach.
 
-**It works with no setup.** Clone it, install, run. Your progress is saved in your browser, and you don't need an account, a database or any API key.
+**It works with no setup.** Clone it, install, run. The first screen asks for your name and saves your progress under it — no password. Add a free Supabase database (optional) and you can pick your name on any device to continue where you left off.
 
 > The product name is set in one place, `src/config/brand.ts`. Change it there to rename the app.
 
@@ -47,7 +47,7 @@ To run the Playwright browsers for the first time: `npx playwright install chrom
 | `/videos` | Curated, verified YouTube lessons with search, filters, favourites and watched state |
 | `/ai-coach` | Listening teacher (explain → demo → listen → feedback → adapt) and chat |
 | `/progress` | Completion vs mastery, per-track progress, drill history, quiz history, weekly report |
-| `/settings` | Theme, Western/Sargam labels and Sa, keyboard size, goals, backup/import, account and sync |
+| `/settings` | Your profile & sync, theme, Western/Sargam labels and Sa, keyboard size, goals, backup/import |
 
 ### Music conventions
 - Scientific pitch notation: **MIDI 60 = C4 = middle C** and A4 = 440 Hz (adjustable from 430 to 450 Hz). Some keyboard brands call middle C "C3". It is the same physical key.
@@ -68,7 +68,7 @@ src/
     instruments/       PianoKeyboard, Fretboard, ChordDiagram, Staff, MicButton, note labels
     layout/            App shell, instrument toggle, theme toggle, global audio/mic indicator
     dashboard/ progress/ settings/ piano/ guitar/ practice/ tuner/ lesson/ learn/
-    onboarding/ songs/ videos/ coach/ account/
+    onboarding/ songs/ videos/ coach/ learner/
   content/             Curriculum (levels 0–7), songs, curated videos — pure data
   hooks/               usePrefs, useData, useMic, useMidi, useNoteInput, useMetronome, usePracticeLog
   lib/
@@ -79,7 +79,7 @@ src/
     storage/           Storage adapters, zod schemas, repositories, export/import
     coach/             Rule-based coach + listening-session state machine
     server/            Server-only code (auth, database)
-prisma/                PostgreSQL schema, migrations, seed (optional remote mode)
+supabase/schema.sql    Table for learner profiles (optional cross-device sync)
 e2e/                   Playwright tests (microphone mocked with a synthetic oscillator)
 ```
 
@@ -88,7 +88,7 @@ UI components never touch storage directly. They call **repositories** (`src/lib
 
 1. **IndexedDB** stores progress, history and saved items. It is chosen automatically, falls back to localStorage, and then to memory if storage is blocked.
 2. **localStorage** stores small preferences: instrument, theme, label mode, Sa, keyboard size and so on. These are read synchronously so the first paint is correct.
-3. **Remote (optional)** means PostgreSQL through Prisma, used when `DATABASE_URL` is set. You can sign in, upload this device's progress or download from your account. Before anything is overwritten, a dry run shows the conflicts and you choose what to keep. See `docs/persistence.md`.
+3. **Supabase (optional)** stores one row per learner name with their full progress. The browser talks only to the app's own `/api/learners` routes; the Supabase secret key stays on the server. See [Profiles & Supabase](#profiles--supabase-optional).
 
 Every stored record is validated with zod. Malformed rows are skipped rather than crashing the app. Storage failures and full-quota errors fall back to memory with a warning toast. A schema version number plus a migration hook (`src/lib/storage/db.ts`) handle future changes. **Settings → Your data** lets you download and import JSON backups.
 
@@ -116,13 +116,31 @@ Copy `.env.example` to `.env.local` and fill in only the features you want.
 ### Coach
 The coach is built in and runs entirely in your browser. It needs no API key and works offline. It answers common beginner questions, using the app's own music-theory code for things like scale notes, chord notes and capo suggestions, and it gives feedback from your measured exercise results.
 
-### Accounts and cloud sync (PostgreSQL)
-```bash
-DATABASE_URL=postgresql://user:pass@host:5432/melody
-npx prisma migrate deploy      # apply migrations
-npm run db:seed                # seed lessons into the database (optional)
-```
-Google sign-in is optional: set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, and register `APP_URL/api/auth/google/callback`. See `docs/persistence.md` for SQLite and serverless notes.
+### Profiles & Supabase (optional)
+
+**How it works**
+- **First visit:** the site asks *"What's your name?"*. Your progress is saved under that name.
+- **Another device:** open the site and it lists the saved names. Click yours and your progress is downloaded, then kept in sync.
+- **While you practise:** changes upload about 2 seconds later, and also when you close or hide the tab. Opening the site pulls the newest copy.
+- **Two devices changed while offline:** the copies are merged. Records only on one side are added, and where both changed the same record, the device that's uploading keeps its version. Practice sessions and drills are never lost.
+- **Typing a name that already exists:** the site asks *"Is that you?"* rather than overwriting.
+- **Switch learner:** in the name menu (top right) or Settings. It uploads your progress, then clears this device for the next person.
+- **Without Supabase:** the name is still asked and saved, but progress stays in that browser. If you add Supabase later, an existing learner is uploaded automatically the next time they open the site.
+
+**Setup (about 5 minutes)**
+1. Create a free project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor → New query**, paste the contents of `supabase/schema.sql`, and click **Run**.
+3. Go to **Project Settings → API Keys** and copy the **secret** key (`sb_secret_…`). On older projects, copy the `service_role` key instead. Copy the **Project URL** too.
+4. Create `.env.local` in the project folder:
+   ```bash
+   SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+   SUPABASE_SECRET_KEY=sb_secret_...
+   ```
+5. Restart `npm run dev`. The name screen now says progress can be continued on any device.
+
+When you deploy (e.g. Vercel), add the same two variables in the host's environment settings.
+
+**Privacy note:** profiles are name-only with no password, so anyone who can open your site can see the list of names and continue as any of them. That's fine for personal or family use; don't store anything private. The table has Row Level Security enabled with no policies, so the public Supabase keys can't read it. Only your server can, using the secret key, which is never sent to the browser.
 
 ---
 
@@ -135,9 +153,9 @@ Google sign-in is optional: set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, a
 
 ## Deploying
 - **Vercel or any Node host.** Run `npm run build`, then `npm start`. With no env vars the app runs in local-first mode. Every user's progress stays in their own browser.
-- **With accounts.** Point `DATABASE_URL` at a managed Postgres database (Neon, Supabase, RDS and so on) and run `npx prisma migrate deploy` during deployment. A local SQLite file will **not** persist on serverless hosts.
+- **With cross-device profiles.** Add `SUPABASE_URL` and `SUPABASE_SECRET_KEY` to your host's environment variables (after running `supabase/schema.sql` once).
 - **HTTPS is required** for the microphone, MIDI and the service worker in production.
-- **Offline support.** The service worker (`public/sw.js`) caches the app shell and pages you have visited for offline use. Video embeds and account sync still need a connection.
+- **Offline support.** The service worker (`public/sw.js`) caches the app shell and pages you have visited for offline use. Video embeds and profile sync still need a connection (sync catches up automatically when you're back online).
 
 ---
 

@@ -1,6 +1,6 @@
 # Implementation status
 
-Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean), `npm test` (555 unit tests passing), `npm run build` (190 pages), and `npm run test:e2e` (12 Playwright tests passing, with the microphone mocked).
+Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean), `npm test` (545 unit tests passing), `npm run build` (190 pages), and `npm run test:e2e` (15 Playwright tests passing, with the microphone and Supabase API mocked).
 
 ## Implemented
 
@@ -76,7 +76,7 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - Local-first storage: IndexedDB, falling back to localStorage, then memory.
 - zod validation, schema versioning, and quota/failure fallback.
 - Backup export and import with a conflict review.
-- Optional PostgreSQL (Prisma) with email/password and Google sign-in, plus a sync API that never overwrites data silently.
+- Name-based learner profiles: the first visit asks your name. With Supabase configured, progress syncs automatically and you can pick your name on any device to continue. Concurrent changes are merged, never silently overwritten.
 
 ## Known limitations
 - **Microphone chord recognition** is a chroma-based estimate with a confidence score. It is not a reliable transcription in noisy rooms. MIDI is exact. Technique such as finger pressure, posture and fingering can't be measured; it is covered by self-checks.
@@ -85,8 +85,9 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - **Web MIDI** is unavailable in Safari.
 - **Rate limits** on the optional auth endpoints are in-memory, so they apply per server instance.
 - **The coach** is rule-based, not a large language model: it handles common beginner questions and measured feedback well, but open-ended questions outside its topics get a general suggestion and a pointer to the right lesson.
-- **SQLite** is documented in `docs/persistence.md` but not implemented. The Postgres schema uses Postgres-only types.
-- **The remote adapter** has no delete operation, because sync is upload/download of bundles.
+- **Profiles are name-only (no password).** Anyone who can open the site can see the list of names and continue as any learner. Fine for personal or family use; not for private data.
+- **Sync is whole-profile.** Each sync uploads the learner's full progress bundle (capped at 2 MB, far more than years of practice history). Deleting a record on one device doesn't delete it on another that still has it, so a merge can bring it back.
+- **Rename in Supabase mode.** You can't rename a learner from the app; use Switch learner and create a new name, or edit the row in Supabase.
 - **Missing songs.** Some traditional songs (Greensleeves, Scarborough Fair and others) were left out because their exact rhythms couldn't be verified with confidence.
 - **Popular songs** never include chords. You add your own through the custom editor.
 - **Videos** were verified on 2026-10-18 and may later be removed by their owners. Each one still has a "Watch on YouTube" fallback link.

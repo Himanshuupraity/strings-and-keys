@@ -6,6 +6,7 @@ import { ArrowRight, Award, BookOpen, CalendarCheck, Clock, Flame, Guitar, ListM
 import { Badge, Button, Callout, Card, CardBody, CardHeader, EmptyState, ProgressBar, Skeleton, SourceTag, cn } from "@/components/ui";
 import { InstrumentToggle } from "@/components/layout/instrument-toggle";
 import { usePrefs, useHydrated } from "@/hooks/use-prefs";
+import { useLearner } from "@/hooks/use-learner";
 import { LESSONS, getLesson, lessonsForInstrument } from "@/content/curriculum";
 import { getSong } from "@/content/songs";
 import { LEVEL_NAMES, type Level } from "@/content/types";
@@ -50,6 +51,8 @@ export function Dashboard() {
   const [prefs] = usePrefs();
   const hydrated = useHydrated();
   const { data, loading } = useLearnerData();
+  const { learner } = useLearner();
+  const learnerName = learner?.name ?? data.profile?.name;
   const instrument = prefs.instrument;
   const lessons = useMemo(() => lessonsForInstrument(instrument), [instrument]);
   if (!hydrated) return <DashboardSkeleton />;
@@ -102,7 +105,7 @@ export function Dashboard() {
         <div>
           <h1 className="font-display text-3xl tracking-tight sm:text-4xl">
             {greeting()}
-            {data.profile?.name ? `, ${data.profile.name}` : ""}.
+            {learnerName ? `, ${learnerName}` : ""}.
           </h1>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-muted">
             <InstrumentIcon className={cn("h-4 w-4", instrument === "guitar" ? "text-guitar" : "text-piano")} aria-hidden />

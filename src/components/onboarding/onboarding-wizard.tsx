@@ -7,18 +7,18 @@ import { ArrowLeft, ArrowRight, Check, ClipboardCheck, Clock, Ear, Guitar, Heart
 import { toast } from "sonner";
 import { BRAND } from "@/config/brand";
 import { LESSONS } from "@/content/curriculum";
+import { useLearner } from "@/hooks/use-learner";
 import { usePrefs } from "@/hooks/use-prefs";
 import { practicePlan, nextLesson } from "@/lib/progress/engine";
 import { goalsRepo, profileRepo } from "@/lib/storage/repositories";
 import type { Instrument, Profile } from "@/lib/storage/schemas";
-import { Badge, Button, Callout, Card, Input, ProgressBar, Slider, cn } from "@/components/ui";
+import { Badge, Button, Callout, Card, ProgressBar, Slider, cn } from "@/components/ui";
 import { AudioButton } from "./question-media";
 
 type YesNo = "yes" | "no" | "skip";
 type Choice = Instrument | "both";
 
 interface Answers {
-  name: string;
   instrument: Choice;
   experience: Profile["experience"];
   dailyMinutes: number;
@@ -77,11 +77,11 @@ function YesNoRow({ label, value, onChange }: { label: string; value: YesNo; onC
 export function OnboardingWizard() {
   const router = useRouter();
   const [prefs, setPrefs] = usePrefs();
+  const { learner } = useLearner();
   const [step, setStep] = useState<Step>("welcome");
   const [saving, setSaving] = useState(false);
   const [checkAnswers, setCheckAnswers] = useState<Record<string, number>>({});
   const [a, setA] = useState<Answers>(() => ({
-    name: "",
     instrument: prefs.instrument,
     experience: "none",
     dailyMinutes: 20,
@@ -104,7 +104,7 @@ export function OnboardingWizard() {
       const existing = await profileRepo.get();
       await profileRepo.save({
         ...existing,
-        name: a.name.trim().slice(0, 60),
+        name: learner?.name ?? existing?.name ?? "",
         firstInstrument: primary,
         experience: a.experience,
         dailyMinutes: a.dailyMinutes,
@@ -117,7 +117,7 @@ export function OnboardingWizard() {
       const goals = await goalsRepo.get();
       await goalsRepo.save({ ...goals, dailyMinutes: a.dailyMinutes });
       setPrefs({ instrument: primary, onboarded: true });
-      toast.success(`Welcome${a.name.trim() ? `, ${a.name.trim()}` : ""}! Your plan is ready.`);
+      toast.success(`Welcome${learner?.name ? `, ${learner.name}` : ""}! Your plan is ready.`);
       router.push(destination);
     } catch {
       toast.error("We couldn't save your answers, but you can start learning anyway.");
@@ -148,13 +148,8 @@ export function OnboardingWizard() {
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-guitar to-piano text-white">
               <Music4 className="h-6 w-6" aria-hidden />
             </span>
-            <h1 className="mt-4 font-display text-3xl">Welcome to {BRAND.name}</h1>
+            <h1 className="mt-4 font-display text-3xl">{learner?.name ? `Welcome, ${learner.name}!` : `Welcome to ${BRAND.name}`}</h1>
             <p className="mt-2 text-muted">A few quick questions so we can build a plan that fits you. No music knowledge needed — we start from zero. You can skip anything optional.</p>
-            <label htmlFor="ob-name" className="mt-5 block text-sm font-medium">
-              What should we call you? <span className="font-normal text-muted">(optional)</span>
-            </label>
-            <Input id="ob-name" className="mt-1.5" value={a.name} maxLength={60} placeholder="Your first name" onChange={(e) => set("name", e.target.value)} />
-            <p className="mt-2 text-xs text-muted">Saved only on this device.</p>
           </div>
         )}
 

@@ -31,9 +31,10 @@ export async function denyMicrophone(page: Page) {
   });
 }
 
-/** Skip onboarding prompts by seeding prefs. */
+/** Skip the name screen and onboarding prompts by seeding a local learner + prefs. */
 export async function seedPrefs(page: Page, prefs: Record<string, unknown> = {}) {
   await page.addInitScript((p) => {
     if (!localStorage.getItem("mm:prefs")) localStorage.setItem("mm:prefs", JSON.stringify({ onboarded: true, ...p }));
+    if (!localStorage.getItem("mm:learner")) localStorage.setItem("mm:learner", JSON.stringify({ id: null, name: "Tester", syncedAt: null, dirty: false }));
   }, prefs);
 }

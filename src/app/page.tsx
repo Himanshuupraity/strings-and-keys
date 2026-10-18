@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, AudioLines, Bot, Gauge, Guitar, HardDrive, Languages, ListMusic, Music4, Piano, ShieldCheck, Sparkles, Timer } from "lucide-react";
 import { BRAND } from "@/config/brand";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { LandingLearnerPanel } from "@/components/learner/landing-panel";
 
 const FEATURES = [
   { icon: Sparkles, title: "From absolute zero", text: "Eight levels, from “what is a note?” to improvisation and songwriting. Every lesson explains, demonstrates, lets you try, and checks." },
@@ -89,24 +90,28 @@ export default function Landing() {
             <h1 className="font-display text-5xl leading-[1.05] tracking-tight sm:text-6xl">
               Learn music like you have a <em className="text-accent">patient teacher</em>{" "}beside you.
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-muted">{BRAND.description} No account, no setup — your progress is saved on this device.</p>
+            <p className="mt-5 max-w-xl text-lg text-muted">{BRAND.description} Just enter your name — no password, no setup — and your progress is saved under it.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/onboarding" className="inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 font-medium text-accent-fg shadow-sm hover:bg-accent-hover">
-                Start from zero <ArrowRight className="h-4 w-4" />
+              <Link href="/learn" className="inline-flex h-12 items-center gap-2 rounded-xl border border-border-strong px-6 font-medium hover:bg-surface-2">
+                See the curriculum <ArrowRight className="h-4 w-4" />
               </Link>
-              <Link href="/dashboard" className="inline-flex h-12 items-center rounded-xl border border-border-strong px-6 font-medium hover:bg-surface-2">Go to dashboard</Link>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
               <span className="flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-success" /> Audio processed locally</span>
-              <span className="flex items-center gap-1.5"><HardDrive className="h-4 w-4 text-success" /> Works without an account</span>
+              <span className="flex items-center gap-1.5"><HardDrive className="h-4 w-4 text-success" /> Just your name — no password</span>
             </div>
           </div>
-          <HeroArt />
+          <div className="order-first lg:order-none">
+            <LandingLearnerPanel />
+          </div>
         </section>
 
         <section className="border-y border-border bg-surface/60">
           <div className="mx-auto max-w-6xl px-5 py-16">
-            <h2 className="font-display text-3xl sm:text-4xl">Everything a beginner needs, in one studio</h2>
+            <div className="grid items-center gap-8 lg:grid-cols-2">
+              <h2 className="font-display text-3xl sm:text-4xl">Everything a beginner needs, in one studio</h2>
+              <div className="mx-auto w-full max-w-md"><HeroArt /></div>
+            </div>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map(({ icon: Icon, title, text }) => (
                 <div key={title} className="rounded-2xl border border-border bg-surface p-5 shadow-card">

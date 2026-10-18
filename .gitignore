@@ -46,5 +46,3 @@ next-env.d.ts
 /playwright-report/
 /playwright/.cache/
 
-# prisma generated client (created by `prisma generate` on install)
-/src/generated/

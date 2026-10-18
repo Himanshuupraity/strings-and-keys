@@ -3,10 +3,10 @@
 import { useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Download, HardDrive, Laptop, Mic, Moon, Music, Piano, ShieldCheck, Sun, Target, Trash2, Upload, User } from "lucide-react";
-import { Button, Callout, Card, CardBody, CardHeader, Field, Input, PageHeader, Segmented, Select, Slider, Switch } from "@/components/ui";
+import { Button, Callout, Card, CardBody, CardHeader, Field, PageHeader, Segmented, Select, Slider, Switch } from "@/components/ui";
 import { useHydrated, usePrefs } from "@/hooks/use-prefs";
 import { useData } from "@/hooks/use-data";
-import { applyImport, exportAll, goalsRepo, planImport, profileRepo, resetAllData, type ImportPlan } from "@/lib/storage/repositories";
+import { applyImport, exportAll, goalsRepo, planImport, resetAllData, type ImportPlan } from "@/lib/storage/repositories";
 import { getAdapter } from "@/lib/storage/db";
 import { KEYBOARD_PRESETS, SELECTABLE_SIZES, type KeyboardSize } from "@/lib/music/keyboard";
 import { SHARP_NAMES, FLAT_NAMES } from "@/lib/music/notes";
@@ -26,10 +26,7 @@ function Section({ id, icon, title, description, children }: { id?: string; icon
 
 export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
   const [prefs, setPrefs] = usePrefs();
-  const profile = useData(() => profileRepo.get(), ["profile"], undefined);
   const goals = useData(() => goalsRepo.get(), ["goals"], DEFAULT_GOALS);
-  const [nameDraft, setName] = useState<string | null>(null);
-  const name = nameDraft ?? profile.data?.name ?? "";
   const hydrated = useHydrated();
   const env = hydrated ? { mic: micSupported(), midi: midiSupported(), storage: getAdapter().kind as string } : { mic: false, midi: false, storage: "…" };
   const [pending, setPending] = useState<{ bundle: unknown; plan: ImportPlan } | null>(null);
@@ -65,12 +62,6 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
       <PageHeader eyebrow="Settings" title="Settings" description="Preferences are saved on this device automatically." />
       <div className="grid gap-6 lg:grid-cols-2">
         <Section icon={<User className="h-5 w-5" />} title="Profile">
-          <Field label="Your name (optional)" htmlFor="name" hint="Only used for the greeting. It stays on this device.">
-            <div className="flex gap-2">
-              <Input id="name" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder="e.g. Asha" />
-              <Button variant="secondary" onClick={() => profileRepo.save({ ...(profile.data ?? {}), name }).then(() => toast.success("Saved"))}>Save</Button>
-            </div>
-          </Field>
           <Field label="Instrument mode">
             <Segmented<Prefs["instrument"]> label="Instrument" value={prefs.instrument} onChange={(instrument) => setPrefs({ instrument })} options={[{ value: "guitar", label: "Guitar" }, { value: "piano", label: "Piano / keyboard" }]} />
           </Field>

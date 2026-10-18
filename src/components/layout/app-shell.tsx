@@ -10,6 +10,10 @@ import { cn } from "@/components/ui";
 import { InstrumentToggle } from "./instrument-toggle";
 import { ThemeToggle } from "./theme-toggle";
 import { AudioControls } from "./audio-controls";
+import { LearnerMenu } from "@/components/learner/learner-menu";
+import { WelcomeScreen } from "@/components/learner/welcome";
+import { useLearner } from "@/hooks/use-learner";
+import { useHydrated } from "@/hooks/use-prefs";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/" && pathname.startsWith(href + "/")) || (href === "/learn" && pathname.startsWith("/lesson"));
@@ -64,6 +68,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const mobileItems = ALL_NAV.filter((n) => n.mobile);
+  const { learner } = useLearner();
+  const hydrated = useHydrated();
 
   return (
     <div className="min-h-screen lg:pl-64">
@@ -79,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="scrollbar-thin flex-1 overflow-y-auto px-3 pb-6 pt-2">
           <NavLinks />
         </div>
-        <div className="border-t border-border p-4 text-xs text-muted">Progress is saved on this device.</div>
+        <div className="border-t border-border p-4 text-xs text-muted">Progress is saved under your name.</div>
       </aside>
 
       {/* Tablet/mobile drawer */}
@@ -111,12 +117,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <InstrumentToggle size="sm" />
           </div>
           <AudioControls />
+          <LearnerMenu />
           <ThemeToggle />
         </div>
       </header>
 
       <main id="main" className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12">
-        {children}
+        {!hydrated ? <div className="h-[60vh] animate-pulse rounded-2xl bg-surface-2/60" aria-busy="true" aria-label="Loading" /> : learner ? children : <WelcomeScreen />}
       </main>
 
       {/* Mobile bottom navigation */}
