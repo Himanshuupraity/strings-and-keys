@@ -3,12 +3,17 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ClipboardPaste, Pencil, SlidersHorizontal, Trash2 } from "lucide-react";
+import { ChevronLeft, ClipboardPaste, ExternalLink, Pencil, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge, Button, Callout, Card, CardBody, CardHeader, EmptyState, Field, Input, Skeleton } from "@/components/ui";
 import { getSong } from "@/content/songs";
 import { getCatalogueSong } from "@/content/songs";
 import { guessKey, parseSheet, sheetSections, uniqueChords, youtubeId } from "@/lib/sheet/parse";
+
+/** Web search for a lyrics-with-chords page (third-party sites; the student copies what they need). */
+export function lyricsChordsSearch(title: string, artist?: string) {
+  return `https://www.google.com/search?q=${encodeURIComponent(`${title} ${artist?.split(/[,&(]/)[0] ?? ""} lyrics chords`.replace(/\s+/g, " ").trim())}`;
+}
 import { customSongRepo, type CustomSong } from "../custom-repo";
 import { SongSheet } from "./song-sheet";
 
@@ -76,6 +81,19 @@ export function SheetPage() {
           </Button>
         </div>
       </div>
+      {!parseSheet(song.sheet).lines.some((l) => l.kind === "lyric" && l.text.trim()) && (
+        <Callout tone="info" title="Add the lyrics to sing along" className="items-start">
+          <p>This sheet only has chords. Open a lyrics-with-chords page for this song, copy the whole thing, then tap Edit and paste it in. The chords will appear above the exact words.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a href={lyricsChordsSearch(song.title, song.artist)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover" data-testid="find-lyrics">
+              <Search className="h-4 w-4" /> Find lyrics with chords <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+            <Link href={`/songs/sheet?id=${song.id}&edit=1`} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2">
+              <Pencil className="h-4 w-4" /> Edit & paste
+            </Link>
+          </div>
+        </Callout>
+      )}
       <SongSheet title={song.title} artist={song.artist} sheet={song.sheet} youtube={song.youtube} />
     </div>
   );
@@ -143,7 +161,7 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
       </div>
       {chart && (
         <Callout tone="info" title={`Chords for ${chart.title} are filled in`}>
-          Paste the lyrics under the matching chord lines, or replace everything with a full lyrics-and-chords version you have.
+          Easiest: tap “Find lyrics with chords”, copy the whole lyrics-and-chords page for this song, then “Paste from clipboard” to replace this chords-only outline.
         </Callout>
       )}
       <Card>
@@ -169,6 +187,29 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
           description="Chords on their own line above the words (spacing is kept), or inline like [Am]. Section names like [Chorus] or “Verse:” are optional."
         />
         <CardBody className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <a href={lyricsChordsSearch(finalTitle || "song", finalArtist)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium hover:bg-surface-2" data-testid="editor-find-lyrics">
+              <Search className="h-4 w-4 text-guitar" /> 1. Find lyrics with chords <ExternalLink className="h-3.5 w-3.5 text-muted" />
+            </a>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-9"
+              data-testid="paste-clipboard"
+              onClick={async () => {
+                try {
+                  const clip = await navigator.clipboard.readText();
+                  if (!clip.trim()) return toast.message("Your clipboard is empty — copy the lyrics with chords first.");
+                  setText(clip);
+                  toast.success("Pasted. Check the preview below.");
+                } catch {
+                  toast.message("Your browser blocked clipboard access — click in the box below and press Ctrl+V (⌘V on Mac).");
+                }
+              }}
+            >
+              <ClipboardPaste className="h-4 w-4" /> 2. Paste from clipboard
+            </Button>
+          </div>
           <textarea
             aria-label="Lyrics and chords"
             value={text}

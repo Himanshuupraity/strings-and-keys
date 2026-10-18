@@ -64,3 +64,13 @@ test("a chord chart page offers 'Sing along with lyrics' with chords pre-filled"
   await expect(page.getByLabel("Title")).toHaveValue("Kesariya");
   await expect(page.getByTestId("sheet-text")).toHaveValue(/\[Verse\]/);
 });
+
+test("a chords-only sheet guides you to add the lyrics", async ({ page }) => {
+  await seedPrefs(page);
+  await page.goto("/songs/sheet?new=1&chart=bw-chart-tum-hi-ho");
+  await expect(page.getByTestId("editor-find-lyrics")).toHaveAttribute("href", /google\.com\/search\?q=Tum%20Hi%20Ho.*lyrics%20chords/);
+  await page.getByTestId("sheet-save").click();
+  await expect(page).toHaveURL(/\/songs\/sheet\?id=/);
+  await expect(page.getByText("Add the lyrics to sing along")).toBeVisible();
+  await expect(page.getByTestId("find-lyrics")).toHaveAttribute("href", /lyrics%20chords/);
+});
