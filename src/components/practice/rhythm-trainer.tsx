@@ -8,7 +8,9 @@ import { Badge, Button, Callout, Card, CardBody, CardHeader, Slider, SourceTag, 
 import { ensureAudio, getAudioContext, scheduleClick } from "@/lib/audio/engine";
 import { scoreTiming } from "@/lib/audio/scheduler";
 import { exerciseRepo } from "@/lib/storage/repositories";
-import { RHYTHM_PATTERNS, patternDuration, patternHitTimes, rhythmFeedback, type RhythmPattern } from "./logic/rhythm";
+import { ALL_RHYTHM_PATTERNS as RHYTHM_PATTERNS, patternDuration, patternHitTimes, rhythmFeedback, type RhythmPattern } from "./logic/rhythm";
+import { TAALS, bolVoice } from "@/lib/music/taal";
+import { TaalVisual } from "./taal-visual";
 
 const LATENCY_KEY = "mm:rhythm-latency-ms";
 function loadLatency(): number {
@@ -32,6 +34,41 @@ function scheduleTone(ctx: AudioContext, time: number, freq = 520) {
   o.stop(time + 0.16);
 }
 
+/**
+ * Tabla-style practice click for a bol: a short pitched "ring" for the treble drum and a falling
+ * low thump for the bass drum. A simple synthesised approximation, not a recording.
+ */
+function scheduleBol(ctx: AudioContext, time: number, bol: string, sam: boolean) {
+  const v = bolVoice(bol);
+  const peak = sam ? 0.6 : 0.4;
+  if (v.high) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "triangle";
+    o.frequency.value = v.muted ? 620 : 880;
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.exponentialRampToValueAtTime(v.muted ? peak * 0.5 : peak, time + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + (v.muted ? 0.06 : 0.22));
+    o.connect(g).connect(ctx.destination);
+    o.start(time);
+    o.stop(time + 0.25);
+  }
+  if (v.low) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.setValueAtTime(140, time);
+    o.frequency.exponentialRampToValueAtTime(70, time + 0.25);
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.exponentialRampToValueAtTime(peak, time + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.3);
+    o.connect(g).connect(ctx.destination);
+    o.start(time);
+    o.stop(time + 0.32);
+  }
+  if (!v.high && !v.low) scheduleClick(ctx, time, sam);
+}
+
 type Phase = "idle" | "demo" | "count-in" | "playing" | "done" | "calibrating";
 type Score = ReturnType<typeof scoreTiming> & { startMs: number; total: number };
 
@@ -43,6 +80,8 @@ export function RhythmTrainer() {
   const [score, setScore] = useState<Score | null>(null);
   const [latency, setLatency] = useState(0);
   const [tapFlash, setTapFlash] = useState(false);
+  const [tabla, setTabla] = useState(true);
+  const [matra, setMatra] = useState(-1);
   const run = useRef<{ start: number; expected: number[]; taps: number[]; end: number } | null>(null);
   const timers = useRef<number[]>([]);
   const calib = useRef<{ clicks: number[]; taps: number[] } | null>(null);
@@ -53,10 +92,25 @@ export function RhythmTrainer() {
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   const later = (ms: number, fn: () => void) => timers.current.push(window.setTimeout(fn, ms));
+  const taal = pattern.taal ? TAALS[pattern.taal] : null;
+
+  /** Beat clicks for one bar starting at `t0`: tabla bols for taal patterns, metronome otherwise. */
+  const scheduleBeats = (ctx: AudioContext, t0: number, beats: number, highlight: boolean) => {
+    const beat = 60 / bpm;
+    for (let i = 0; i < beats; i++) {
+      const t = t0 + i * beat;
+      const inBar = i % pattern.beatsPerBar;
+      if (taal && tabla) scheduleBol(ctx, t, taal.bols[inBar], inBar === 0);
+      else scheduleClick(ctx, t, inBar === 0);
+      if (highlight) later(Math.max(0, (t - ctx.currentTime) * 1000), () => setMatra(inBar));
+    }
+    if (highlight) later(Math.max(0, (t0 + beats * beat - ctx.currentTime) * 1000), () => setMatra(-1));
+  };
 
   const choose = (p: RhythmPattern) => {
     setPattern(p);
     setBpm(p.bpm);
+    setMatra(-1);
     setScore(null);
     setPhase("idle");
   };
@@ -65,8 +119,7 @@ export function RhythmTrainer() {
     await ensureAudio();
     const ctx = getAudioContext()!;
     const t0 = ctx.currentTime + 0.1;
-    const beat = 60 / bpm;
-    for (let i = 0; i < pattern.bars * pattern.beatsPerBar; i++) scheduleClick(ctx, t0 + i * beat, i % pattern.beatsPerBar === 0);
+    scheduleBeats(ctx, t0, pattern.bars * pattern.beatsPerBar, true);
     patternHitTimes(pattern, t0, bpm).forEach((t) => scheduleTone(ctx, t));
     setPhase("demo");
     later((patternDuration(pattern, bpm) + 0.3) * 1000, () => setPhase("idle"));
@@ -79,7 +132,7 @@ export function RhythmTrainer() {
     const countIn = ctx.currentTime + 0.15;
     const start = countIn + pattern.beatsPerBar * beat;
     for (let i = 0; i < pattern.beatsPerBar; i++) scheduleClick(ctx, countIn + i * beat, i === 0);
-    for (let i = 0; i < pattern.bars * pattern.beatsPerBar; i++) scheduleClick(ctx, start + i * beat, i % pattern.beatsPerBar === 0);
+    scheduleBeats(ctx, start, pattern.bars * pattern.beatsPerBar, true);
     const expected = patternHitTimes(pattern, start, bpm);
     if (guide) expected.forEach((t) => scheduleTone(ctx, t, 440));
     const end = start + patternDuration(pattern, bpm);
@@ -174,23 +227,38 @@ export function RhythmTrainer() {
       <Card className="h-fit">
         <CardHeader title="Patterns" description="Easiest first." />
         <CardBody className="space-y-1.5">
-          {RHYTHM_PATTERNS.map((p) => (
-            <button key={p.id} type="button" onClick={() => choose(p)} disabled={busy} aria-pressed={p.id === pattern.id} className={cn("flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors disabled:opacity-60", p.id === pattern.id ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2")}>
-              <span className="font-medium">{p.name}</span>
-              <Badge>L{p.level}</Badge>
-            </button>
+          {(["western", "taal"] as const).map((group) => (
+            <div key={group} className="space-y-1.5">
+              <p className={cn("px-1 text-xs font-semibold uppercase tracking-wider text-subtle", group === "taal" && "pt-3")}>{group === "taal" ? "Indian taal (Bollywood feels)" : "Beats & strums"}</p>
+              {RHYTHM_PATTERNS.filter((p) => (p.group ?? "western") === group).map((p) => (
+                <button key={p.id} type="button" onClick={() => choose(p)} disabled={busy} aria-pressed={p.id === pattern.id} data-testid={`pattern-${p.id}`} className={cn("flex min-h-11 w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors disabled:opacity-60", p.id === pattern.id ? "border-accent bg-accent-soft" : "border-border hover:bg-surface-2")}>
+                  <span className="font-medium">{p.name}</span>
+                  <Badge>L{p.level}</Badge>
+                </button>
+              ))}
+            </div>
           ))}
         </CardBody>
       </Card>
 
       <div className="space-y-6">
         <Card>
-          <CardHeader title={pattern.name} description={pattern.description} action={<Badge tone="theory">{pattern.beatsPerBar === 3 && pattern.id === "dadra" ? "6/8" : `${pattern.beatsPerBar}/4`}</Badge>} />
+          <CardHeader title={pattern.name} description={pattern.description} action={<Badge tone="theory">{taal ? `${taal.name} · ${taal.matras} matras` : `${pattern.beatsPerBar}/4`}</Badge>} />
           <CardBody className="space-y-5">
-            <PatternGrid pattern={pattern} />
-            <p className="text-sm text-muted">Count: <span className="font-mono text-text">{pattern.count}</span></p>
+            {taal ? (
+              <div className="space-y-2">
+                <TaalVisual taal={taal} current={matra} hits={pattern.hits} strokes={pattern.hits.length < taal.matras ? pattern.count.split(" ") : undefined} />
+                <p className="text-xs text-muted">
+                  <span lang="hi">{taal.hindi}</span> · {taal.vibhag.join(" + ")} · <span className="font-semibold text-accent">X</span> = sam (strongest beat) · <span className="font-semibold text-piano">0</span> = khali (lighter) · {taal.western}
+                </p>
+              </div>
+            ) : (
+              <PatternGrid pattern={pattern} />
+            )}
+            <p className="text-sm text-muted">{taal ? "Theka / strokes" : "Count"}: <span className="font-mono text-text">{pattern.count}</span></p>
             <Slider label="Tempo" value={bpm} min={40} max={160} step={5} onChange={setBpm} format={(v) => `${v} BPM`} />
             <Switch label="Play the rhythm as a guide while I tap" description="Turn off for a real test: you'll hear only the clicks." checked={guide} onChange={setGuide} />
+            {taal && <Switch label="Tabla-style beat" description="Bass and treble clicks follow the bols (a synthesised approximation, not a real tabla). Off = plain metronome clicks." checked={tabla} onChange={setTabla} />}
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={() => void demo()} disabled={busy}><Ear className="h-4 w-4" /> Hear the pattern</Button>
               <Button onClick={() => void start()} disabled={busy} data-testid="rhythm-start"><Play className="h-4 w-4" /> Start (1-bar count-in)</Button>
@@ -206,7 +274,7 @@ export function RhythmTrainer() {
             <button
               type="button"
               onPointerDown={(e) => { e.preventDefault(); tap(); }}
-              className={cn("flex h-36 w-36 items-center justify-center rounded-full border-4 text-lg font-semibold transition-all duration-75 select-none touch-none", tapFlash ? "scale-95 border-accent bg-accent text-accent-fg" : phase === "playing" || phase === "calibrating" ? "border-accent bg-accent-soft text-accent" : "border-border-strong bg-surface-2 text-muted")}
+              className={cn("flex h-40 w-40 items-center justify-center sm:h-36 sm:w-36 rounded-full border-4 text-lg font-semibold transition-all duration-75 select-none touch-none", tapFlash ? "scale-95 border-accent bg-accent text-accent-fg" : phase === "playing" || phase === "calibrating" ? "border-accent bg-accent-soft text-accent" : "border-border-strong bg-surface-2 text-muted")}
               aria-label="Tap"
               data-testid="rhythm-tap"
             >

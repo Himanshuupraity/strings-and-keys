@@ -89,6 +89,7 @@ export function SheetPage() {
       </div>
       <SongSheet
         key={song.updatedAt}
+        sheetId={song.id}
         title={song.title}
         artist={song.artist}
         sheet={song.sheet}

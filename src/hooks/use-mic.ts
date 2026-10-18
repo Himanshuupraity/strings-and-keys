@@ -10,6 +10,16 @@ const activeMics = new Map<symbol, () => void>();
 const micListeners = new Set<() => void>();
 const emitMic = () => micListeners.forEach((l) => l());
 export const micRegistry = {
+  /** For other microphone users (e.g. the recorder): returns an unregister function. */
+  register: (stop: () => void) => {
+    const key = Symbol("mic");
+    activeMics.set(key, stop);
+    emitMic();
+    return () => {
+      activeMics.delete(key);
+      emitMic();
+    };
+  },
   count: () => activeMics.size,
   stopAll: () => [...activeMics.values()].forEach((s) => s()),
   subscribe: (fn: () => void) => {

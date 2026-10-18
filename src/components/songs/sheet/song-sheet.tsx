@@ -5,6 +5,8 @@ import { ChevronDown, ChevronUp, Hand, Mic, Minus, Pause, Play, PlayCircle as Yo
 import { Badge, Button, Callout, Card, CardBody, Segmented, Slider, cn } from "@/components/ui";
 import { ChordDiagram } from "@/components/instruments/chord-diagram";
 import { MicButton } from "@/components/instruments/mic-button";
+import { RecorderPanel } from "@/components/recordings/recorder-panel";
+import { RecordingsList } from "@/components/recordings/recordings-list";
 import { useMic } from "@/hooks/use-mic";
 import { usePrefs } from "@/hooks/use-prefs";
 import { usePracticeLog } from "@/hooks/use-practice-log";
@@ -19,7 +21,7 @@ type Layout = "sheet" | "flow";
 const LAYOUT_KEY = "mm:sheet-layout";
 
 /** Lyrics + chords sheet with follow-my-voice, auto-scroll and manual navigation. */
-export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPasteLyrics, findLyricsHref }: { title: string; artist?: string; sheet: string; youtube?: string; onLineChange?: () => void; onPasteLyrics?: (text: string) => Promise<void>; findLyricsHref?: string }) {
+export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPasteLyrics, findLyricsHref, sheetId }: { title: string; artist?: string; sheet: string; youtube?: string; onLineChange?: () => void; onPasteLyrics?: (text: string) => Promise<void>; findLyricsHref?: string; sheetId?: string }) {
   const [prefs] = usePrefs();
   const parsed = useMemo(() => parseSheet(sheet), [sheet]);
   const baseKey = useMemo(() => guessKey(parsed.lines), [parsed]);
@@ -225,6 +227,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
             )}
             {mode === "manual" && <p className="text-xs text-muted">Tap a line, use the arrow keys / space bar, or a Bluetooth page-turner pedal.</p>}
 
+            <RecorderPanel compact sheetId={sheetId} songTitle={title} className="border-t border-border pt-3" />
             <button
               type="button"
               onClick={() => setShowSettings((v) => !v)}
@@ -287,6 +290,14 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
             <div className="h-[40vh]" aria-hidden />
           </CardBody>
         </Card>
+        {sheetId && (
+          <Card>
+            <CardBody className="pt-5">
+              <p className="mb-3 font-semibold">Your recordings of this song</p>
+              <RecordingsList sheetId={sheetId} showUsage={false} emptyHint="Tap Record above, sing or play along with the sheet, then listen back." />
+            </CardBody>
+          </Card>
+        )}
       </div>
 
       {/* Side panel: video + chords */}

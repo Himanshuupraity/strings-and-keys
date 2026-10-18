@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, AudioLines, Ear, Gauge, Guitar, Hand, Music2, Piano, Repeat2, Sparkles, Timer, Waves } from "lucide-react";
+import { ArrowRight, AudioLines, Ear, Gauge, Guitar, Hand, Music2, Piano, Repeat2, Sparkles, Timer, Waves, Mic } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePrefs } from "@/hooks/use-prefs";
 import { useData } from "@/hooks/use-data";
@@ -28,6 +28,7 @@ const TOOLS: Tool[] = [
   { href: "/practice/rhythm", title: "Rhythm trainer", description: "Tap along to patterns; see early and late hits.", icon: Hand, for: ["guitar", "piano"] },
   { href: "/practice/ear-training", title: "Ear-training lab", description: "High/low, intervals, major vs minor, melodies and swaras.", icon: Ear, for: ["guitar", "piano"] },
   { href: "/practice/note-detector", title: "Piano note detector", description: "Play one note on a real piano and check it.", icon: Waves, for: ["piano"], needs: "Mic or MIDI" },
+  { href: "/practice/record", title: "Record yourself", description: "Record your playing or singing and listen back — saved only on this device.", icon: Mic, for: ["guitar", "piano"], needs: "Microphone" },
   { href: "/practice/timer", title: "Practice timer", description: "Time and save sessions; daily and weekly stats.", icon: Timer, for: ["guitar", "piano"] },
   { href: "/piano-lab", title: "Piano Lab", description: "Full playable keyboard (49/61/88 keys) with guided exercises.", icon: Piano, for: ["piano"] },
   { href: "/guitar-lab", title: "Guitar Lab", description: "Fretboard, chords, scales, capo simulator and transposer.", icon: Guitar, for: ["guitar"] },

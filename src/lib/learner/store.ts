@@ -9,9 +9,12 @@ export interface ActiveLearner {
   syncedAt: string | null;
   /** Local changes not yet uploaded. */
   dirty: boolean;
+  /** Profile is protected with a PIN (Supabase mode). */
+  hasPin?: boolean;
 }
 
-export type SyncState = "local-only" | "idle" | "saving" | "offline" | "error";
+/** "locked": the profile has a PIN and this device needs to enter it before syncing. */
+export type SyncState = "local-only" | "idle" | "saving" | "offline" | "error" | "locked";
 export interface SyncStatus {
   state: SyncState;
   lastSyncedAt: string | null;
@@ -30,7 +33,7 @@ export function loadLearner(): ActiveLearner | null {
   try {
     const raw = window.localStorage.getItem(KEY);
     const v = raw ? (JSON.parse(raw) as Partial<ActiveLearner>) : null;
-    cache = v && typeof v.name === "string" && v.name ? { id: v.id ?? null, name: v.name, syncedAt: v.syncedAt ?? null, dirty: !!v.dirty } : null;
+    cache = v && typeof v.name === "string" && v.name ? { id: v.id ?? null, name: v.name, syncedAt: v.syncedAt ?? null, dirty: !!v.dirty, hasPin: !!v.hasPin } : null;
   } catch {
     cache = null;
   }

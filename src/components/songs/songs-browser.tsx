@@ -9,6 +9,9 @@ import { usePrefs } from "@/hooks/use-prefs";
 import { songRepo } from "@/lib/storage/repositories";
 import { BUILT_IN_SONGS, CATALOGUE_SONGS } from "@/content/songs";
 import { songChords } from "@/content/songs/parse";
+import { songStatus, type SongStatus } from "@/lib/songs/status";
+import { SongStatusChip } from "./song-status-chip";
+import { ReadyToLearn } from "./ready-to-learn";
 import type { Song } from "@/content/songs/types";
 import { customSongRepo } from "./custom-repo";
 import { LINK_BUTTON, catalogueEditorHref } from "./catalogue-view";
@@ -61,7 +64,7 @@ export function SongsBrowser() {
   const grid = (list: Song[]) => (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {list.map((s) => (
-        <SongCard key={s.id} song={s} saved={!!progressFor(s.id)?.saved} minutes={progressFor(s.id)?.minutes ?? 0} />
+        <SongCard key={s.id} song={s} saved={!!progressFor(s.id)?.saved} minutes={progressFor(s.id)?.minutes ?? 0} status={songStatus(s, progressFor(s.id))} />
       ))}
     </div>
   );
@@ -122,6 +125,7 @@ export function SongsBrowser() {
 
       {tab === "hindi" ? (
         <div className="space-y-8">
+          {!q && decade === null && <ReadyToLearn instrument={prefs.instrument} />}
           {charts.length > 0 && (
             <section>
               <h2 className="font-semibold">Bollywood songs</h2>
@@ -188,7 +192,7 @@ export function SongsBrowser() {
   );
 }
 
-function SongCard({ song, saved, minutes }: { song: Song; saved: boolean; minutes: number }) {
+function SongCard({ song, saved, minutes, status }: { song: Song; saved: boolean; minutes: number; status: SongStatus }) {
   const chords = songChords(song);
   return (
     <Link href={`/songs/${song.id}`} className="group" data-testid={`song-card-${song.id}`}>
@@ -207,6 +211,7 @@ function SongCard({ song, saved, minutes }: { song: Song; saved: boolean; minute
           <Badge tone={song.source === "public-domain" ? "theory" : song.source === "chord-chart" ? "guitar" : "accent"}>{song.source === "public-domain" ? "Public domain" : song.source === "chord-chart" ? "Chord chart" : "Original"}</Badge>
           <Badge>Key {song.key}</Badge>
           <Difficulty n={song.difficulty} />
+          <SongStatusChip status={status} />
         </div>
         <p className="mt-3 font-mono text-xs text-muted">{chords.join(" · ")}</p>
         <div className="mt-auto flex items-center justify-between pt-3 text-xs text-muted">

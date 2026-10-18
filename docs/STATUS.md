@@ -83,6 +83,9 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - Backup export and import with a conflict review.
 - Name-based learner profiles: the first visit asks your name. With Supabase configured, progress syncs automatically and you can pick your name on any device to continue. Concurrent changes are merged, never silently overwritten.
 
+**Daily practice reminders**
+- Web Push reminders at a time each learner picks (Settings). Server routes (`/api/push/*`), a server-only `push_subscriptions` table, an idempotent cron route (at most one reminder per local day, time-zone and DST aware), service-worker push and notification-click handlers, iPhone "Add to Home Screen" guidance, and a test-notification button.
+
 ## Known limitations
 - **Microphone chord recognition** is a chroma-based estimate with a confidence score. It is not a reliable transcription in noisy rooms. MIDI is exact. Technique such as finger pressure, posture and fingering can't be measured; it is covered by self-checks.
 - **Very low notes.** Piano notes below about A1, and very quiet strings, may not be detected reliably.
@@ -97,4 +100,5 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - **Songs in the 165-song list have no chords or lyrics.** Use Find chords, then paste lyrics + chords into a song sheet. The app never ships copyrighted lyrics; sheets contain only what you paste, for your own practice.
 - **Follow-my-voice follows phrasing, not words.** It moves on after each sung line and pause. Long held notes or loud strumming can make it early or late; arrows, a tap or a page-turner pedal correct it.
 - **Videos** were verified on 2026-10-18 and may later be removed by their owners. Each one still has a "Watch on YouTube" fallback link.
-- **Audio quality.** Piano and guitar sounds are synthesised with Tone.js (FM synth and Karplus-Strong pluck) rather than sampled, so they work offline with no downloads.
+- **Audio quality.** Piano uses recorded Salamander Grand Piano samples (2 MB, downloaded on the first note, CC BY 3.0) with the light synth as a fallback or option; guitar is still synthesised (Karplus-Strong pluck).
+- **Reminders need deployment plus setup** (VAPID keys, a SQL migration, a cron schedule). On Vercel Hobby, cron may run only daily; use an external scheduler for timely reminders. On iPhone they work only from the Home Screen app (iOS 16.4+). Not tested end-to-end with a real push service in this environment.

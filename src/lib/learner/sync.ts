@@ -6,6 +6,7 @@ import { applyImport, exportAll, profileRepo, resetAllData } from "@/lib/storage
 import type { ExportBundle } from "@/lib/storage/schemas";
 import { selectionAction, startupAction } from "./decide";
 import { getSyncStatus, loadLearner, patchLearner, setLearner, setSyncStatus, type ActiveLearner } from "./store";
+import { setToken, tokenHeader } from "./pin-client";
 
 /**
  * Keeps this device's local progress in sync with the learner's row in Supabase (via /api/learners).
@@ -17,6 +18,22 @@ export interface LearnerSummary {
   id: string;
   name: string;
   updatedAt: string;
+  /** Protected with a 4-digit PIN (unlock before loading). */
+  hasPin?: boolean;
+}
+
+/** Thrown when a PIN-protected profile is opened without a valid device token. */
+export class PinRequiredError extends Error {
+  constructor(readonly learner: LearnerSummary) {
+    super("This profile is protected with a PIN.");
+    this.name = "PinRequiredError";
+  }
+}
+
+let pinSupported = false;
+/** Whether the server's database has the PIN columns (migration 002 applied). */
+export function isPinSupported() {
+  return pinSupported;
 }
 
 const PUSH_DELAY_MS = 2000;
@@ -28,7 +45,8 @@ let remoteEnabled: boolean | null = null;
 /* ---------------- API ---------------- */
 
 async function api<T>(path: string, init?: RequestInit): Promise<{ status: number; body: T }> {
-  const res = await fetch(path, { ...init, headers: { "content-type": "application/json", ...(init?.headers ?? {}) }, cache: "no-store" });
+  const learnerId = /^\/api\/learners\/([0-9a-f-]{36})$/i.exec(path)?.[1];
+  const res = await fetch(path, { ...init, headers: { "content-type": "application/json", ...tokenHeader(learnerId), ...(init?.headers ?? {}) }, cache: "no-store" });
   let body: unknown = null;
   try {
     body = await res.json();
@@ -38,13 +56,14 @@ async function api<T>(path: string, init?: RequestInit): Promise<{ status: numbe
   return { status: res.status, body: body as T };
 }
 
-export async function fetchLearners(): Promise<{ enabled: boolean; learners: LearnerSummary[]; error?: string }> {
+export async function fetchLearners(): Promise<{ enabled: boolean; pinSupported: boolean; learners: LearnerSummary[]; error?: string }> {
   try {
-    const r = await api<{ enabled: boolean; learners?: LearnerSummary[]; error?: string }>("/api/learners");
+    const r = await api<{ enabled: boolean; pinSupported?: boolean; learners?: LearnerSummary[]; error?: string }>("/api/learners");
     remoteEnabled = !!r.body?.enabled;
-    return { enabled: remoteEnabled, learners: r.body?.learners ?? [], error: r.status >= 400 ? r.body?.error ?? "Could not load names." : undefined };
+    pinSupported = !!r.body?.pinSupported;
+    return { enabled: remoteEnabled, pinSupported, learners: r.body?.learners ?? [], error: r.status >= 400 ? r.body?.error ?? "Could not load names." : undefined };
   } catch {
-    return { enabled: remoteEnabled ?? false, learners: [], error: "You're offline — saved names can't be loaded right now." };
+    return { enabled: remoteEnabled ?? false, pinSupported, learners: [], error: "You're offline — saved names can't be loaded right now." };
   }
 }
 
@@ -125,6 +144,10 @@ export async function pushNow(): Promise<void> {
         if (remote.body?.data) await applyRemote(remote.body.data, "merge");
         r = await api(`/api/learners/${l.id}`, { method: "PUT", body: JSON.stringify({ bundle: await exportAll(), force: true }) });
       }
+      if (r.status === 401) {
+        lockProfile(l.id!);
+        return;
+      }
       if (r.status === 404) {
         setSyncStatus({ state: "error", message: "This profile no longer exists on the server." });
         return;
@@ -144,6 +167,22 @@ export async function pushNow(): Promise<void> {
   }
 }
 
+/**
+ * The profile has a PIN and this device's token is missing or out of date (e.g. the PIN was changed
+ * on another device). Progress stays on this device; syncing resumes after the PIN is entered.
+ */
+function lockProfile(id: string) {
+  setToken(id, null);
+  patchLearner({ hasPin: true });
+  setSyncStatus({ state: "locked", message: "Enter your PIN to keep syncing. Your progress is safe on this device." });
+}
+
+/** After the PIN is entered on a locked profile: resume syncing. */
+export async function resumeAfterUnlock(): Promise<void> {
+  setSyncStatus({ state: "idle", message: undefined });
+  await reconcile();
+}
+
 /* ---------------- Choosing a learner ---------------- */
 
 /** Continue as an existing learner (e.g. on a new device). */
@@ -151,12 +190,16 @@ export async function selectLearner(target: LearnerSummary): Promise<void> {
   const current = loadLearner();
   if (current?.id && current.id !== target.id && current.dirty) await pushNow();
   const r = await fetchLearner(target.id);
+  if (r.status === 401) {
+    setToken(target.id, null);
+    throw new PinRequiredError({ ...target, hasPin: true });
+  }
   if (r.status >= 400 || !r.body?.learner) throw new Error(r.body?.error ?? "Could not load that profile.");
   const data = r.body.data ?? null;
   const action = selectionAction({ sameLearner: current?.id === target.id, hadLearnerBefore: !!current, remoteHasData: !!data });
   if (action === "replace-local" && data) await applyRemote(data, "replace");
   if (action === "clear-local") await clearLocal();
-  setLearner({ id: target.id, name: target.name, syncedAt: data ? r.body.learner.updatedAt : null, dirty: !data });
+  setLearner({ id: target.id, name: target.name, syncedAt: data ? r.body.learner.updatedAt : null, dirty: !data, hasPin: !!target.hasPin });
   applyingRemote = true;
   try {
     await setProfileName(target.name);
@@ -236,6 +279,10 @@ export async function reconcile(): Promise<void> {
   const cur = loadLearner() as ActiveLearner;
   try {
     const r = await fetchLearner(cur.id!);
+    if (r.status === 401) {
+      lockProfile(cur.id!);
+      return;
+    }
     if (r.status === 404) {
       setSyncStatus({ state: "error", message: "This profile was removed from the server." });
       return;

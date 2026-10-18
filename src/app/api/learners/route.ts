@@ -10,7 +10,8 @@ const disabled = () => NextResponse.json({ enabled: false, learners: [] });
 export async function GET() {
   if (!isSupabaseEnabled()) return disabled();
   try {
-    return NextResponse.json({ enabled: true, learners: await listLearners() });
+    const { learners, pinSupported } = await listLearners();
+    return NextResponse.json({ enabled: true, pinSupported, learners });
   } catch (e) {
     console.error("[learners] list failed", e);
     return NextResponse.json({ enabled: true, error: "Could not reach the database." }, { status: 502 });

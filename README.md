@@ -94,7 +94,7 @@ UI components never touch storage directly. They call **repositories** (`src/lib
 Every stored record is validated with zod. Malformed rows are skipped rather than crashing the app. Storage failures and full-quota errors fall back to memory with a warning toast. A schema version number plus a migration hook (`src/lib/storage/db.ts`) handle future changes. **Settings → Your data** lets you download and import JSON backups.
 
 ### Audio and honesty rules
-- Sound uses Tone.js and only starts after a click or tap.
+- Sound uses Tone.js and only starts after a click or tap. The piano is a recorded grand piano (Salamander Grand Piano by Alexander Holm, CC BY 3.0; 30 samples, 2 MB in `public/samples/piano/`, downloaded on the first note) and falls back to a light synth while loading, if loading fails, or when chosen in Settings.
 - The metronome uses a look-ahead scheduler on the audio clock. Each beat's time is calculated from its index rather than added up from intervals, so timing errors don't build up over time. This is unit-tested with a jittery fake clock.
 - **Single notes.** Pitch is found with the McLeod pitch method (`pitchy`). An event counts only when the pitch is clear and stable for several frames.
 - **Chords.** Chords from the microphone are a *best-effort* estimate from a chromagram, shown with a confidence level. If the estimate is ambiguous, the app asks you to play again. A MIDI keyboard gives exact notes and is labelled "measured (MIDI)".
@@ -141,9 +141,30 @@ The coach is built in and runs entirely in your browser. It needs no API key and
 
 When you deploy (e.g. Vercel), add the same two variables in the host's environment settings.
 
-**Privacy note:** profiles are name-only with no password, so anyone who can open your site can see the list of names and continue as any of them. That's fine for personal or family use; don't store anything private. The table has Row Level Security enabled with no policies, so the public Supabase keys can't read it. Only your server can, using the secret key, which is never sent to the browser.
+**Optional PIN per profile**
+- In **Settings → Your profile & sync**, tap **Protect with a PIN** (4 digits). New profiles are also offered a PIN right after you type your name.
+- On another device, picking a protected name asks for the PIN before any progress loads. After 5 wrong tries the profile is locked for 5 minutes.
+- Only a salted hash of the PIN is stored, and it's checked by your server. Each device keeps a token that stops working if the PIN is changed; that device then asks for the new PIN, and its local progress is kept.
+- **Already set up Supabase before PINs existed?** Run `supabase/migrations/002_learner_pin.sql` once in the SQL Editor. Until then everything works, just without PINs.
+- Optional: set `AUTH_SECRET` (any long random string) to sign PIN tokens; otherwise a key is derived from `SUPABASE_SECRET_KEY`.
+
+**Privacy note:** the list of names is visible to anyone who can open your site. Without a PIN, anyone can continue as that learner. The table has Row Level Security enabled with no policies, so the public Supabase keys can't read it. Only your server can, using the secret key, which is never sent to the browser.
 
 ---
+
+### Reminders (optional)
+
+A daily "time to practise" notification at the time each learner picks in **Settings → Daily practice reminder**. It works on Android and desktop Chrome, and on iPhone once the app is added to the Home Screen (iOS 16.4+). Reminders are sent by the server, so they only start working once the site is deployed.
+
+**Setup (after deploying, about 5 minutes)**
+1. In the project folder run `node scripts/generate-vapid-keys.mjs`. It prints `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` and `CRON_SECRET`. Change `VAPID_SUBJECT` to your email (`mailto:you@example.com`).
+2. Add those four variables to your host's environment variables (Vercel → Project → Settings → Environment Variables) and redeploy.
+3. In Supabase → SQL Editor, run `supabase/migrations/003_push_subscriptions.sql`.
+4. Open the deployed site, go to Settings, turn on the reminder and tap **Send a test notification**.
+
+**How often it checks.** `vercel.json` asks Vercel Cron to call `/api/push/cron` every hour. On Vercel's free Hobby plan, cron jobs may run only once a day, so reminders could arrive late. Two fixes: upgrade to a paid plan, or use a free external scheduler such as [cron-job.org](https://cron-job.org) to call `https://YOUR-SITE/api/push/cron` every 15 minutes with the header `Authorization: Bearer YOUR_CRON_SECRET`. Each device gets at most one reminder per local day, however often the route is called.
+
+**Privacy.** Only the browser's push address, the reminder time and the time zone are stored (in the server-only `push_subscriptions` table). Turning the reminder off deletes it.
 
 ## Testing the microphone and MIDI
 - **Microphone.** Open `/tuner` on `localhost` or over HTTPS, since browsers block the mic on insecure origins. Press **Listen to me**, allow access, and pluck one string at a time. For best results, turn off noise suppression in your OS, keep the room quiet and hold the phone or laptop near the guitar's sound hole. A piano works the same way at `/practice/note-detector`. Very low notes (below about A1) are unreliable.

@@ -41,8 +41,9 @@ describe("learner routes with Supabase (data layer mocked)", () => {
       const real = await orig<typeof import("@/lib/server/learners")>();
       return {
         ...real,
-        listLearners: vi.fn(async () => [{ id: "1", name: "Asha", updatedAt: "2026-10-18T10:00:00Z" }]),
+        listLearners: vi.fn(async () => ({ pinSupported: true, learners: [{ id: "1", name: "Asha", updatedAt: "2026-10-18T10:00:00Z", hasPin: false }] })),
         createOrFindLearner: vi.fn(async (name: string) => ({ learner: { id: "2", name, updatedAt: "t" }, existed: name === "Asha" })),
+        getLearnerAuth: vi.fn(async () => ({ pinSupported: true, exists: true, pinHash: null, attempts: 0, lockedUntil: null })),
         getLearner: vi.fn(async () => null),
         saveLearner: vi.fn(async () => ({ status: "conflict", updatedAt: "2026-10-18T11:00:00Z" })),
       };
@@ -55,7 +56,7 @@ describe("learner routes with Supabase (data layer mocked)", () => {
 
   it("lists names", async () => {
     const { GET } = await import("@/app/api/learners/route");
-    expect(await (await GET()).json()).toMatchObject({ enabled: true, learners: [{ name: "Asha" }] });
+    expect(await (await GET()).json()).toMatchObject({ enabled: true, pinSupported: true, learners: [{ name: "Asha", hasPin: false }] });
   });
   it("validates names and reports existing learners", async () => {
     const { POST } = await import("@/app/api/learners/route");

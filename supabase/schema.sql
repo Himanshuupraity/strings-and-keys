@@ -1,5 +1,6 @@
 -- Melody Masters: learner profiles + progress.
 -- Run this once in Supabase → SQL Editor → New query → Run.
+-- (Already set up before PINs existed? Run supabase/migrations/002_learner_pin.sql instead.)
 
 create table if not exists public.learners (
   id          uuid primary key default gen_random_uuid(),
@@ -8,6 +9,10 @@ create table if not exists public.learners (
   name_key    text not null unique,
   -- The learner's full progress backup (same format as Settings → Download backup).
   data        jsonb,
+  -- Optional 4-digit PIN: salted scrypt hash only (checked by the app's server), plus lockout state.
+  pin_hash         text,
+  pin_attempts     int not null default 0,
+  pin_locked_until timestamptz,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );

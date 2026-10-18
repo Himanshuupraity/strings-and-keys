@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Cloud, CloudOff, HardDrive, Loader2, LogOut, RefreshCw, AlertTriangle } from "lucide-react";
+import { Cloud, CloudOff, HardDrive, Loader2, Lock, LogOut, RefreshCw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/components/ui";
 import { useLearner } from "@/hooks/use-learner";
@@ -19,6 +19,8 @@ export function syncLabel(s: SyncStatus): { text: string; icon: typeof Cloud; to
       return { text: "Offline — will sync later", icon: CloudOff, tone: "text-warn" };
     case "error":
       return { text: s.message ?? "Sync problem", icon: AlertTriangle, tone: "text-danger" };
+    case "locked":
+      return { text: "PIN needed to sync — see Settings", icon: Lock, tone: "text-warn" };
     default:
       return { text: s.lastSyncedAt ? "Synced to your profile" : "Synced", icon: Cloud, tone: "text-success" };
   }

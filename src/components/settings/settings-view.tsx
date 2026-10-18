@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Download, HardDrive, Laptop, Mic, Moon, Music, Piano, ShieldCheck, Sun, Target, Trash2, Upload, User } from "lucide-react";
 import { Button, Callout, Card, CardBody, CardHeader, Field, PageHeader, Segmented, Select, Slider, Switch } from "@/components/ui";
 import { useHydrated, usePrefs } from "@/hooks/use-prefs";
+import { PianoSoundSetting } from "./piano-sound-setting";
+import { ReminderSetting } from "./reminder-setting";
 import { useData } from "@/hooks/use-data";
 import { applyImport, exportAll, goalsRepo, planImport, resetAllData, type ImportPlan } from "@/lib/storage/repositories";
 import { getAdapter } from "@/lib/storage/db";
@@ -117,6 +119,9 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
           <Slider label="Tuning reference (A4)" min={430} max={450} value={prefs.a4} onChange={(a4) => setPrefs({ a4 })} format={(v) => `${v} Hz`} />
           <Slider label="Volume" min={0} max={1} step={0.05} value={prefs.volume} onChange={(volume) => setPrefs({ volume })} format={(v) => `${Math.round(v * 100)}%`} />
         </Section>
+
+        <PianoSoundSetting />
+        <ReminderSetting />
 
         <Section id="goals" icon={<Target className="h-5 w-5" />} title="Practice goals">
           <Slider label="Daily practice" min={5} max={60} step={5} value={goals.data.dailyMinutes} onChange={(dailyMinutes) => saveGoals({ dailyMinutes })} format={(v) => `${v} min`} />

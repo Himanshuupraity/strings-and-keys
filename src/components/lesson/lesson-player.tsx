@@ -21,6 +21,8 @@ import { RichText } from "./rich-text";
 import { PlayExample } from "./play-example";
 import { VisualRenderer } from "./visual";
 import { ExerciseRenderer } from "./exercises";
+import { revisionRepo } from "@/lib/revision/repo";
+import { exerciseUpdate, quizUpdates } from "@/lib/revision/hooks";
 import { LessonQuiz } from "./quiz";
 import { resolveInstrument, type ExerciseOutcome, type Inst } from "./utils";
 
@@ -138,6 +140,9 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
         details: o.details,
       });
       if (step.mastery && o.accuracy >= (step.passAccuracy ?? 0.8)) toast.success("Mastery evidence saved for this lesson.");
+      // Spaced revision: missed mastery exercises come back later; passing a due one counts as a review.
+      const rev = exerciseUpdate(lesson, step, o, await revisionRepo.map());
+      if (rev) await revisionRepo.saveMany([rev]);
     } catch {
       toast.error("Couldn't save this result. You can keep practising.");
     }
@@ -398,6 +403,7 @@ export function LessonPlayer({ lessonId }: { lessonId: string }) {
           onFinish={async (score, total, wrong) => {
             try {
               await progressRepo.recordQuiz(lesson, score, total, wrong);
+              await revisionRepo.saveMany(quizUpdates(lesson, wrong, await revisionRepo.map()));
             } catch {
               toast.error("Couldn't save your quiz result.");
             }

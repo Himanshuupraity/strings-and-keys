@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowRight, Award, BookOpen, CalendarCheck, Clock, Flame, Guitar, ListMusic, Piano, PlayCircle, Sparkles, Target, TrendingUp, Trophy } from "lucide-react";
+import { ArrowRight, Award, BookOpen, CalendarCheck, Clock, Flame, Guitar, Piano, PlayCircle, Sparkles, Target, TrendingUp, Trophy } from "lucide-react";
 import { Badge, Button, Callout, Card, CardBody, CardHeader, EmptyState, ProgressBar, Skeleton, SourceTag, cn } from "@/components/ui";
 import { InstrumentToggle } from "@/components/layout/instrument-toggle";
 import { usePrefs, useHydrated } from "@/hooks/use-prefs";
 import { useLearner } from "@/hooks/use-learner";
 import { LESSONS, getLesson, lessonsForInstrument } from "@/content/curriculum";
-import { getSong } from "@/content/songs";
+import { RevisionCard } from "./revision-card";
+import { NextSongCard } from "./next-song-card";
 import { LEVEL_NAMES, type Level } from "@/content/types";
 import { isDone, nextLesson, practicePlan, practiceStreak, totalMinutes, weakSkills, weeklyMinutes } from "@/lib/progress/engine";
 import { achievements, currentLevel, isEmptyLearner, useLearnerData } from "./learner-data";
@@ -77,7 +78,6 @@ export function Dashboard() {
   const drills = data.drills.filter((d) => !d.untimed);
   const drillsThisWeek = drills.filter((d) => withinDays(d.date, 7)).length;
   const bestDrill = drills.reduce<(typeof drills)[number] | null>((b, d) => (!b || d.transitions > b.transitions ? d : b), null);
-  const songs = data.songs.filter((s) => s.instrument === instrument && (s.saved || s.minutes > 0));
   const ach = achievements(data);
   const InstrumentIcon = instrument === "guitar" ? Guitar : Piano;
   const tone = instrument === "guitar" ? "guitar" : "piano";
@@ -99,6 +99,8 @@ export function Dashboard() {
           <Link href="/onboarding" className="font-medium text-piano underline underline-offset-2">Start onboarding</Link>
         </Callout>
       )}
+
+      <RevisionCard />
 
       {/* Greeting */}
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -283,27 +285,7 @@ export function Dashboard() {
           </Card>
         )}
 
-        <Card>
-          <CardHeader icon={<ListMusic className="h-5 w-5" />} title="Songs" action={<Link href="/songs" className="text-xs text-muted hover:text-text">Song Lab</Link>} />
-          <CardBody>
-            {songs.length ? (
-              <ul className="space-y-2">
-                {songs.slice(0, 4).map((s) => (
-                  <li key={s.songId} className="flex items-center justify-between gap-2 text-sm">
-                    {getSong(s.songId) ? (
-                      <Link href={`/songs/${s.songId}`} className="truncate hover:underline">{getSong(s.songId)!.title}</Link>
-                    ) : (
-                      <span className="truncate">Your song</span>
-                    )}
-                    <span className="text-xs text-muted">{Math.round(s.minutes)} min{s.bestTempo ? ` · ${s.bestTempo}%` : ""}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted">Save a song in the Song Lab to track it here.</p>
-            )}
-          </CardBody>
-        </Card>
+        <NextSongCard instrument={instrument} />
       </div>
 
       <Card>

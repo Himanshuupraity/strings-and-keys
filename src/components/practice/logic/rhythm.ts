@@ -1,3 +1,5 @@
+import { GUITAR_STRUMS, TAALS, type TaalId } from "@/lib/music/taal";
+
 /**
  * Rhythm trainer patterns. `hits` are beat offsets (in beats, quarter = 1) within ONE bar;
  * the pattern repeats for `bars` bars.
@@ -13,6 +15,9 @@ export interface RhythmPattern {
   description: string;
   /** Text counting guide, e.g. "1 2 3 4" */
   count: string;
+  /** Indian taal patterns: one beat = one matra; bols and sam/khali come from the taal. */
+  taal?: TaalId;
+  group?: "western" | "taal";
 }
 
 export const RHYTHM_PATTERNS: RhythmPattern[] = [
@@ -25,8 +30,23 @@ export const RHYTHM_PATTERNS: RhythmPattern[] = [
   { id: "strum-pop", name: "Pop strum rhythm", level: 4, beatsPerBar: 4, bpm: 70, bars: 2, hits: [0, 1, 1.5, 2.5, 3, 3.5], description: "The classic D-DU-UDU strum: 1, 2&, &, 4&... a beginner favourite.", count: "1 2 & (3) & 4 &" },
   { id: "offbeats", name: "Offbeats only", level: 5, beatsPerBar: 4, bpm: 70, bars: 2, hits: [0.5, 1.5, 2.5, 3.5], description: "Tap only on the 'and's — reggae / ska feel.", count: "(1) & (2) & (3) & (4) &" },
   { id: "syncopation", name: "Syncopation", level: 5, beatsPerBar: 4, bpm: 80, bars: 2, hits: [0, 1.5, 3], description: "3-3-2 feel used in countless pop and Bollywood songs.", count: "1 (2) & (3) 4" },
-  { id: "dadra", name: "Dadra-style 6/8", level: 6, beatsPerBar: 3, bpm: 60, bars: 2, hits: [0, 0.5, 1, 1.5, 2, 2.5], description: "Six even pulses (Dha Dhi Na Dha Tu Na). Accent the first.", count: "1 2 3 4 5 6" },
 ];
+
+const allMatras = (n: number) => Array.from({ length: n }, (_, i) => i);
+const bolCount = (id: TaalId) => TAALS[id].bols.join(" ");
+const strumCount = (pattern: string[]) => pattern.map((x) => (x === "-" ? "·" : x)).join(" ");
+
+/** Indian taal patterns. Each beat is one matra; tempo is matras per minute. */
+export const TAAL_PATTERNS: RhythmPattern[] = [
+  { id: "taal-dadra", name: "Dadra — theka", level: 6, beatsPerBar: 6, bpm: 120, bars: 2, hits: allMatras(6), taal: "dadra", group: "taal", description: "Tap every matra of Dadra (6 beats, 3+3). Lean on sam (X), lighter on khali (0).", count: bolCount("dadra") },
+  { id: "taal-dadra-strum", name: "Dadra — guitar strum", level: 6, beatsPerBar: 6, bpm: 120, bars: 2, hits: GUITAR_STRUMS.dadra![0].hits, taal: "dadra", group: "taal", description: GUITAR_STRUMS.dadra![0].description, count: strumCount(GUITAR_STRUMS.dadra![0].pattern) },
+  { id: "taal-keherwa", name: "Keherwa — theka", level: 6, beatsPerBar: 8, bpm: 140, bars: 2, hits: allMatras(8), taal: "keherwa", group: "taal", description: "Tap every matra of Keherwa (8 beats, 4+4).", count: bolCount("keherwa") },
+  { id: "taal-keherwa-strum", name: "Keherwa — guitar strum", level: 6, beatsPerBar: 8, bpm: 140, bars: 2, hits: GUITAR_STRUMS.keherwa![0].hits, taal: "keherwa", group: "taal", description: GUITAR_STRUMS.keherwa![0].description, count: strumCount(GUITAR_STRUMS.keherwa![0].pattern) },
+  { id: "taal-keherwa-offbeat", name: "Keherwa — off-beats", level: 7, beatsPerBar: 8, bpm: 140, bars: 2, hits: GUITAR_STRUMS.keherwa![1].hits, taal: "keherwa", group: "taal", description: GUITAR_STRUMS.keherwa![1].description, count: strumCount(GUITAR_STRUMS.keherwa![1].pattern) },
+  { id: "taal-rupak", name: "Rupak — theka", level: 7, beatsPerBar: 7, bpm: 120, bars: 2, hits: allMatras(7), taal: "rupak", group: "taal", description: "Seven matras, 3+2+2 — the cycle starts on khali (0).", count: bolCount("rupak") },
+];
+
+export const ALL_RHYTHM_PATTERNS: RhythmPattern[] = [...RHYTHM_PATTERNS, ...TAAL_PATTERNS];
 
 /** Absolute times (seconds) of every expected hit, given when bar 1 starts. */
 export function patternHitTimes(p: RhythmPattern, startTime: number, bpm = p.bpm): number[] {

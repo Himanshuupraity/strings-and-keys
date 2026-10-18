@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { ArrowRight, CloudOff, Loader2, UserRound } from "lucide-react";
+import { ArrowRight, CloudOff, Loader2, Lock, UserRound } from "lucide-react";
 import { Button, Callout, Input, cn } from "@/components/ui";
 import { BRAND, } from "@/config/brand";
 import { LearnerNameSchema, initials } from "@/lib/learner/names";
-import { createLearner, fetchLearners, selectLearner, type LearnerSummary } from "@/lib/learner/sync";
+import { createLearner, fetchLearners, PinRequiredError, selectLearner, type LearnerSummary } from "@/lib/learner/sync";
+import { changePin, getToken, unlockLearner } from "@/lib/learner/pin-client";
+import { loadLearner, patchLearner } from "@/lib/learner/store";
+import { PinPad } from "./pin-pad";
 
 function lastActive(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -22,7 +25,11 @@ function lastActive(iso: string): string {
  * to continue with their saved progress.
  */
 export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "existing") => void; className?: string }) {
-  const [list, setList] = useState<{ loading: boolean; enabled: boolean; learners: LearnerSummary[]; error?: string }>({ loading: true, enabled: false, learners: [] });
+  const [list, setList] = useState<{ loading: boolean; enabled: boolean; pinSupported: boolean; learners: LearnerSummary[]; error?: string }>({ loading: true, enabled: false, pinSupported: false, learners: [] });
+  /** Profile waiting for its PIN before it can be opened. */
+  const [unlock, setUnlock] = useState<LearnerSummary | null>(null);
+  /** Just-created profile: offer to protect it with a PIN. */
+  const [offerPin, setOfferPin] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -37,15 +44,32 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
   }, []);
 
   const pick = async (l: LearnerSummary) => {
-    setBusy(l.id);
     setError(null);
+    if (l.hasPin && !getToken(l.id)) {
+      setConfirm(null);
+      setUnlock(l);
+      return;
+    }
+    setBusy(l.id);
     try {
       await selectLearner(l);
       onReady?.("existing");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't load that profile.");
+      if (e instanceof PinRequiredError) {
+        setConfirm(null);
+        setUnlock(e.learner);
+      } else setError(e instanceof Error ? e.message : "Couldn't load that profile.");
       setBusy(null);
     }
+  };
+
+  const submitPin = async (pin: string) => {
+    if (!unlock) return;
+    const r = await unlockLearner(unlock.id, pin);
+    if (!r.ok) return r.message;
+    const target = unlock;
+    setUnlock(null);
+    await pick({ ...target, hasPin: true });
   };
 
   const submit = async (e: FormEvent) => {
@@ -64,12 +88,51 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
         setBusy(null);
         return;
       }
+      if (r.kind === "created" && list.pinSupported) {
+        setBusy(null);
+        setOfferPin(true);
+        return;
+      }
       onReady?.("new");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save your name.");
       setBusy(null);
     }
   };
+
+  if (unlock) {
+    return (
+      <div className={cn("w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-card sm:p-8", className)} data-testid="welcome-card">
+        <PinPad title={`Enter ${unlock.name}'s PIN`} subtitle="This profile is protected." onSubmit={submitPin} onCancel={() => setUnlock(null)} cancelLabel="Back" />
+      </div>
+    );
+  }
+
+  if (offerPin) {
+    const finish = () => {
+      setOfferPin(false);
+      onReady?.("new");
+    };
+    return (
+      <div className={cn("w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-card sm:p-8", className)} data-testid="welcome-card">
+        <PinPad
+          mode="set"
+          title="Protect your profile with a PIN?"
+          subtitle="Optional. Anyone opening this site would need it to see or change your progress."
+          onSubmit={async (pin) => {
+            const me = loadLearner();
+            if (!me?.id) return finish();
+            const r = await changePin(me.id, pin);
+            if (!r.ok) return r.message;
+            patchLearner({ hasPin: true });
+            finish();
+          }}
+          onCancel={finish}
+          cancelLabel="Skip for now"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={cn("w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-card sm:p-8", className)} data-testid="welcome-card">
@@ -143,7 +206,10 @@ export function WelcomeCard({ onReady, className }: { onReady?: (kind: "new" | "
                     {initials(l.name)}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{l.name}</span>
+                    <span className="flex items-center gap-1.5 truncate font-medium">
+                      {l.name}
+                      {l.hasPin && <Lock className="h-3.5 w-3.5 shrink-0 text-muted" aria-label="PIN protected" />}
+                    </span>
                     <span className="block text-xs text-muted">Last active {lastActive(l.updatedAt)}</span>
                   </span>
                   {busy === l.id ? <Loader2 className="h-4 w-4 animate-spin text-muted" /> : <ArrowRight className="h-4 w-4 text-subtle" />}

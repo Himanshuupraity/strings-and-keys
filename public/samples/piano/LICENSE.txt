@@ -1,0 +1,6 @@
+Salamander Grand Piano samples
+Author: Alexander Holm
+Source: https://github.com/sfzinstruments/SalamanderGrandPiano (mp3 subset as distributed with Tone.js examples, https://tonejs.github.io/audio/salamander/)
+License: Creative Commons Attribution 3.0 Unported (CC BY 3.0) — http://creativecommons.org/licenses/by/3.0/
+
+Files: 30 samples every minor third from A0 to C8 (A, C, D#, F# in each octave), unmodified.

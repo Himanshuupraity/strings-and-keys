@@ -21,6 +21,9 @@ import { ChordChart } from "./chord-chart";
 import { CapoHelper } from "./capo-helper";
 import { ultimateGuitarSearch } from "@/content/songs/catalogue";
 import { PlayAlong } from "./play-along";
+import { SongChangeDrill, SongMasteryCard } from "./song-mastery";
+import { SongStatusChip } from "./song-status-chip";
+import { songStatus } from "@/lib/songs/status";
 
 const SOURCE_TONE = { "public-domain": "theory", original: "accent", user: "piano", "chord-chart": "guitar" } as const;
 const SOURCE_LABEL = { "public-domain": "Public domain", original: "Original practice piece", user: "User-provided", "chord-chart": "Bollywood chord chart" } as const;
@@ -105,6 +108,7 @@ export function SongWorkspace({ song }: { song: Song }) {
             <Badge>Difficulty {song.difficulty}/5</Badge>
             <Badge>Key {song.key}</Badge>
             <Badge>{song.tempo} BPM{song.practiceTempo ? " (practice)" : ""} · {song.beatsPerBar}/4</Badge>
+            <SongStatusChip status={songStatus(song, progress.data)} />
           </div>
           <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{song.title}</h1>
           <p className="mt-1 text-muted">{song.artist}</p>
@@ -282,6 +286,8 @@ export function SongWorkspace({ song }: { song: Song }) {
             </CardBody>
           </Card>
 
+          <SongMasteryCard song={song} instrument={instrument} progress={progress.data} />
+          <SongChangeDrill song={song} instrument={instrument} progress={progress.data} />
           <Card>
             <CardHeader title="Your progress" action={<SourceTag source="measured" />} />
             <CardBody className="space-y-1.5 text-sm">
