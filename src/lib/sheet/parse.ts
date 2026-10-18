@@ -10,8 +10,9 @@ import { transposeChord } from "@/lib/music/transpose";
  */
 export type SheetLine =
   | { kind: "section"; name: string }
-  | { kind: "lyric"; text: string; chords: { chord: string; at: number }[] }
-  | { kind: "chords"; chords: string[] }
+  /** `at` = index in the lyric text (clamped); `col` = original column on the chord line (may pass the end of the words). */
+  | { kind: "lyric"; text: string; chords: { chord: string; at: number; col?: number }[] }
+  | { kind: "chords"; chords: string[]; cols?: number[] }
   | { kind: "blank" };
 
 export interface ParsedSheet {
@@ -22,7 +23,11 @@ export interface ParsedSheet {
 
 const SECTION_WORDS = /^(intro|verse|chorus|pre[- ]?chorus|post[- ]?chorus|bridge|outro|interlude|instrumental|solo|hook|refrain|antara|mukhda|sthayi|coda|ending|break|tag|riff)\b/i;
 /** Tokens allowed on a chord line besides chords: bar lines, repeat marks, dashes. */
-const FILLER = /^(\|+|:?\|\|?:?|-+|\/+|\.+|x\d+|\(x\d+\)|\d+x|\(\d+x\)|\*+|%|n\.?c\.?)$/i;
+const FILLER = /^(\|+|:?\|\|?:?|-+|\/+|\.+|x\d+|\(x\d+\)|\d+x|\(\d+x\)|\*+|%)$/i;
+/** "No chord" marker — shown on the sheet, ignored for transposing / chord lists. */
+export const NO_CHORD = "N.C.";
+const NC_RE = /^\(?n\.?\s?c\.?\)?$/i;
+export const isNoChord = (c: string) => c === NO_CHORD;
 
 function cleanChordToken(t: string): string {
   return t.replace(/^[([{]+|[)\]},.;]+$/g, "");
@@ -40,6 +45,10 @@ export function chordLinePositions(line: string): { chord: string; at: number }[
   let m: RegExpExecArray | null;
   while ((m = re.exec(line))) {
     const tok = m[0];
+    if (NC_RE.test(tok)) {
+      out.push({ chord: NO_CHORD, at: m.index });
+      continue;
+    }
     if (FILLER.test(tok)) continue;
     if (!isChordToken(tok)) return null;
     const lead = tok.length - tok.replace(/^[([{]+/, "").length;
@@ -114,10 +123,10 @@ export function parseSheet(raw: string): ParsedSheet {
       const nextIsLyric = next.trim() !== "" && !chordLinePositions(next) && !sectionName(next.trim()) && !/^\{.*\}$/.test(next.trim());
       if (nextIsLyric) {
         const text = next;
-        lines.push({ kind: "lyric", text, chords: positions.map((p) => ({ chord: p.chord, at: Math.min(p.at, text.length) })) });
+        lines.push({ kind: "lyric", text, chords: positions.map((p) => ({ chord: p.chord, at: Math.min(p.at, text.length), col: p.at })) });
         i++;
       } else {
-        lines.push({ kind: "chords", chords: positions.map((p) => p.chord) });
+        lines.push({ kind: "chords", chords: positions.map((p) => p.chord), cols: positions.map((p) => p.at) });
       }
       continue;
     }
@@ -135,7 +144,7 @@ export function parseSheet(raw: string): ParsedSheet {
 
 /** Every chord in order of appearance. */
 export function sheetChords(lines: SheetLine[]): string[] {
-  return lines.flatMap((l) => (l.kind === "lyric" ? l.chords.map((c) => c.chord) : l.kind === "chords" ? l.chords : []));
+  return lines.flatMap((l) => (l.kind === "lyric" ? l.chords.map((c) => c.chord) : l.kind === "chords" ? l.chords : [])).filter((c) => !isNoChord(c));
 }
 
 export function uniqueChords(lines: SheetLine[]): string[] {
@@ -144,7 +153,7 @@ export function uniqueChords(lines: SheetLine[]): string[] {
 
 export function transposeSheet(lines: SheetLine[], semitones: number, targetKey?: string): SheetLine[] {
   if (!semitones) return lines;
-  const t = (c: string) => transposeChord(c, semitones, targetKey);
+  const t = (c: string) => (isNoChord(c) ? c : transposeChord(c, semitones, targetKey));
   return lines.map((l) => (l.kind === "lyric" ? { ...l, chords: l.chords.map((c) => ({ ...c, chord: t(c.chord) })) } : l.kind === "chords" ? { ...l, chords: l.chords.map(t) } : l));
 }
 
@@ -166,7 +175,7 @@ export function sheetSections(lines: SheetLine[], maxSections = 12, maxBars = 64
       if (cur.bars.length) out.push(cur);
       cur = { name: l.name.slice(0, 40), bars: [] };
     } else {
-      for (const c of l.kind === "lyric" ? l.chords.map((x) => x.chord) : l.kind === "chords" ? l.chords : []) cur.bars.push(c);
+      for (const c of l.kind === "lyric" ? l.chords.map((x) => x.chord) : l.kind === "chords" ? l.chords : []) if (!isNoChord(c)) cur.bars.push(c);
     }
   }
   if (cur.bars.length) out.push(cur);

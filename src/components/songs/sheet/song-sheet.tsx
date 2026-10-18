@@ -10,10 +10,13 @@ import { usePrefs } from "@/hooks/use-prefs";
 import { usePracticeLog } from "@/hooks/use-practice-log";
 import { chordNoteNames } from "@/lib/music/chords";
 import { transposeKey } from "@/lib/music/transpose";
-import { guessKey, lyricSegments, parseSheet, transposeSheet, uniqueChords, youtubeId, type SheetLine } from "@/lib/sheet/parse";
+import { guessKey, isNoChord, lyricSegments, parseSheet, transposeSheet, uniqueChords, youtubeId, type SheetLine } from "@/lib/sheet/parse";
 import { advanceOn, DEFAULT_FOLLOWER, firstStop, nextStop, PhraseFollower, prevStop } from "@/lib/sheet/follow";
 
 type Mode = "voice" | "auto" | "manual";
+type Layout = "sheet" | "flow";
+
+const LAYOUT_KEY = "mm:sheet-layout";
 
 /** Lyrics + chords sheet with follow-my-voice, auto-scroll and manual navigation. */
 export function SongSheet({ title, artist, sheet, youtube, onLineChange }: { title: string; artist?: string; sheet: string; youtube?: string; onLineChange?: () => void }) {
@@ -22,7 +25,23 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange }: { tit
   const baseKey = useMemo(() => guessKey(parsed.lines), [parsed]);
   const [transpose, setTranspose] = useState(0);
   const [capo, setCapo] = useState(0);
-  const [fontSize, setFontSize] = useState(20);
+  // Smaller default text on phones so typical chord-sheet lines fit without scrolling sideways.
+  const [fontSize, setFontSize] = useState(() => (typeof window !== "undefined" && window.innerWidth < 640 ? 15 : 19));
+  const [layout, setLayoutState] = useState<Layout>(() => {
+    try {
+      return (typeof window !== "undefined" && (localStorage.getItem(LAYOUT_KEY) as Layout)) || "sheet";
+    } catch {
+      return "sheet";
+    }
+  });
+  const setLayout = (l: Layout) => {
+    setLayoutState(l);
+    try {
+      localStorage.setItem(LAYOUT_KEY, l);
+    } catch {
+      /* storage blocked */
+    }
+  };
   const [mode, setMode] = useState<Mode>("voice");
   const [secondsPerLine, setSecondsPerLine] = useState(5);
   const [autoRunning, setAutoRunning] = useState(false);
@@ -190,6 +209,16 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange }: { tit
                 <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Smaller text" onClick={() => setFontSize((f) => Math.max(14, f - 2))}><Minus className="h-3.5 w-3.5" /></Button>
                 <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Larger text" onClick={() => setFontSize((f) => Math.min(36, f + 2))}><Plus className="h-3.5 w-3.5" /></Button>
               </div>
+              <Segmented<Layout>
+                label="Layout"
+                size="sm"
+                value={layout}
+                onChange={setLayout}
+                options={[
+                  { value: "sheet", label: "Chord sheet", testId: "layout-sheet" },
+                  { value: "flow", label: "Flowing", testId: "layout-flow" },
+                ]}
+              />
               {capo > 0 && <Badge tone="guitar">Showing shapes for capo {capo} · sounds in {soundingKey}</Badge>}
             </div>
           </CardBody>
@@ -200,10 +229,13 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange }: { tit
           <CardBody className="pt-6" >
             <h2 className="font-display text-3xl">{title}</h2>
             {artist && <p className="mb-6 text-muted">{artist}</p>}
-            <div style={{ fontSize }} data-testid="song-sheet">
-              {shown.map((l, i) => (
-                <SheetRow key={i} line={l} active={i === current} past={i < current} onClick={() => (l.kind === "lyric" || l.kind === "chords") && go(i)} refCb={(el) => (lineRefs.current[i] = el)} />
-              ))}
+            <div style={{ fontSize }} data-testid="song-sheet" data-layout={layout} className={cn(layout === "sheet" && "scrollbar-thin overflow-x-auto")}>
+              <div className={cn(layout === "sheet" && "w-max min-w-full")}>
+                {shown.map((l, i) => {
+                  const props = { line: l, active: i === current, past: i < current, onClick: () => (l.kind === "lyric" || l.kind === "chords") && go(i), refCb: (el: HTMLDivElement | null) => void (lineRefs.current[i] = el) };
+                  return layout === "sheet" ? <SheetRowMono key={i} {...props} /> : <SheetRow key={i} {...props} />;
+                })}
+              </div>
             </div>
             <div className="h-[40vh]" aria-hidden />
           </CardBody>
@@ -265,6 +297,61 @@ function safeNotes(c: string) {
   } catch {
     return "";
   }
+}
+
+/** A chord name in a small grey box, as on printed chord sheets. N.C. = no chord. */
+function ChordTag({ chord }: { chord: string }) {
+  return (
+    <span className={cn("rounded-[3px] px-[0.2ch] font-bold leading-[1.25]", isNoChord(chord) ? "text-muted" : "bg-surface-3 text-text")} data-chord={chord}>
+      {chord}
+    </span>
+  );
+}
+
+type RowProps = { line: SheetLine; active: boolean; past: boolean; onClick: () => void; refCb: (el: HTMLDivElement | null) => void };
+
+/**
+ * Chord-sheet layout: monospaced text so every chord sits above the exact letter where it was
+ * placed on the original sheet (including chords placed after the last word).
+ */
+function SheetRowMono({ line, active, past, onClick, refCb }: RowProps) {
+  if (line.kind === "blank") return <div className="h-[1.2em]" ref={refCb} />;
+  if (line.kind === "section") {
+    return (
+      <div ref={refCb} className="mb-1 mt-4 font-mono text-[0.85em] text-muted">
+        [{line.name}]
+      </div>
+    );
+  }
+  const base = cn("-mx-2 cursor-pointer rounded-lg px-2 font-mono transition-colors", active ? "bg-accent-soft ring-1 ring-accent/40" : past ? "opacity-55 hover:opacity-80" : "hover:bg-surface-2");
+  const chordRow = (items: { chord: string; col: number }[]) => {
+    const width = Math.max(...items.map((c) => c.col + c.chord.length + 1));
+    return (
+      <div className="relative h-[1.45em] whitespace-pre text-[0.92em]" style={{ minWidth: `${width}ch` }} aria-hidden>
+        {items.map((c, i) => (
+          <span key={i} className="absolute top-0 -ml-[0.2ch]" style={{ left: `${c.col}ch` }}>
+            <ChordTag chord={c.chord} />
+          </span>
+        ))}
+      </div>
+    );
+  };
+  if (line.kind === "chords") {
+    const cols = line.cols ?? line.chords.map((_, i) => i * 6);
+    return (
+      <div ref={refCb} onClick={onClick} className={cn(base, "py-0.5")} data-active={active || undefined} aria-label={`Chords: ${line.chords.join(", ")}`}>
+        {chordRow(line.chords.map((c, i) => ({ chord: c, col: cols[i] ?? i * 6 })))}
+      </div>
+    );
+  }
+  return (
+    <div ref={refCb} onClick={onClick} className={cn(base, "py-0.5")} data-active={active || undefined} data-line-text={line.text.trim()}>
+      {line.chords.length > 0 && chordRow(line.chords.map((c) => ({ chord: c.chord, col: c.col ?? c.at })))}
+      <p className="whitespace-pre leading-[1.45]" aria-label={`${line.text.trim()}${line.chords.length ? ` (chords: ${line.chords.map((c) => c.chord).join(", ")})` : ""}`}>
+        {line.text || " "}
+      </p>
+    </div>
+  );
 }
 
 function SheetRow({ line, active, past, onClick, refCb }: { line: SheetLine; active: boolean; past: boolean; onClick: () => void; refCb: (el: HTMLDivElement | null) => void }) {

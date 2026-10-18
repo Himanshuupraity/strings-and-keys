@@ -23,9 +23,9 @@ describe("parseSheet", () => {
     expect(kinds).toEqual(["section", "lyric", "lyric", "blank", "section", "lyric", "chords"]);
     const l1 = s.lines[1] as Extract<(typeof s.lines)[number], { kind: "lyric" }>;
     expect(l1.text).toBe("Morning tea and open windows");
-    expect(l1.chords).toEqual([{ chord: "Am", at: 0 }, { chord: "F", at: 12 }]);
+    expect(l1.chords).toEqual([{ chord: "Am", at: 0, col: 0 }, { chord: "F", at: 12, col: 12 }]);
     expect(lyricSegments(l1)).toEqual([{ chord: "Am", text: "Morning tea " }, { chord: "F", text: "and open windows" }]);
-    expect(s.lines[6]).toEqual({ kind: "chords", chords: ["Am", "F", "C", "G"] });
+    expect(s.lines[6]).toMatchObject({ kind: "chords", chords: ["Am", "F", "C", "G"] });
     expect(sheetChords(s.lines)).toEqual(["Am", "F", "C", "G", "F", "G", "Am", "Am", "F", "C", "G"]);
     expect(uniqueChords(s.lines)).toEqual(["Am", "F", "C", "G"]);
   });
@@ -37,6 +37,18 @@ describe("parseSheet", () => {
     expect(l.text).toBe("Little steps, little light");
     expect(l.chords.map((c) => c.chord)).toEqual(["G", "D", "Em", "C"]);
     expect(l.chords[1].at).toBe(7);
+  });
+
+  it("supports N.C. (no chord) and chords placed past the end of the words", () => {
+    // Original test text (not from any song).
+    const s = parseSheet("N.C.\nQuiet opening words\nF\nnext line here\n    C          G         F    C\nshort words");
+    expect(s.lines[0]).toMatchObject({ kind: "lyric", text: "Quiet opening words", chords: [{ chord: "N.C.", at: 0 }] });
+    expect(s.lines[1]).toMatchObject({ kind: "lyric", chords: [{ chord: "F" }] });
+    const last = s.lines[2] as Extract<(typeof s.lines)[number], { kind: "lyric" }>;
+    expect(last.chords.map((c) => c.col)).toEqual([4, 15, 25, 30]);
+    expect(last.chords.at(-1)!.at).toBe("short words".length); // clamped for the flowing layout
+    expect(sheetChords(s.lines)).toEqual(["F", "C", "G", "F", "C"]); // N.C. isn't a chord to play
+    expect(uniqueChords(transposeSheet(s.lines, 2, "G"))).toEqual(["G", "D", "A"]);
   });
 
   it("does not mistake normal words for chords", () => {
