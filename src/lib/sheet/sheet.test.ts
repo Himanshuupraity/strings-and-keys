@@ -51,6 +51,13 @@ describe("parseSheet", () => {
     expect(uniqueChords(transposeSheet(s.lines, 2, "G"))).toEqual(["G", "D", "A"]);
   });
 
+  it("understands Ultimate-Guitar-style [tab]/[ch] markup", () => {
+    // Original test text (not from any song).
+    const s = parseSheet("[Verse]\n[tab][ch]Am[/ch]        [ch]F[/ch]\nSample words for testing[/tab]");
+    expect(s.lines[0]).toEqual({ kind: "section", name: "Verse" });
+    expect(s.lines[1]).toMatchObject({ kind: "lyric", text: "Sample words for testing", chords: [{ chord: "Am", col: 0 }, { chord: "F", col: 10 }] });
+  });
+
   it("does not mistake normal words for chords", () => {
     expect(chordLinePositions("A day to remember")).toBeNull();
     expect(chordLinePositions("Am  F  C  G")).not.toBeNull();

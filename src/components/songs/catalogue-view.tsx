@@ -6,6 +6,7 @@ import { Badge, Callout, Card, CardBody } from "@/components/ui";
 
 export const LINK_BUTTON = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 font-medium text-accent-fg shadow-sm transition-colors hover:bg-accent-hover";
 import type { CatalogueSong } from "@/content/songs/types";
+import { ultimateGuitarSearch } from "@/content/songs/catalogue";
 
 export function catalogueEditorHref(s: Pick<CatalogueSong, "id" | "title" | "artist">) {
   return `/songs/sheet?new=1&from=${encodeURIComponent(s.id)}&title=${encodeURIComponent(s.title)}&artist=${encodeURIComponent(s.artist)}`;
@@ -38,6 +39,14 @@ export function CatalogueView({ song }: { song: CatalogueSong }) {
             <span className="flex-1">
               <span className="block font-medium">Find the official audio on YouTube</span>
               <span className="text-xs text-muted">YouTube search — look for the label’s or artist’s official channel. Not a verified link.</span>
+            </span>
+            <ExternalLink className="h-4 w-4 text-muted" />
+          </a>
+          <a href={ultimateGuitarSearch(song.title)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-border p-3 hover:bg-surface-2" data-testid="find-ug">
+            <Search className="h-5 w-5 text-guitar" />
+            <span className="flex-1">
+              <span className="block font-medium">Find it on Ultimate Guitar</span>
+              <span className="text-xs text-muted">Opens UG&apos;s search. Copy the chords &amp; lyrics from there and paste them into a song sheet here.</span>
             </span>
             <ExternalLink className="h-4 w-4 text-muted" />
           </a>

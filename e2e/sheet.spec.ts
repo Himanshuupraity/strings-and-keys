@@ -79,3 +79,12 @@ test("a chords-only sheet has a paste box right in the sheet, and pasted lyrics 
   await expect(page.locator('[data-line-text="Practice words for the test"]')).toBeVisible();
   await expect(page.locator('[data-chord="Db"]').first()).toBeVisible();
 });
+
+test("a sheet can save its source page and links to Ultimate Guitar search", async ({ page }) => {
+  await seedPrefs(page);
+  await page.goto("/songs/sheet?new=1&chart=bw-chart-raabta");
+  await expect(page.getByTestId("editor-find-ug")).toHaveAttribute("href", /ultimate-guitar\.com\/search\.php\?search_type=title&value=Raabta/);
+  await page.getByLabel("Source page (optional)").fill("https://tabs.ultimate-guitar.com/tab/example-123");
+  await page.getByTestId("sheet-save").click();
+  await expect(page.getByTestId("open-source")).toHaveAttribute("href", "https://tabs.ultimate-guitar.com/tab/example-123");
+});

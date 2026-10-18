@@ -9,6 +9,8 @@ import { BOLLYWOOD_CATALOGUE } from "./bollywood-catalogue";
  */
 export const yt = (q: string) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q + " official audio")}`;
 export const sheets = (q: string) => `https://www.musicnotes.com/search/go?w=${encodeURIComponent(q)}`;
+/** Ultimate Guitar's own search page (we link to it; we never copy its content). */
+export const ultimateGuitarSearch = (title: string) => `https://www.ultimate-guitar.com/search.php?search_type=title&value=${encodeURIComponent(title)}`;
 export const chordsSearch = (q: string) => `https://www.google.com/search?q=${encodeURIComponent(q + " guitar chords")}`;
 
 export interface CatalogueRow {

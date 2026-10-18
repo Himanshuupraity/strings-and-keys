@@ -88,8 +88,18 @@ function inlineChordPro(line: string): { text: string; chords: { chord: string; 
   return { text, chords };
 }
 
+/**
+ * Ultimate-Guitar-style markup ("[tab]…[/tab]" blocks and "[ch]Am[/ch]" chord tags) → plain
+ * chords-over-lyrics. Tags are removed so the remaining spacing lines chords up with the words.
+ */
+export function stripChordMarkup(raw: string): string {
+  return raw
+    .replace(/\[\/?tab\]/gi, "")
+    .replace(/\[ch\]([^[]*?)\[\/ch\]/gi, "$1");
+}
+
 export function parseSheet(raw: string): ParsedSheet {
-  const src = raw.replace(/\r\n?/g, "\n").replace(/\t/g, "    ").split("\n");
+  const src = stripChordMarkup(raw).replace(/\r\n?/g, "\n").replace(/\t/g, "    ").split("\n");
   const lines: SheetLine[] = [];
   let title: string | undefined;
   let artist: string | undefined;

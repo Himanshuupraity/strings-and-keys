@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Badge, Button, Callout, Card, CardBody, CardHeader, EmptyState, Field, Input, Skeleton } from "@/components/ui";
 import { getSong } from "@/content/songs";
 import { getCatalogueSong } from "@/content/songs";
+import { ultimateGuitarSearch } from "@/content/songs/catalogue";
 import { guessKey, parseSheet, sheetSections, uniqueChords, youtubeId } from "@/lib/sheet/parse";
 
 /** Web search for a lyrics-with-chords page (third-party sites; the student copies what they need). */
@@ -61,6 +62,11 @@ export function SheetPage() {
           <ChevronLeft className="h-4 w-4" /> All songs
         </Link>
         <div className="flex flex-wrap gap-2">
+          {song.sourceUrl && (
+            <a href={song.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2" data-testid="open-source">
+              <ExternalLink className="h-4 w-4" /> Open original
+            </a>
+          )}
           <Link href={`/songs/custom?id=${song.id}`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2">
             <SlidersHorizontal className="h-4 w-4" /> Practice tools
           </Link>
@@ -87,7 +93,7 @@ export function SheetPage() {
         artist={song.artist}
         sheet={song.sheet}
         youtube={song.youtube}
-        findLyricsHref={lyricsChordsSearch(song.title, song.artist)}
+        findLyricsHref={ultimateGuitarSearch(song.title)}
         onPasteLyrics={async (text) => {
           const parsed = parseSheet(text);
           if (!uniqueChords(parsed.lines).length) {
@@ -117,6 +123,8 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
   const [title, setTitle] = useState(existing?.title ?? chart?.title ?? params.get("title") ?? catalogue?.title ?? "");
   const [artist, setArtist] = useState(existing?.artist ?? chart?.artist ?? params.get("artist") ?? catalogue?.artist ?? "");
   const [youtube, setYoutube] = useState(existing?.youtube ?? "");
+  const [sourceUrl, setSourceUrl] = useState(existing?.sourceUrl ?? "");
+  const sourceOk = !sourceUrl.trim() || /^https?:\/\/\S+$/i.test(sourceUrl.trim());
   const [text, setText] = useState(existing?.sheet ?? skeleton);
   const [saving, setSaving] = useState(false);
   const parsed = useMemo(() => parseSheet(text), [text]);
@@ -133,6 +141,7 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
     if (!finalTitle) return toast.error("Give the song a title.");
     if (!chords.length) return toast.error("No chords found. Put chords on their own line above the words, or inline like [Am].");
     if (!ytOk) return toast.error("That doesn't look like a YouTube link.");
+    if (!sourceOk) return toast.error("The source page should be a web link starting with https://");
     setSaving(true);
     try {
       const secs = sheetSections(parsed.lines).map((s, i) => ({ id: `s${i}`, name: s.name, bars: s.bars }));
@@ -150,6 +159,7 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
         sections: secs,
         sheet: text.slice(0, 30000),
         youtube: youtube.trim() || undefined,
+        sourceUrl: sourceUrl.trim() || undefined,
       });
       toast.success("Song saved to your profile");
       onSaved(saved);
@@ -187,6 +197,11 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
               <Input id="sheet-yt" value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="https://www.youtube.com/watch?v=…" aria-invalid={!ytOk} />
             </Field>
           </div>
+          <div className="sm:col-span-2">
+            <Field label="Source page (optional)" htmlFor="sheet-src" hint={sourceOk ? "Where you copied the lyrics & chords from (e.g. an Ultimate Guitar page) — saved so you can open it again." : "Use a full web link starting with https://"}>
+              <Input id="sheet-src" value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://tabs.ultimate-guitar.com/…" aria-invalid={!sourceOk} />
+            </Field>
+          </div>
         </CardBody>
       </Card>
       <Card>
@@ -197,8 +212,11 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
         />
         <CardBody className="space-y-3">
           <div className="flex flex-wrap gap-2">
+            <a href={ultimateGuitarSearch(finalTitle || "song")} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium hover:bg-surface-2" data-testid="editor-find-ug">
+              <Search className="h-4 w-4 text-guitar" /> 1. Find on Ultimate Guitar <ExternalLink className="h-3.5 w-3.5 text-muted" />
+            </a>
             <a href={lyricsChordsSearch(finalTitle || "song", finalArtist)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium hover:bg-surface-2" data-testid="editor-find-lyrics">
-              <Search className="h-4 w-4 text-guitar" /> 1. Find lyrics with chords <ExternalLink className="h-3.5 w-3.5 text-muted" />
+              <Search className="h-4 w-4 text-muted" /> or search the web <ExternalLink className="h-3.5 w-3.5 text-muted" />
             </a>
             <Button
               size="sm"

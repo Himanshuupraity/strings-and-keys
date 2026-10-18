@@ -118,6 +118,30 @@ export function VideoHub() {
       )}
 
       <div className="mb-4 flex flex-col gap-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Quick picks">
+          {([
+            { label: "Hindi piano lessons", inst: "piano", lang: "hindi", testId: "pick-hindi-piano" },
+            { label: "Hindi guitar lessons", inst: "guitar", lang: "hindi", testId: "pick-hindi-guitar" },
+            { label: "Everything", inst: "all", lang: "all", testId: "pick-all" },
+          ] as const).map((p) => {
+            const on = inst === p.inst && lang === p.lang;
+            return (
+              <button
+                key={p.label}
+                type="button"
+                aria-pressed={on}
+                data-testid={p.testId}
+                onClick={() => {
+                  setInst(p.inst);
+                  setLang(p.lang);
+                }}
+                className={cn("rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors", on ? "border-accent bg-accent text-accent-fg" : "border-border hover:bg-surface-2")}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle" />

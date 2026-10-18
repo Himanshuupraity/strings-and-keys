@@ -19,6 +19,7 @@ import { adaptChord, buildTimeline, chordAt, type PianoPattern } from "./playbac
 import { useSongPlayer } from "./use-song-player";
 import { ChordChart } from "./chord-chart";
 import { CapoHelper } from "./capo-helper";
+import { ultimateGuitarSearch } from "@/content/songs/catalogue";
 import { PlayAlong } from "./play-along";
 
 const SOURCE_TONE = { "public-domain": "theory", original: "accent", user: "piano", "chord-chart": "guitar" } as const;
@@ -305,6 +306,11 @@ export function SongWorkspace({ song }: { song: Song }) {
               </span>
               <span className="shrink-0 rounded-xl bg-accent px-3 py-2 text-sm font-medium text-accent-fg">Add lyrics</span>
             </Link>
+          )}
+          {song.source === "chord-chart" && (
+            <a href={ultimateGuitarSearch(song.title)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-text" data-testid="find-ug">
+              Find this song on Ultimate Guitar ↗
+            </a>
           )}
           {song.source === "chord-chart" && (
             <Callout tone="info" title="About this chord chart">

@@ -28,6 +28,8 @@ export const CustomSongSchema = z.object({
   sheet: z.string().max(30000).optional(),
   /** Optional YouTube link to play the song beside the sheet. */
   youtube: z.string().max(300).optional(),
+  /** Optional link to the page the lyrics/chords came from (e.g. a chord website). */
+  sourceUrl: z.string().max(500).optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });

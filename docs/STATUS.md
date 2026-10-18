@@ -61,11 +61,11 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 **Song Lab (Bollywood first)**
 - 29 Bollywood chord charts, each cross-checked against 2+ independent chord sources (listed on the page). Chords only, with capo help, strumming, chord diagrams, piano accompaniment, looping and slow play-along.
 - A searchable list of 165 Bollywood/Hindi songs (singers, film, year and composer checked against a source page), with Listen, Find chords and Add chords buttons, a decade filter and search by song, film, singer or composer.
-- Song sheets: paste lyrics + chords (chords-over-lyrics or ChordPro), then sing along. Chords are shown above the words; follow-my-voice moves line by line from your sung phrases and pauses (on-device, no speech recognition); auto-scroll and manual/pedal navigation; transpose, capo and chord diagrams; an optional YouTube video beside the sheet. Saved to the learner's profile.
+- Song sheets: paste lyrics + chords (chords-over-lyrics, ChordPro, or Ultimate-Guitar-style [ch]/[tab] markup), then sing along. Each sheet can save its source page link; "Find on Ultimate Guitar" search buttons on charts, catalogue songs and sheets (we link to UG; we never copy its content). Chords are shown above the words; follow-my-voice moves line by line from your sung phrases and pauses (on-device, no speech recognition); auto-scroll and manual/pedal navigation; transpose, capo and chord diagrams; an optional YouTube video beside the sheet. Saved to the learner's profile.
 - 5 original Hindi-style practice pieces with melodies; public-domain English classics in a separate tab; a custom song editor.
 
 **Video Hub**
-- 82 YouTube lessons (37 taught in Hindi/Hinglish), each verified through oEmbed; Hindi/English language filter with Hindi lessons listed first.
+- 112 YouTube lessons (67 taught in Hindi/Hinglish, including 45 Hindi piano/keyboard lessons), each verified through oEmbed; Hindi/English language filter, quick picks for Hindi piano and Hindi guitar, Hindi lessons listed first.
 - Search and filters, click-to-load privacy embeds, favourites, watched state and lesson-based recommendations.
 
 **Progress**

@@ -362,7 +362,7 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
       <div className="mt-3 flex flex-wrap gap-2">
         {findHref && (
           <a href={findHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-surface-2">
-            Find lyrics with chords ↗
+            Find on Ultimate Guitar ↗
           </a>
         )}
         <Button
