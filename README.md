@@ -43,7 +43,7 @@ To run the Playwright browsers for the first time: `npx playwright install chrom
 | `/guitar-lab` | Fretboard, chord and scale explorers, capo simulator, Easy Chord Transposer, exercises |
 | `/tuner` | Microphone guitar tuner with cents needle and adjustable A4 |
 | `/practice/*` | Metronome, chord trainer, scale trainer, rhythm trainer, ear training, note detector, practice timer, **1-Minute Chord Change drill** |
-| `/songs` | Public-domain songs, original practice pieces, and your own chord charts with play-along |
+| `/songs` | Bollywood chord charts (29 songs), a searchable list of 165 Hindi songs, Hindi-style practice pieces, your own charts, and a small English classics tab |
 | `/videos` | Curated, verified YouTube lessons with search, filters, favourites and watched state |
 | `/ai-coach` | Listening teacher (explain → demo → listen → feedback → adapt) and chat |
 | `/progress` | Completion vs mastery, per-track progress, drill history, quiz history, weekly report |
@@ -169,7 +169,7 @@ When you deploy (e.g. Vercel), add the same two variables in the host's environm
 ---
 
 ## Content and copyright
-- **Songs** are public domain, original practice pieces written for this app (clearly labelled), or charts you enter yourself. For popular songs, the app links to official audio and licensed sheet-music sources. It never reproduces lyrics, chords or arrangements it can't verify.
+- **Songs.** Bollywood songs are **chords only** (no lyrics or melody, which are copyrighted). Each chord chart was cross-checked against at least two independent chord sources, which are listed on the song page; where sources disagreed, the disputed section was left out or flagged. Timing is approximate, so play along with the original recording. The 165-song Hindi list has singer, film, year and composer details checked against Wikipedia or official credits, plus links to official audio, a chord web search, and the add-your-own-chords editor. Original practice pieces and public-domain classics include melodies.
 - **Videos** are only ones whose IDs were confirmed through YouTube's oEmbed endpoint, each with a `verifiedAt` date in `src/content/videos.ts`. Categories without verified videos show clearly labelled YouTube search links instead.
 
 ## Known limitations

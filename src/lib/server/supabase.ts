@@ -8,6 +8,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 if (typeof window !== "undefined") throw new Error("supabase.ts must only be imported on the server");
 
 export function supabaseEnv(): { url: string; key: string } | null {
+  // Automated tests set this so they can never read or write the real database.
+  if (process.env.MM_DISABLE_SUPABASE === "1") return null;
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   return url && key ? { url, key } : null;

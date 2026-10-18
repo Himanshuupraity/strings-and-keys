@@ -21,8 +21,8 @@ import { ChordChart } from "./chord-chart";
 import { CapoHelper } from "./capo-helper";
 import { PlayAlong } from "./play-along";
 
-const SOURCE_TONE = { "public-domain": "theory", original: "accent", user: "piano" } as const;
-const SOURCE_LABEL = { "public-domain": "Public domain", original: "Original practice piece", user: "User-provided" } as const;
+const SOURCE_TONE = { "public-domain": "theory", original: "accent", user: "piano", "chord-chart": "guitar" } as const;
+const SOURCE_LABEL = { "public-domain": "Public domain", original: "Original practice piece", user: "User-provided", "chord-chart": "Bollywood chord chart" } as const;
 
 export function SongWorkspace({ song }: { song: Song }) {
   const [prefs, setPrefs] = usePrefs();
@@ -103,10 +103,15 @@ export function SongWorkspace({ song }: { song: Song }) {
             <Badge tone={SOURCE_TONE[song.source]}>{SOURCE_LABEL[song.source]}</Badge>
             <Badge>Difficulty {song.difficulty}/5</Badge>
             <Badge>Key {song.key}</Badge>
-            <Badge>{song.tempo} BPM · {song.beatsPerBar}/4</Badge>
+            <Badge>{song.tempo} BPM{song.practiceTempo ? " (practice)" : ""} · {song.beatsPerBar}/4</Badge>
           </div>
           <h1 className="font-display text-3xl tracking-tight sm:text-4xl">{song.title}</h1>
           <p className="mt-1 text-muted">{song.artist}</p>
+          {(song.film || song.composer) && (
+            <p className="mt-0.5 text-sm text-muted">
+              {[song.composer && `Music: ${song.composer}`, song.film && `Film: ${song.film}`, song.year].filter(Boolean).join(" · ")}
+            </p>
+          )}
           {song.styleNote && <p className="mt-1 text-sm font-medium text-accent">{song.styleNote}</p>}
           <p className="mt-1 text-xs text-subtle">{song.licence}</p>
         </div>
@@ -251,7 +256,7 @@ export function SongWorkspace({ song }: { song: Song }) {
               {instrument === "guitar" && (
                 <div className="border-t border-border pt-4">
                   <p className="mb-2 text-sm font-medium">Capo helper (keeps the key)</p>
-                  <CapoHelper chords={chordsInUse} songKey={currentKey} />
+                  <CapoHelper chords={chordsInUse} songKey={currentKey} preferCapo={transpose === 0 ? song.sourceCapo : undefined} />
                 </div>
               )}
             </CardBody>
@@ -292,6 +297,24 @@ export function SongWorkspace({ song }: { song: Song }) {
               )}
             </CardBody>
           </Card>
+          {song.source === "chord-chart" && (
+            <Callout tone="info" title="About this chord chart">
+              <p>
+                Chords only — no lyrics or melody (those are copyrighted). The chord order was cross-checked against {song.sources?.length ?? 0} independent chord sources; it isn&apos;t an official transcription.
+                {song.timingApproximate && " How long each chord lasts is approximate, so play along with the original recording and follow the chord changes by ear."}
+                {song.sourceCapo ? ` Most guitarists play it with a capo on fret ${song.sourceCapo}.` : ""}
+              </p>
+              {song.sources && song.sources.length > 0 && (
+                <ul className="mt-2 list-inside list-disc text-xs">
+                  {song.sources.map((src) => (
+                    <li key={src.url}>
+                      <a href={src.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-text">{src.site}</a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Callout>
+          )}
           {song.source === "user" && <Callout tone="info" title="User-provided chords">These chords were entered by you and haven’t been checked against the original recording.</Callout>}
         </aside>
       </div>

@@ -1,9 +1,10 @@
 import { ORIGINAL_SONGS } from "./originals";
+import { BOLLYWOOD_CHARTS } from "./bollywood";
 import { PUBLIC_DOMAIN_SONGS } from "./public-domain";
 import { CATALOGUE_SONGS } from "./catalogue";
 import type { CatalogueSong, Song } from "./types";
 
-export const BUILT_IN_SONGS: Song[] = [...PUBLIC_DOMAIN_SONGS, ...ORIGINAL_SONGS];
+export const BUILT_IN_SONGS: Song[] = [...BOLLYWOOD_CHARTS, ...ORIGINAL_SONGS, ...PUBLIC_DOMAIN_SONGS];
 export { CATALOGUE_SONGS };
 
 const SONGS = new Map(BUILT_IN_SONGS.map((s) => [s.id, s]));

@@ -20,7 +20,10 @@ export default defineConfig({
   webServer: {
     command: `npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}/dashboard`,
-    reuseExistingServer: !process.env.CI,
+    // Never reuse a dev server: it may be connected to the real Supabase database.
+    reuseExistingServer: false,
+    // Tests must never touch the real database, even when .env.local has Supabase keys.
+    env: { MM_DISABLE_SUPABASE: "1" },
     timeout: 120_000,
   },
 });

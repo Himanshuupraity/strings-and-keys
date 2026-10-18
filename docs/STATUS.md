@@ -58,11 +58,10 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - Chat with saved history.
 - Built-in rule-based teacher that runs in the browser: no API key, no network, works offline.
 
-**Song Lab**
-- 7 public-domain songs and 5 original practice pieces.
-- A catalogue of 12 popular songs that links to official and licensed sources only.
-- A custom song editor.
-- Play-along with tempo control, looping, metronome, capo helper, simplified chords and measured note feedback.
+**Song Lab (Bollywood first)**
+- 29 Bollywood chord charts, each cross-checked against 2+ independent chord sources (listed on the page). Chords only, with capo help, strumming, chord diagrams, piano accompaniment, looping and slow play-along.
+- A searchable list of 165 Bollywood/Hindi songs (singers, film, year and composer checked against a source page), with Listen, Find chords and Add chords buttons, a decade filter and search by song, film, singer or composer.
+- 5 original Hindi-style practice pieces with melodies; public-domain English classics in a separate tab; a custom song editor.
 
 **Video Hub**
 - 48 YouTube lessons, each verified through oEmbed.
@@ -88,7 +87,7 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - **Profiles are name-only (no password).** Anyone who can open the site can see the list of names and continue as any learner. Fine for personal or family use; not for private data.
 - **Sync is whole-profile.** Each sync uploads the learner's full progress bundle (capped at 2 MB, far more than years of practice history). Deleting a record on one device doesn't delete it on another that still has it, so a merge can bring it back.
 - **Rename in Supabase mode.** You can't rename a learner from the app; use Switch learner and create a new name, or edit the row in Supabase.
-- **Missing songs.** Some traditional songs (Greensleeves, Scarborough Fair and others) were left out because their exact rhythms couldn't be verified with confidence.
-- **Popular songs** never include chords. You add your own through the custom editor.
+- **Bollywood chord charts are chords only, with approximate timing.** Lyrics and melodies are copyrighted. Chord sources are fan transcriptions; disputed sections were removed (Khairiyat chorus, Kabira verse, Pehla Nasha verse) and caveats are shown on the song page (Dil Diyan Gallan, Tum Se Hi, Zara Sa, Phir Le Aya Dil).
+- **Songs in the 165-song list have no chords.** Use Find chords, then Add chords.
 - **Videos** were verified on 2026-10-18 and may later be removed by their owners. Each one still has a "Watch on YouTube" fallback link.
 - **Audio quality.** Piano and guitar sounds are synthesised with Tone.js (FM synth and Karplus-Strong pluck) rather than sampled, so they work offline with no downloads.

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, Info } from "lucide-react";
-import { bestCapoArrangement } from "@/lib/music/transpose";
+import { bestCapoArrangement, capoArrangements } from "@/lib/music/transpose";
 import { ChordDiagram } from "@/components/instruments/chord-diagram";
 import { Badge, Callout } from "@/components/ui";
 
@@ -10,10 +10,13 @@ import { Badge, Callout } from "@/components/ui";
  * Inline capo suggestion using the same transposition utilities as the Guitar Lab simulator.
  * The arrangement keeps the SOUNDING chords identical to the song; only the shapes change.
  */
-export function CapoHelper({ chords, songKey }: { chords: string[]; songKey: string }) {
+export function CapoHelper({ chords, songKey, preferCapo }: { chords: string[]; songKey: string; preferCapo?: number }) {
   const unique = Array.from(new Set(chords));
   if (!unique.length) return null;
-  const best = bestCapoArrangement(unique, songKey.endsWith("m") ? undefined : songKey);
+  const keyArg = songKey.endsWith("m") ? undefined : songKey;
+  // Prefer the capo most chord sources use (so it matches lessons and videos), if it really works.
+  const preferred = preferCapo ? capoArrangements(unique, keyArg).find((a) => a.capo === preferCapo && a.verified) : undefined;
+  const best = preferred ?? bestCapoArrangement(unique, keyArg);
   const href = `/guitar-lab?tab=capo&prog=${encodeURIComponent(unique.join(","))}&key=${encodeURIComponent(songKey)}`;
   return (
     <div className="space-y-3">

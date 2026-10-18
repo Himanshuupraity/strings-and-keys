@@ -12,7 +12,7 @@ const FEATURES = [
   { icon: Bot, title: "Patient listening coach", text: "Explains, plays an example, listens to your attempt and tells you exactly what was higher, lower, early or missing." },
   { icon: Languages, title: "Western & Sargam", text: "See C D E… or Sa Re Ga… (or both) with a movable Sa you choose — on every keyboard, fretboard and lesson." },
   { icon: Timer, title: "Practice toolkit", text: "Metronome, rhythm, ear training, scale & chord trainers, a 1-minute chord change drill and a practice timer." },
-  { icon: ListMusic, title: "Song Lab", text: "Public-domain melodies, original Bollywood- and pop-style practice pieces, and your own songs with play-along tools." },
+  { icon: ListMusic, title: "Bollywood Song Lab", text: "29 Bollywood songs with chords, capo help and slow play-along, plus a searchable list of 165 Hindi songs you can add chords to." },
 ];
 
 function HeroArt() {

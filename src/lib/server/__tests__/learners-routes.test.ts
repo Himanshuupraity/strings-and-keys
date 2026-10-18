@@ -9,6 +9,13 @@ describe("learner routes without Supabase", () => {
   beforeEach(() => ENV_KEYS.forEach((k) => vi.stubEnv(k, "")));
   afterEach(() => vi.unstubAllEnvs());
 
+  it("MM_DISABLE_SUPABASE forces local mode even when keys are present (used by e2e tests)", async () => {
+    vi.stubEnv("SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("SUPABASE_SECRET_KEY", "sb_secret_test");
+    vi.stubEnv("MM_DISABLE_SUPABASE", "1");
+    const { isSupabaseEnabled } = await import("@/lib/server/supabase");
+    expect(isSupabaseEnabled()).toBe(false);
+  });
   it("GET list reports disabled (so the app saves locally)", async () => {
     const { GET } = await import("@/app/api/learners/route");
     const res = await GET();

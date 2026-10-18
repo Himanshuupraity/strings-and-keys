@@ -16,7 +16,7 @@ export interface SongSection {
   melody?: string;
 }
 
-export type SongSource = "public-domain" | "original" | "user";
+export type SongSource = "public-domain" | "original" | "user" | "chord-chart";
 
 export interface SongPrerequisite {
   skill: string;
@@ -33,7 +33,7 @@ export interface Song {
   licence: string;
   /** For original pieces: "Original practice piece in the style of …" */
   styleNote?: string;
-  genre: "children" | "classical" | "folk" | "holiday" | "hymn" | "bollywood-style" | "pop-style" | "user";
+  genre: "children" | "classical" | "folk" | "holiday" | "hymn" | "bollywood" | "bollywood-style" | "pop-style" | "user";
   difficulty: 1 | 2 | 3 | 4 | 5;
   key: string;
   /** Scale the melody is checked against. */
@@ -51,6 +51,18 @@ export interface Song {
   pianoTip: string;
   prerequisites: SongPrerequisite[];
   tags: string[];
+  /* ---- Community chord charts of real songs (chords only: no lyrics, no melody) ---- */
+  film?: string;
+  composer?: string;
+  year?: number;
+  /** Capo most chord sources use for the beginner version. Sections always hold SOUNDING chords. */
+  sourceCapo?: number;
+  /** Chord sources the chart was cross-checked against. */
+  sources?: { site: string; url: string }[];
+  /** Chord order is cross-checked, but bar lengths are a practice approximation. */
+  timingApproximate?: boolean;
+  /** Tempo is a comfortable practice tempo, not the recording's tempo. */
+  practiceTempo?: boolean;
 }
 
 /** Popular songs we DON'T include chords for — links to official / licensed sources only. */
@@ -61,6 +73,11 @@ export interface CatalogueSong {
   /** Composer / film where well known. */
   credit?: string;
   region: "bollywood" | "international";
+  film?: string;
+  year?: number;
+  composer?: string;
   officialAudioSearch: string;
   licensedSheetSearch: string;
+  /** Web search for chord charts (results are third-party and unverified). */
+  chordSearch: string;
 }

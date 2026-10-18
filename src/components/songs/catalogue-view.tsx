@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ExternalLink, FileMusic, PlayCircle, PlusCircle } from "lucide-react";
+import { ChevronLeft, ExternalLink, FileMusic, PlayCircle, PlusCircle, Search } from "lucide-react";
 import { Badge, Callout, Card, CardBody } from "@/components/ui";
 
 export const LINK_BUTTON = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 font-medium text-accent-fg shadow-sm transition-colors hover:bg-accent-hover";
@@ -24,8 +24,12 @@ export function CatalogueView({ song }: { song: CatalogueSong }) {
         <p className="mt-1 text-muted">{song.artist}</p>
         {song.credit && <p className="text-sm text-subtle">{song.credit}</p>}
       </div>
-      <Callout tone="info" title="Chords not included">
-        This song is copyrighted. We only include verified, licensed musical data, so there are no chords, lyrics or melody here. Use an official or licensed source below, then add the chords yourself to unlock looping, slow practice, the capo helper and play-along.
+      <Callout tone="info" title="How to practise this song">
+        <ol className="mt-1 list-inside list-decimal space-y-0.5">
+          <li>Listen to the official audio.</li>
+          <li>Find the chords online (pick a chart that sounds right when you play along).</li>
+          <li>Add them here to unlock looping, slow practice, the capo helper and play-along.</li>
+        </ol>
       </Callout>
       <Card>
         <CardBody className="space-y-3 pt-5">
@@ -34,6 +38,14 @@ export function CatalogueView({ song }: { song: CatalogueSong }) {
             <span className="flex-1">
               <span className="block font-medium">Find the official audio on YouTube</span>
               <span className="text-xs text-muted">YouTube search — look for the label’s or artist’s official channel. Not a verified link.</span>
+            </span>
+            <ExternalLink className="h-4 w-4 text-muted" />
+          </a>
+          <a href={song.chordSearch} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded-xl border border-border p-3 hover:bg-surface-2" data-testid="find-chords">
+            <Search className="h-5 w-5 text-guitar" />
+            <span className="flex-1">
+              <span className="block font-medium">Find the chords online</span>
+              <span className="text-xs text-muted">Web search. Chord sites are written by fans and can disagree, so check it against the recording.</span>
             </span>
             <ExternalLink className="h-4 w-4 text-muted" />
           </a>
