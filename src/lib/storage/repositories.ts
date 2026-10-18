@@ -156,7 +156,7 @@ export const songRepo = {
   list: () => listValid("songProgress", SongProgressSchema),
   get: (songId: string, instrument: string) => getValid("songProgress", `${songId}:${instrument}`, SongProgressSchema),
   upsert: async (songId: string, instrument: "guitar" | "piano", fn: (p: SongProgress) => SongProgress) => {
-    const prev = (await songRepo.get(songId, instrument)) ?? { songId, instrument, saved: false, sectionsPracticed: [], minutes: 0 };
+    const prev = (await songRepo.get(songId, instrument)) ?? { songId, instrument, saved: false, sectionsPracticed: [], sectionsMastered: [], minutes: 0 };
     const next = SongProgressSchema.parse(fn(prev));
     await put("songProgress", `${songId}:${instrument}`, next);
     return next;

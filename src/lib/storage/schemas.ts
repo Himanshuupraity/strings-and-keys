@@ -26,6 +26,13 @@ export const PrefsSchema = z.object({
   capo: z.number().int().min(0).max(12).catch(0),
   onboarded: z.boolean().catch(false),
   coachEnabled: z.boolean().catch(true),
+  /** Interface language. */
+  uiLanguage: z.enum(["en", "hi"]).catch("en"),
+  /** Piano sound: recorded grand-piano samples, or the lightweight synth. */
+  pianoSound: z.enum(["sampled", "synth"]).catch("sampled"),
+  /** Daily practice reminder (push notifications; works once the site is deployed). */
+  reminderEnabled: z.boolean().catch(false),
+  reminderTime: z.string().regex(/^\d{2}:\d{2}$/).catch("19:00"),
 });
 export type Prefs = z.infer<typeof PrefsSchema>;
 export const DEFAULT_PREFS: Prefs = PrefsSchema.parse({});
@@ -128,6 +135,10 @@ export const SongProgressSchema = z.object({
   instrument: InstrumentSchema,
   saved: z.boolean().catch(false),
   sectionsPracticed: z.array(z.string()).catch([]),
+  /** Sections the student marked "I can play this". */
+  sectionsMastered: z.array(z.string()).catch([]),
+  /** Best chord changes per minute measured while practising this song. */
+  bestChangesPerMinute: z.number().optional(),
   bestTempo: z.number().optional(),
   minutes: z.number().catch(0),
   lastPracticed: z.string().optional(),
@@ -160,6 +171,23 @@ export const GoalsSchema = z.object({
 });
 export type Goals = z.infer<typeof GoalsSchema>;
 export const DEFAULT_GOALS: Goals = GoalsSchema.parse({});
+
+/** Spaced-revision item: something answered wrong, scheduled to come back (SM-2 style). */
+export const RevisionItemSchema = z.object({
+  id: z.string(),
+  kind: z.enum(["quiz", "exercise"]),
+  lessonId: z.string(),
+  /** Quiz question id or exercise step id. */
+  refId: z.string(),
+  track: TrackSchema,
+  ease: z.number().catch(2.5),
+  intervalDays: z.number().catch(0),
+  reps: z.number().int().catch(0),
+  due: z.string(),
+  lastResult: z.enum(["wrong", "right"]).catch("wrong"),
+  updatedAt: z.string(),
+});
+export type RevisionItem = z.infer<typeof RevisionItemSchema>;
 
 export const CoachMessageSchema = z.object({
   id: z.string(),

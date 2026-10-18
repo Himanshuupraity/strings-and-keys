@@ -16,6 +16,7 @@ export type CollectionName =
   | "transpositions"
   | "coachHistory"
   | "goals"
+  | "revision"
   | "meta";
 
 export interface StorageAdapter {

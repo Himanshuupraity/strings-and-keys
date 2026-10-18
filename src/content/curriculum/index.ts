@@ -8,8 +8,9 @@ import { LEVEL_4 } from "./level-4";
 import { LEVEL_5 } from "./level-5";
 import { LEVEL_6 } from "./level-6";
 import { LEVEL_7 } from "./level-7";
+import { TAAL_LESSONS } from "./taal";
 
-export const LESSONS: Lesson[] = [...LEVEL_0, ...LEVEL_1, ...LEVEL_2, ...LEVEL_3, ...LEVEL_4, ...LEVEL_5, ...LEVEL_6, ...LEVEL_7].sort(
+export const LESSONS: Lesson[] = [...LEVEL_0, ...LEVEL_1, ...LEVEL_2, ...LEVEL_3, ...LEVEL_4, ...LEVEL_5, ...LEVEL_6, ...LEVEL_7, ...TAAL_LESSONS].sort(
   (a, b) => a.level - b.level || a.order - b.order,
 );
 
