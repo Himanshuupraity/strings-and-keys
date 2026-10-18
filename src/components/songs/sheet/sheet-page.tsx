@@ -81,20 +81,29 @@ export function SheetPage() {
           </Button>
         </div>
       </div>
-      {!parseSheet(song.sheet).lines.some((l) => l.kind === "lyric" && l.text.trim()) && (
-        <Callout tone="info" title="Add the lyrics to sing along" className="items-start">
-          <p>This sheet only has chords. Open a lyrics-with-chords page for this song, copy the whole thing, then tap Edit and paste it in. The chords will appear above the exact words.</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <a href={lyricsChordsSearch(song.title, song.artist)} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-medium text-accent-fg hover:bg-accent-hover" data-testid="find-lyrics">
-              <Search className="h-4 w-4" /> Find lyrics with chords <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-            <Link href={`/songs/sheet?id=${song.id}&edit=1`} className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-surface-2">
-              <Pencil className="h-4 w-4" /> Edit & paste
-            </Link>
-          </div>
-        </Callout>
-      )}
-      <SongSheet title={song.title} artist={song.artist} sheet={song.sheet} youtube={song.youtube} />
+      <SongSheet
+        key={song.updatedAt}
+        title={song.title}
+        artist={song.artist}
+        sheet={song.sheet}
+        youtube={song.youtube}
+        findLyricsHref={lyricsChordsSearch(song.title, song.artist)}
+        onPasteLyrics={async (text) => {
+          const parsed = parseSheet(text);
+          if (!uniqueChords(parsed.lines).length) {
+            toast.error("No chords found in what you pasted. Copy a version with chords above the words.");
+            return;
+          }
+          const saved = await customSongRepo.save({
+            ...song,
+            key: guessKey(parsed.lines),
+            sections: sheetSections(parsed.lines).map((s, i) => ({ id: `s${i}`, name: s.name, bars: s.bars })),
+            sheet: text.slice(0, 30000),
+          });
+          setLoaded({ id: saved.id, song: saved });
+          toast.success("Lyrics added");
+        }}
+      />
     </div>
   );
 }

@@ -19,7 +19,7 @@ type Layout = "sheet" | "flow";
 const LAYOUT_KEY = "mm:sheet-layout";
 
 /** Lyrics + chords sheet with follow-my-voice, auto-scroll and manual navigation. */
-export function SongSheet({ title, artist, sheet, youtube, onLineChange }: { title: string; artist?: string; sheet: string; youtube?: string; onLineChange?: () => void }) {
+export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPasteLyrics, findLyricsHref }: { title: string; artist?: string; sheet: string; youtube?: string; onLineChange?: () => void; onPasteLyrics?: (text: string) => Promise<void>; findLyricsHref?: string }) {
   const [prefs] = usePrefs();
   const parsed = useMemo(() => parseSheet(sheet), [sheet]);
   const baseKey = useMemo(() => guessKey(parsed.lines), [parsed]);
@@ -229,6 +229,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange }: { tit
           <CardBody className="pt-6" >
             <h2 className="font-display text-3xl">{title}</h2>
             {artist && <p className="mb-6 text-muted">{artist}</p>}
+            {onPasteLyrics && !parsed.lines.some((l) => l.kind === "lyric" && l.text.trim()) && <InlinePaste onPaste={onPasteLyrics} findHref={findLyricsHref} />}
             <div style={{ fontSize }} data-testid="song-sheet" data-layout={layout} className={cn(layout === "sheet" && "scrollbar-thin overflow-x-auto")}>
               <div className={cn(layout === "sheet" && "w-max min-w-full")}>
                 {shown.map((l, i) => {
@@ -297,6 +298,75 @@ function safeNotes(c: string) {
   } catch {
     return "";
   }
+}
+
+/** Shown inside the sheet when it has chords but no words yet: paste the lyrics right here. */
+function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise<void>; findHref?: string }) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const save = async (t: string) => {
+    if (!t.trim()) return;
+    setBusy(true);
+    try {
+      await onPaste(t);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="mb-8 rounded-2xl border-2 border-dashed border-accent/50 bg-accent-soft/40 p-4 sm:p-5" data-testid="inline-paste">
+      <p className="font-semibold">No lyrics yet — add them here</p>
+      <ol className="mt-1 list-inside list-decimal text-sm text-muted">
+        <li>Open a lyrics-with-chords page for this song{findHref ? " (button below)" : ""} and copy it.</li>
+        <li>Press “Paste from clipboard” — or paste into the box — and the lyrics appear with chords above the words.</li>
+      </ol>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {findHref && (
+          <a href={findHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-surface-2">
+            Find lyrics with chords ↗
+          </a>
+        )}
+        <Button
+          size="sm"
+          className="h-9"
+          loading={busy}
+          data-testid="inline-paste-clipboard"
+          onClick={async () => {
+            try {
+              const clip = await navigator.clipboard.readText();
+              if (!clip.trim()) return;
+              await save(clip);
+            } catch {
+              /* clipboard blocked: the textarea below still works */
+            }
+          }}
+        >
+          Paste from clipboard
+        </Button>
+      </div>
+      <textarea
+        aria-label="Paste lyrics with chords"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onPaste={(e) => {
+          const t = e.clipboardData.getData("text");
+          if (t.trim()) {
+            e.preventDefault();
+            void save(t);
+          }
+        }}
+        rows={4}
+        placeholder="…or click here and press Ctrl+V / ⌘V"
+        className="mt-3 w-full rounded-xl border border-border bg-surface p-3 font-mono text-sm focus:border-accent focus:outline-none"
+        data-testid="inline-paste-text"
+      />
+      {text.trim() && (
+        <Button size="sm" className="mt-2" onClick={() => void save(text)} loading={busy}>
+          Add these lyrics
+        </Button>
+      )}
+    </div>
+  );
 }
 
 /** A chord name in a small grey box, as on printed chord sheets. N.C. = no chord. */
