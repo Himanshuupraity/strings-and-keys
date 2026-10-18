@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Light = warm "sheet music paper"; dark = calm studio slate (not pure black).
+ * Guitar is associated with amber (wood/brass), piano with indigo (ivory & ebony at night).
+ */
+:root {
+  --bg: #f6f4ef;
+  --bg-grad: #efe9df;
+  --surface: #ffffff;
+  --surface-2: #f3efe7;
+  --surface-3: #e9e3d8;
+  --border: #e0d8ca;
+  --border-strong: #cbbfac;
+  --text: #1d1b18;
+  --muted: #6b645a;
+  --subtle: #958c7f;
+  --accent: #c2410c;
+  --accent-hover: #9a3412;
+  --accent-soft: #fdecdf;
+  --accent-fg: #ffffff;
+  --guitar: #c46a12;
+  --guitar-soft: #fbead3;
+  --piano: #4f46e5;
+  --piano-soft: #e6e5fb;
+  --theory: #0f766e;
+  --theory-soft: #d7efec;
+  --success: #15803d;
+  --success-soft: #dcf2e3;
+  --warn: #b45309;
+  --warn-soft: #fbefd5;
+  --danger: #b91c1c;
+  --danger-soft: #fbe1e1;
+  --ring: #c2410c;
+  --shadow: 0 1px 2px rgb(60 40 20 / 0.06), 0 4px 16px -4px rgb(60 40 20 / 0.08);
+
+  /* Instruments */
+  --key-white: #fffdf8;
+  --key-white-edge: #d8cfbf;
+  --key-black: #22201d;
+  --key-black-top: #3a3631;
+  --fret-wood: #6b4423;
+  --fret-wood-2: #57361b;
+  --fret-wire: #c8c3bb;
+  --string: #d9cdb8;
+  --inlay: #efe6d6;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #111418;
+  --bg-grad: #161a20;
+  --surface: #181c22;
+  --surface-2: #1f242c;
+  --surface-3: #282e37;
+  --border: #2b313a;
+  --border-strong: #3b434e;
+  --text: #ece8e1;
+  --muted: #a39d93;
+  --subtle: #7d776f;
+  --accent: #f59e0b;
+  --accent-hover: #fbbf24;
+  --accent-soft: #3a2a10;
+  --accent-fg: #1a1206;
+  --guitar: #f2a23b;
+  --guitar-soft: #3b2a14;
+  --piano: #8b8cf8;
+  --piano-soft: #25264a;
+  --theory: #2dd4bf;
+  --theory-soft: #12332f;
+  --success: #4ade80;
+  --success-soft: #133222;
+  --warn: #fbbf24;
+  --warn-soft: #3a2c0d;
+  --danger: #f87171;
+  --danger-soft: #3d1717;
+  --ring: #f59e0b;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px -6px rgb(0 0 0 / 0.45);
+
+  --key-white: #ece7dd;
+  --key-white-edge: #a59d8f;
+  --key-black: #0d0f12;
+  --key-black-top: #2a2f37;
+  --fret-wood: #4a2f19;
+  --fret-wood-2: #3a2412;
+  --fret-wire: #9aa0a8;
+  --string: #b8ad99;
+  --inlay: #c9bfae;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-guitar: var(--guitar);
+  --color-guitar-soft: var(--guitar-soft);
+  --color-piano: var(--piano);
+  --color-piano-soft: var(--piano-soft);
+  --color-theory: var(--theory);
+  --color-theory-soft: var(--theory-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+  --shadow-card: var(--shadow);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 100% -10%, var(--bg-grad), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+.komal {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--danger) 55%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+.mic-live {
+  animation: pulse-ring 1.4s ease-out infinite;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.96); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.animate-pop {
+  animation: pop 180ms ease-out;
+}
