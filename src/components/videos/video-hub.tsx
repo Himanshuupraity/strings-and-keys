@@ -19,6 +19,8 @@ import {
   type CuratedVideo,
   type VideoCategory,
   type VideoLevel,
+  type VideoLanguage,
+  videoLanguage,
 } from "@/content/videos";
 import { recommendVideos } from "./recommend";
 
@@ -30,6 +32,7 @@ export function VideoHub() {
   const [category, setCategory] = useState<VideoCategory | "all">("all");
   const [inst, setInst] = useState<InstrumentFilter>("all");
   const [level, setLevel] = useState<VideoLevel | "all">("all");
+  const [lang, setLang] = useState<VideoLanguage | "all">("all");
   const [favOnly, setFavOnly] = useState(false);
   const [hideWatched, setHideWatched] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null);
@@ -50,19 +53,20 @@ export function VideoHub() {
   const lesson = ctx.data;
   const recommended = useMemo(
     () =>
-      recommendVideos(VIDEOS, {
+      recommendVideos(lang === "all" ? VIDEOS : VIDEOS.filter((v) => videoLanguage(v) === lang), {
         instrument: prefs.instrument,
         topics: lesson?.topics.length ? lesson.topics : [prefs.instrument === "guitar" ? "guitar-beginner" : "piano-beginner"],
         keywords: lesson ? [...lesson.title.split(/\W+/), ...lesson.skills] : [],
         watched,
       }),
-    [lesson, prefs.instrument, watched],
+    [lesson, prefs.instrument, watched, lang],
   );
 
   const filtered = VIDEOS.filter((v) => {
     if (category !== "all" && v.category !== category) return false;
     if (inst !== "all" && v.instrument !== inst && v.instrument !== "both") return false;
     if (level !== "all" && v.level !== level) return false;
+    if (lang !== "all" && videoLanguage(v) !== lang) return false;
     if (favOnly && !stateOf(v.id)?.favorite) return false;
     if (hideWatched && stateOf(v.id)?.watched) return false;
     if (q) {
@@ -70,7 +74,7 @@ export function VideoHub() {
       if (!q.toLowerCase().split(/\s+/).every((w) => hay.includes(w))) return false;
     }
     return true;
-  });
+  }).sort((a, b) => Number(videoLanguage(b) === "hindi") - Number(videoLanguage(a) === "hindi")); // Hindi lessons first
   const searches = VIDEO_SEARCHES.filter((s) => (category === "all" || s.category === category) && (inst === "all" || s.instrument === inst || s.instrument === "both"));
   const categoryLabel = (c: VideoCategory) => VIDEO_CATEGORIES.find((x) => x.id === c)?.label ?? c;
 
@@ -123,6 +127,11 @@ export function VideoHub() {
             <option value="all">All instruments</option>
             <option value="guitar">Guitar</option>
             <option value="piano">Piano</option>
+          </Select>
+          <Select aria-label="Language" value={lang} onChange={(e) => setLang(e.target.value as VideoLanguage | "all")} data-testid="video-language">
+            <option value="all">Hindi &amp; English</option>
+            <option value="hindi">Hindi only</option>
+            <option value="english">English only</option>
           </Select>
           <Select aria-label="Level" value={level} onChange={(e) => setLevel(e.target.value as VideoLevel | "all")}>
             <option value="all">All levels</option>
@@ -210,6 +219,7 @@ function VideoCard({ video: v, category, favorite, watched, playing, onPlay, onC
         <p className="mt-2 text-sm text-muted">{v.description}</p>
         <div className="mt-3 flex flex-wrap gap-1.5">
           <Badge tone={v.instrument === "guitar" ? "guitar" : v.instrument === "piano" ? "piano" : "theory"}>{v.instrument === "both" ? "Guitar & piano" : v.instrument}</Badge>
+          {videoLanguage(v) === "hindi" && <Badge tone="accent">Hindi</Badge>}
           <Badge>{v.level}</Badge>
           <Badge>{category}</Badge>
         </div>

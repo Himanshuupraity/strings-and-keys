@@ -65,7 +65,7 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - 5 original Hindi-style practice pieces with melodies; public-domain English classics in a separate tab; a custom song editor.
 
 **Video Hub**
-- 48 YouTube lessons, each verified through oEmbed.
+- 82 YouTube lessons (37 taught in Hindi/Hinglish), each verified through oEmbed; Hindi/English language filter with Hindi lessons listed first.
 - Search and filters, click-to-load privacy embeds, favourites, watched state and lesson-based recommendations.
 
 **Progress**
