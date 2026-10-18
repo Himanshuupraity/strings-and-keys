@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { ruleReply, feedbackFromExercise } from "./rules";
 import { analyzeChord, analyzeNote } from "./analysis";
 import { coachReducer, currentExercise, initialSession, GUITAR_LADDER, PIANO_LADDER } from "./session";
-import { CoachRequestSchema, MAX_MESSAGES } from "./schema";
-import { RateLimiter } from "./rate-limit";
 
 describe("rules", () => {
   it("computes scale notes", () => {
@@ -157,40 +155,3 @@ describe("coach session state machine", () => {
     expect(s.index).toBe(0);
   });
 });
-
-describe("API body validation", () => {
-  const ctx = { instrument: "guitar" as const };
-  it("accepts a valid body", () => {
-    expect(CoachRequestSchema.safeParse({ messages: [{ role: "user", content: "hi" }], context: ctx }).success).toBe(true);
-  });
-  it("rejects bad bodies", () => {
-    expect(CoachRequestSchema.safeParse({ messages: [], context: ctx }).success).toBe(false);
-    expect(CoachRequestSchema.safeParse({ messages: [{ role: "user", content: "x".repeat(2001) }], context: ctx }).success).toBe(false);
-    expect(CoachRequestSchema.safeParse({ messages: [{ role: "assistant", content: "hi" }], context: ctx }).success).toBe(false);
-    expect(CoachRequestSchema.safeParse({ messages: [{ role: "system", content: "hi" }], context: ctx }).success).toBe(false);
-    expect(CoachRequestSchema.safeParse({ messages: [{ role: "user", content: "hi" }], context: { instrument: "drums" } }).success).toBe(false);
-    const many = Array.from({ length: MAX_MESSAGES + 1 }, () => ({ role: "user" as const, content: "a" }));
-    expect(CoachRequestSchema.safeParse({ messages: many, context: ctx }).success).toBe(false);
-  });
-  it("strips unknown keys such as personal data", () => {
-    const r = CoachRequestSchema.parse({ messages: [{ role: "user", content: "hi" }], context: { ...ctx, name: "Asha", email: "a@b.c" } });
-    expect(r.context).not.toHaveProperty("email");
-  });
-});
-
-describe("rate limiter", () => {
-  it("limits per key and recovers after the window", () => {
-    let t = 0;
-    const rl = new RateLimiter(3, 1000, () => t);
-    expect(rl.check("a").allowed).toBe(true);
-    expect(rl.check("a").allowed).toBe(true);
-    expect(rl.check("a").remaining).toBe(0);
-    const blocked = rl.check("a");
-    expect(blocked.allowed).toBe(false);
-    expect(blocked.retryAfterSec).toBe(1);
-    expect(rl.check("b").allowed).toBe(true);
-    t = 1001;
-    expect(rl.check("a").allowed).toBe(true);
-  });
-});
-

@@ -53,11 +53,10 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - Practice timer.
 - 1-Minute Chord Change drill, in self-reported and audio-assisted modes.
 
-**AI Coach**
+**Coach**
 - Listening teacher loop: explain → demo → listen → feedback → adapt.
 - Chat with saved history.
-- Server-side LLM with a configurable provider, rate limiting and validation.
-- A rule-based fallback, so the coach works without an API key.
+- Built-in rule-based teacher that runs in the browser: no API key, no network, works offline.
 
 **Song Lab**
 - 7 public-domain songs and 5 original practice pieces.
@@ -84,8 +83,8 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 - **Very low notes.** Piano notes below about A1, and very quiet strings, may not be detected reliably.
 - **Touch and Bluetooth delay.** Tap-rhythm timing on touch screens or Bluetooth audio includes device latency. The rhythm trainer offers latency calibration.
 - **Web MIDI** is unavailable in Safari.
-- **Rate limits** on AI and auth endpoints are in-memory, so they apply per server instance.
-- **No streaming** in the AI coach. A real cloud-LLM call wasn't exercised in testing because no key was configured. The rule-based path is fully tested.
+- **Rate limits** on the optional auth endpoints are in-memory, so they apply per server instance.
+- **The coach** is rule-based, not a large language model: it handles common beginner questions and measured feedback well, but open-ended questions outside its topics get a general suggestion and a pointer to the right lesson.
 - **SQLite** is documented in `docs/persistence.md` but not implemented. The Postgres schema uses Postgres-only types.
 - **The remote adapter** has no delete operation, because sync is upload/download of bundles.
 - **Missing songs.** Some traditional songs (Greensleeves, Scarborough Fair and others) were left out because their exact rhythms couldn't be verified with confidence.

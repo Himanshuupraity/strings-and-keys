@@ -1,8 +1,8 @@
 # Melody Masters
 
-An AI-assisted guitar and piano academy for absolute beginners through to advanced players. It has structured lessons, playable instruments, a real microphone tuner, a practice toolkit, a song lab and an honest listening coach.
+A guitar and piano academy for absolute beginners through to advanced players. It has structured lessons, playable instruments, a real microphone tuner, a practice toolkit, a song lab and an honest listening coach.
 
-**It works with no setup.** Clone it, install, run. Your progress is saved in your browser, and you don't need an account, a database or an API key.
+**It works with no setup.** Clone it, install, run. Your progress is saved in your browser, and you don't need an account, a database or any API key.
 
 > The product name is set in one place, `src/config/brand.ts`. Change it there to rename the app.
 
@@ -78,7 +78,7 @@ src/
     progress/          Completion/mastery rules, unlocking, streaks, practice plans
     storage/           Storage adapters, zod schemas, repositories, export/import
     coach/             Rule-based coach + listening-session state machine
-    server/            Server-only code (AI providers, auth, database)
+    server/            Server-only code (auth, database)
 prisma/                PostgreSQL schema, migrations, seed (optional remote mode)
 e2e/                   Playwright tests (microphone mocked with a synthetic oscillator)
 ```
@@ -98,7 +98,7 @@ Every stored record is validated with zod. Malformed rows are skipped rather tha
 - **Single notes.** Pitch is found with the McLeod pitch method (`pitchy`). An event counts only when the pitch is clear and stable for several frames.
 - **Chords.** Chords from the microphone are a *best-effort* estimate from a chromagram, shown with a confidence level. If the estimate is ambiguous, the app asks you to play again. A MIDI keyboard gives exact notes and is labelled "measured (MIDI)".
 - **Technique.** Posture, finger pressure and fingering cannot be heard. These are guided self-checks and are always labelled as self-assessment.
-- Results show **Measured**, **Self-reported**, **AI suggestion** or **Coaching tip** tags.
+- Results show **Measured**, **Self-reported** or **Coaching tip** tags.
 - **Microphone privacy.** The microphone is used only after you press a button. A red indicator with a Stop button is shown while it's on. Tracks are stopped when you finish, and no audio is ever recorded or uploaded.
 
 ### Completion vs mastery
@@ -113,17 +113,8 @@ Every stored record is validated with zod. Malformed rows are skipped rather tha
 
 Copy `.env.example` to `.env.local` and fill in only the features you want.
 
-### AI coach
-Without a key, the coach uses a built-in rule-based teacher. Lessons, listening feedback and the chat for common questions all still work.
-
-```bash
-AI_PROVIDER=anthropic          # anthropic | openai | openai-compatible
-AI_API_KEY=sk-...              # or ANTHROPIC_API_KEY / OPENAI_API_KEY
-AI_MODEL=                      # optional override
-AI_BASE_URL=                   # for openai-compatible providers (e.g. a local server)
-```
-
-Keys stay on the server, in `/api/coach`. Requests are validated and rate-limited, and they carry only your question and lesson context, never your name or email.
+### Coach
+The coach is built in and runs entirely in your browser. It needs no API key and works offline. It answers common beginner questions, using the app's own music-theory code for things like scale notes, chord notes and capo suggestions, and it gives feedback from your measured exercise results.
 
 ### Accounts and cloud sync (PostgreSQL)
 ```bash
@@ -146,7 +137,7 @@ Google sign-in is optional: set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, a
 - **Vercel or any Node host.** Run `npm run build`, then `npm start`. With no env vars the app runs in local-first mode. Every user's progress stays in their own browser.
 - **With accounts.** Point `DATABASE_URL` at a managed Postgres database (Neon, Supabase, RDS and so on) and run `npx prisma migrate deploy` during deployment. A local SQLite file will **not** persist on serverless hosts.
 - **HTTPS is required** for the microphone, MIDI and the service worker in production.
-- **Offline support.** The service worker (`public/sw.js`) caches the app shell and pages you have visited for offline use. Cloud AI, video embeds and sync still need a connection.
+- **Offline support.** The service worker (`public/sw.js`) caches the app shell and pages you have visited for offline use. Video embeds and account sync still need a connection.
 
 ---
 

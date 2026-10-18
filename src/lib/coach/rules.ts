@@ -149,7 +149,7 @@ export function ruleReply(question: string, ctx: Ctx = {}): RuleReply {
   return {
     intent: "unknown",
     source: "rules",
-    text: `I'm not sure about that one (I'm in offline mode, so I only know common beginner topics). Try asking about: chords and their notes (“notes in Am”), scales (“G major scale”), capo positions (“capo for F Bb C”), tuning, buzzing strings, sore fingers, strumming, rhythm, middle C, sargam, or how long to practise.${lesson}${weak}`,
+    text: `I'm not sure about that one — I know common beginner topics. Try asking about: chords and their notes (“notes in Am”), scales (“G major scale”), capo positions (“capo for F Bb C”), tuning, buzzing strings, sore fingers, strumming, rhythm, middle C, sargam, or how long to practise.${lesson}${weak}`,
   };
 }
 

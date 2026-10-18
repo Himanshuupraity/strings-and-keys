@@ -18,7 +18,6 @@
     "db:seed": "prisma db seed"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.135.0",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "clsx": "^2.1.1",

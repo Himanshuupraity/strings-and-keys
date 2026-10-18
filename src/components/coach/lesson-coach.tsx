@@ -44,7 +44,7 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
   const [state, dispatch] = useReducer(coachReducer, prefs.instrument, (i) => initialSession(i));
   const ex = currentExercise(state);
   const ladder = ladderFor(state.instrument);
-  const { ping } = usePracticeLog("AI Coach");
+  const { ping } = usePracticeLog("Coach");
   const [heldVirtual, setHeldVirtual] = useState<Set<number>>(new Set());
   // Chord shape built on the virtual fretboard; scoped to the current attempt so it resets automatically.
   const attemptKey = `${state.instrument}-${state.index}-${state.attempts}`;
@@ -150,7 +150,7 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
         total,
         accuracy: r.accuracy,
         measured: r.measured,
-        details: `AI Coach: ${r.title}`,
+        details: `Coach: ${r.title}`,
       });
       onResult?.({
         exerciseId: r.title,

@@ -273,11 +273,10 @@ export function PageHeader({ title, description, eyebrow, actions }: { title: Re
 }
 
 /** Small label that tells the student whether a number was measured or self-reported / AI-generated. */
-export function SourceTag({ source }: { source: "measured" | "self-reported" | "ai" | "rules" | "sample" }) {
+export function SourceTag({ source }: { source: "measured" | "self-reported" | "rules" | "sample" }) {
   const map = {
     measured: { tone: "success", text: "Measured" },
     "self-reported": { tone: "warn", text: "Self-reported" },
-    ai: { tone: "piano", text: "AI suggestion" },
     rules: { tone: "theory", text: "Coaching tip" },
     sample: { tone: "neutral", text: "Sample data" },
   } as const;

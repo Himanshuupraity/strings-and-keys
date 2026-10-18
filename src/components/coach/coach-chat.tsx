@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Loader2, Send, Trash2, User } from "lucide-react";
+import { Bot, Send, Trash2, User } from "lucide-react";
 import { toast } from "sonner";
 import { Button, Card, CardHeader, SourceTag, cn } from "@/components/ui";
 import { useData } from "@/hooks/use-data";
@@ -9,7 +9,7 @@ import { usePrefs } from "@/hooks/use-prefs";
 import { coachRepo, exerciseRepo } from "@/lib/storage/repositories";
 import { weakSkills } from "@/lib/progress/engine";
 import { ruleReply } from "@/lib/coach/rules";
-import { MAX_MESSAGE_CHARS, MAX_MESSAGES, type CoachContext, type CoachResponse, type LastExercise } from "@/lib/coach/schema";
+import { MAX_MESSAGE_CHARS, type CoachContext, type LastExercise } from "@/lib/coach/schema";
 import type { CoachMessage } from "@/lib/storage/schemas";
 
 const STARTERS = ["What notes are in a G major chord?", "Which chord should I learn first?", "Capo for F Bb C", "My strings are buzzing — why?", "How long should I practise each day?", "How did I do?"];
@@ -40,32 +40,9 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
     };
     try {
       await coachRepo.add({ role: "user", content: q });
-      const recent = history.slice(-(MAX_MESSAGES - 1)).map((m) => ({ role: m.role, content: m.content.slice(0, MAX_MESSAGE_CHARS) }));
-      let reply: string;
-      let source: CoachMessage["source"];
-      try {
-        const res = await fetch("/api/coach", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ messages: [...recent, { role: "user", content: q }], context }),
-        });
-        if (res.status === 429) {
-          const wait = res.headers.get("retry-after");
-          toast.warning(`You're asking very quickly — answering offline for now${wait ? ` (cloud AI back in ~${wait}s)` : ""}.`);
-          throw new Error("rate-limited");
-        }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as CoachResponse;
-        reply = data.reply;
-        source = data.source === "llm" ? "llm" : "rules";
-        if (data.fallbackReason === "provider-error") toast.message("The cloud AI didn't respond, so the built-in coach answered.");
-      } catch {
-        // Offline / server unavailable: the rule-based coach runs in the browser too.
-        const r = ruleReply(q, { ...context, tonicPc: prefs.tonicPc });
-        reply = r.text;
-        source = r.source;
-      }
-      await coachRepo.add({ role: "assistant", content: reply, source });
+      // The built-in coach runs entirely in the browser — no API key or network needed.
+      const r = ruleReply(q, { ...context, tonicPc: prefs.tonicPc });
+      await coachRepo.add({ role: "assistant", content: r.text, source: r.source });
     } catch {
       toast.error("Couldn't save the conversation on this device.");
     } finally {
@@ -115,17 +92,12 @@ export function CoachChat({ lastExercise, lessonTitle }: { lastExercise?: LastEx
               <p className="whitespace-pre-wrap">{m.content}</p>
               {m.role === "assistant" && m.source && (
                 <div className="mt-2">
-                  <SourceTag source={m.source === "llm" ? "ai" : m.source === "measured" ? "measured" : "rules"} />
+                  <SourceTag source={m.source === "measured" ? "measured" : "rules"} />
                 </div>
               )}
             </div>
           </div>
         ))}
-        {busy && (
-          <div className="flex items-center gap-2 text-sm text-muted">
-            <Loader2 className="h-4 w-4 animate-spin" /> Thinking…
-          </div>
-        )}
       </div>
       <form onSubmit={onSubmit} className="flex gap-2 border-t border-border p-3">
         <label htmlFor="coach-input" className="sr-only">

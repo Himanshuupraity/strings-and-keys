@@ -17,7 +17,7 @@ export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, mobile: true },
       { href: "/learn", label: "Curriculum", icon: BookOpen, mobile: true },
-      { href: "/ai-coach", label: "AI Coach", icon: Bot, mobile: true },
+      { href: "/ai-coach", label: "Coach", icon: Bot, mobile: true },
     ],
   },
   {

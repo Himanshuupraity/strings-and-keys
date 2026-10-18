@@ -65,7 +65,7 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
       <PageHeader eyebrow="Settings" title="Settings" description="Preferences are saved on this device automatically." />
       <div className="grid gap-6 lg:grid-cols-2">
         <Section icon={<User className="h-5 w-5" />} title="Profile">
-          <Field label="Your name (optional)" htmlFor="name" hint="Only used for the greeting. Never sent to AI providers.">
+          <Field label="Your name (optional)" htmlFor="name" hint="Only used for the greeting. It stays on this device.">
             <div className="flex gap-2">
               <Input id="name" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} placeholder="e.g. Asha" />
               <Button variant="secondary" onClick={() => profileRepo.save({ ...(profile.data ?? {}), name }).then(() => toast.success("Saved"))}>Save</Button>
@@ -175,7 +175,7 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
         <Section icon={<ShieldCheck className="h-5 w-5" />} title="Privacy, microphone & browser support">
           <ul className="space-y-2 text-sm text-muted">
             <li className="flex gap-2"><Mic className="mt-0.5 h-4 w-4 shrink-0" />The microphone is used only after you press a “Listen” button, a red indicator shows while it&apos;s on, and audio is analysed on your device. Nothing is recorded or uploaded.</li>
-            <li>AI coach messages (if a cloud AI is configured) send only your question and lesson context — never your name or email.</li>
+            <li>The coach runs entirely in your browser — your questions are never sent anywhere.</li>
             <li>Microphone: {env.mic ? "supported in this browser." : "not available in this browser or page."}</li>
             <li>Web MIDI: {env.midi ? "supported — connect a keyboard in the Piano Lab." : "not supported here. Use Chrome or Edge on desktop for MIDI keyboards (Safari doesn't support Web MIDI)."}</li>
             <li>Best experience: a recent Chromium browser (Chrome, Edge). Safari works for the virtual instruments and microphone but not MIDI.</li>
