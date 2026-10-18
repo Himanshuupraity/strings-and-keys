@@ -53,6 +53,8 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
   const [dbInfo, setDbInfo] = useState<{ above: number; need: number } | null>(null);
   const frameCount = useRef(0);
   const [showVideo, setShowVideo] = useState(false);
+  // Phones: sheet settings are tucked away so the lyrics get the screen.
+  const [showSettings, setShowSettings] = useState(false);
   const lineRefs = useRef<(HTMLDivElement | null)[]>([]);
   const log = usePracticeLog(`Song sheet: ${title}`);
 
@@ -173,10 +175,10 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                 ]}
               />
               <div className="ml-auto flex items-center gap-1">
-                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Previous line" onClick={() => go(prevStop(parsed.lines, current))}>
+                <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Previous line" onClick={() => go(prevStop(parsed.lines, current))}>
                   <ChevronUp className="h-4 w-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Next line" onClick={() => go(nextStop(parsed.lines, current))} data-testid="sheet-next">
+                <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Next line" onClick={() => go(nextStop(parsed.lines, current))} data-testid="sheet-next">
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </div>
@@ -207,9 +209,10 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
                   </Callout>
                 )}
                 <p className="text-xs text-muted">
-                  Sing (or say) the highlighted line, then pause briefly — the sheet moves to the next line. The bar shows your voice; it needs to pass the white line. Headphones work best when the video is playing.
+                  <span className="sm:hidden">Sing a line, pause briefly — it moves on.</span>
+                  <span className="hidden sm:inline">Sing (or say) the highlighted line, then pause briefly — the sheet moves to the next line. The bar shows your voice; it needs to pass the white line. Headphones work best when the video is playing.</span>
                 </p>
-                <Slider label="Voice sensitivity" min={1.5} max={6} step={0.5} value={7.5 - sensitivity} onChange={(v) => setSensitivity(7.5 - v)} format={(v) => (v < 3 ? "Low" : v < 4.5 ? "Medium" : "High")} />
+                <Slider className={cn(showSettings ? "block" : "hidden", "sm:block")} label="Voice sensitivity" min={1.5} max={6} step={0.5} value={7.5 - sensitivity} onChange={(v) => setSensitivity(7.5 - v)} format={(v) => (v < 3 ? "Low" : v < 4.5 ? "Medium" : "High")} />
               </div>
             )}
             {mode === "auto" && (
@@ -222,7 +225,17 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
             )}
             {mode === "manual" && <p className="text-xs text-muted">Tap a line, use the arrow keys / space bar, or a Bluetooth page-turner pedal.</p>}
 
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3 text-sm">
+            <button
+              type="button"
+              onClick={() => setShowSettings((v) => !v)}
+              aria-expanded={showSettings}
+              className="flex min-h-10 w-full items-center justify-between border-t border-border pt-3 text-sm font-medium text-muted sm:hidden"
+              data-testid="sheet-settings-toggle"
+            >
+              Sheet settings · {soundingKey}{capo ? ` · capo ${capo}` : ""}
+              <ChevronDown className={cn("h-4 w-4 transition-transform", showSettings && "rotate-180")} />
+            </button>
+            <div className={cn(showSettings ? "flex" : "hidden", "flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-3 text-sm sm:flex")}>
               <div className="flex items-center gap-1">
                 <span className="text-muted">Transpose</span>
                 <Button size="icon" variant="ghost" className="h-7 w-7" aria-label="Transpose down" onClick={() => setTranspose((t) => t - 1)}><Minus className="h-3.5 w-3.5" /></Button>

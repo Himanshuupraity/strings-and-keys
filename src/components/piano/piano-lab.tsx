@@ -132,9 +132,10 @@ export function PianoLab() {
       />
 
       <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-        <div className="min-w-0 space-y-6">
+        {/* On phones the keyboard comes first; the keyboard settings card moves below it. */}
+        <div className="flex min-w-0 flex-col gap-6">
           {/* Range / view toolbar */}
-          <Card>
+          <Card className="order-2 sm:order-none">
             <CardBody className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-5">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Keyboard size</span>
@@ -164,13 +165,13 @@ export function PianoLab() {
               </div>
               {view === "focus" && (
                 <div className="flex items-center gap-1">
-                  <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Move view down an octave" disabled={range.low <= preset.low} onClick={() => setFocusStart(Math.max(preset.low, range.low - 12))}>
+                  <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Move view down an octave" disabled={range.low <= preset.low} onClick={() => setFocusStart(Math.max(preset.low, range.low - 12))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm tabular-nums text-muted">
                     {midiToName(range.low)}–{midiToName(range.high)}
                   </span>
-                  <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Move view up an octave" disabled={range.high >= preset.high} onClick={() => setFocusStart(range.low + 12)}>
+                  <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Move view up an octave" disabled={range.high >= preset.high} onClick={() => setFocusStart(range.low + 12)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>

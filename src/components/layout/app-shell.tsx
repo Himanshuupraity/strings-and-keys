@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const hydrated = useHydrated();
 
   return (
-    <div className="min-h-screen lg:pl-64">
+    <div className="min-h-screen overflow-x-clip lg:pl-64">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2">
         Skip to content
       </a>
@@ -92,7 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 left-0 w-72 overflow-y-auto bg-surface p-4 shadow-xl">
+          <div className="absolute inset-y-0 left-0 w-[min(18rem,85vw)] overflow-y-auto bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-[calc(1rem+env(safe-area-inset-top))] shadow-xl">
             <div className="mb-6 flex items-center justify-between">
               <BrandMark />
               <button type="button" className="rounded-lg p-2 hover:bg-surface-2" aria-label="Close menu" onClick={() => setOpen(false)}>
@@ -100,14 +100,18 @@ export function AppShell({ children }: { children: ReactNode }) {
               </button>
             </div>
             <NavLinks onNavigate={() => setOpen(false)} />
+            <div className="mt-6 flex items-center justify-between rounded-xl border border-border p-2 sm:hidden">
+              <AudioControls />
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-20 border-b border-border bg-bg/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6">
-          <button type="button" className="rounded-lg p-2 hover:bg-surface-2 lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}>
+      <header className="sticky top-0 z-20 border-b border-border bg-bg/80 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-6">
+          <button type="button" className="-ml-1 flex h-11 w-11 items-center justify-center rounded-lg hover:bg-surface-2 lg:hidden" aria-label="Open menu" onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
           <div className="hidden sm:block lg:hidden">
@@ -116,24 +120,28 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex flex-1 justify-center sm:justify-end lg:justify-start">
             <InstrumentToggle size="sm" />
           </div>
-          <AudioControls />
+          <div className="hidden items-center gap-1 sm:flex">
+            <AudioControls />
+          </div>
           <LearnerMenu />
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      <main id="main" className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:pb-12">
+      <main id="main" className="mx-auto max-w-7xl px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-6 lg:pb-12">
         {!hydrated ? <div className="h-[60vh] animate-pulse rounded-2xl bg-surface-2/60" aria-busy="true" aria-label="Loading" /> : learner ? children : <WelcomeScreen />}
       </main>
 
       {/* Mobile bottom navigation */}
       <nav aria-label="Quick" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 backdrop-blur lg:hidden">
-        <ul className="mx-auto flex max-w-lg justify-around pb-[env(safe-area-inset-bottom)]">
+        <ul className="mx-auto grid max-w-lg grid-cols-5 pb-[env(safe-area-inset-bottom)]">
           {mobileItems.map(({ href, label, icon: Icon }) => {
             const active = isActive(pathname, href);
             return (
               <li key={href}>
-                <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex min-w-16 flex-col items-center gap-1 px-2 py-2.5 text-[11px] font-medium", active ? "text-accent" : "text-muted")}>
+                <Link href={href} aria-current={active ? "page" : undefined} className={cn("flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-medium", active ? "text-accent" : "text-muted")}>
                   <Icon className="h-5 w-5" aria-hidden />
                   {label.split(" ")[0]}
                 </Link>
@@ -141,7 +149,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
           <li>
-            <button type="button" onClick={() => setOpen(true)} className="flex min-w-16 flex-col items-center gap-1 px-2 py-2.5 text-[11px] font-medium text-muted">
+            <button type="button" onClick={() => setOpen(true)} className="flex min-h-14 w-full flex-col items-center justify-center gap-1 px-1 py-2 text-[11px] font-medium text-muted">
               <Menu className="h-5 w-5" aria-hidden />
               More
             </button>

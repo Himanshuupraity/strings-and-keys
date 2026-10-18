@@ -23,10 +23,10 @@ const VARIANTS: Record<Variant, string> = {
   success: "bg-success text-white hover:opacity-90 dark:text-black",
 };
 const SIZES: Record<Size, string> = {
-  sm: "h-8 px-3 text-sm gap-1.5 rounded-lg",
-  md: "h-10 px-4 text-sm gap-2 rounded-xl",
+  sm: "h-10 sm:h-8 px-3 text-sm gap-1.5 rounded-lg",
+  md: "h-11 sm:h-10 px-4 text-sm gap-2 rounded-xl",
   lg: "h-12 px-6 text-base gap-2 rounded-xl",
-  icon: "h-10 w-10 rounded-xl",
+  icon: "h-11 w-11 sm:h-10 sm:w-10 rounded-xl",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -131,8 +131,8 @@ export function Segmented<T extends string | number>({
             onClick={() => onChange(o.value)}
             className={cn(
               "inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-all",
-              size === "sm" && "h-7 px-2.5 text-xs",
-              size === "md" && "h-8 px-3 text-sm",
+              size === "sm" && "h-9 px-2.5 text-xs sm:h-7",
+              size === "md" && "h-10 px-3 text-sm sm:h-8",
               size === "lg" && "h-11 px-5 text-base",
               active ? cn("bg-surface text-text shadow-sm", o.activeClass) : "text-muted hover:text-text",
             )}

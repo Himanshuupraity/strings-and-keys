@@ -58,7 +58,7 @@ export function SheetPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link href="/songs" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
+        <Link href="/songs" className="-ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
           <ChevronLeft className="h-4 w-4" /> All songs
         </Link>
         <div className="flex flex-wrap gap-2">
@@ -171,7 +171,7 @@ function SheetEditor({ existing, onSaved }: { existing?: CustomSong; onSaved: (s
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Link href="/songs" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
+      <Link href="/songs" className="-ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
         <ChevronLeft className="h-4 w-4" /> All songs
       </Link>
       <div>

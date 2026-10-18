@@ -15,11 +15,11 @@ export function MetronomeWidget({ initialBpm = 70, beatsPerBar = 4, onBeat, clas
         {m.running ? "Stop" : "Metronome"}
       </Button>
       <div className="flex items-center gap-1">
-        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Slower" onClick={() => m.setBpm(m.bpm - 5)}>
+        <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Slower" onClick={() => m.setBpm(m.bpm - 5)}>
           <Minus className="h-4 w-4" />
         </Button>
         <span className="w-16 text-center text-sm font-semibold tabular-nums" aria-live="polite">{m.bpm} BPM</span>
-        <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Faster" onClick={() => m.setBpm(m.bpm + 5)}>
+        <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label="Faster" onClick={() => m.setBpm(m.bpm + 5)}>
           <Plus className="h-4 w-4" />
         </Button>
       </div>

@@ -12,9 +12,16 @@ export const metadata: Metadata = {
   title: { default: `${BRAND.name} — Learn guitar & piano`, template: `%s · ${BRAND.name}` },
   description: BRAND.description,
   applicationName: BRAND.name,
+  appleWebApp: { capable: true, title: BRAND.shortName, statusBarStyle: "black-translucent" },
+  icons: { icon: "/icon.svg", apple: "/apple-touch-icon.png" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Lets the app draw under the notch / home indicator; padding uses env(safe-area-inset-*).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f6f4ef" },
     { media: "(prefers-color-scheme: dark)", color: "#111418" },

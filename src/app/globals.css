@@ -185,3 +185,50 @@ body {
 .animate-pop {
   animation: pop 180ms ease-out;
 }
+
+/* ---------------- Mobile-first behaviour ---------------- */
+
+/* Grid items may shrink below their content width, so wide children (piano keyboard, step rails,
+   fretboards, chord sheets) scroll inside their own box instead of widening the whole page. */
+.grid > * {
+  min-width: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* Taps register immediately (no double-tap-to-zoom delay) — important for playing notes. */
+button,
+a,
+[role="button"],
+[role="radio"],
+[role="switch"],
+input,
+select,
+textarea,
+label {
+  touch-action: manipulation;
+}
+
+/* iOS zooms the page when a focused field's text is under 16px. */
+@media (max-width: 639px) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Range sliders: a taller hit area and a bigger thumb on touch screens. */
+@media (pointer: coarse) {
+  input[type="range"] {
+    min-height: 2rem;
+  }
+}

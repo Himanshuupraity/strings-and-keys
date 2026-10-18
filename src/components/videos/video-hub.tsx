@@ -254,7 +254,7 @@ function VideoCard({ video: v, category, favorite, watched, playing, onPlay, onC
           <Button size="sm" variant="ghost" aria-pressed={watched} onClick={() => void videoRepo.set(v.id, { watched: !watched })}>
             {watched ? <CheckCircle2 className="h-4 w-4 text-success" /> : <Circle className="h-4 w-4" />} {watched ? "Watched" : "Mark watched"}
           </Button>
-          <a href={youtubeWatchUrl(v.id)} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-muted hover:text-text">
+          <a href={youtubeWatchUrl(v.id)} target="_blank" rel="noopener noreferrer" className="ml-auto inline-flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-medium text-muted hover:text-text sm:min-h-0 sm:py-1">
             YouTube <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>

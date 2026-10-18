@@ -25,7 +25,7 @@ export function CoursePage({ instrument }: { instrument: "guitar" | "piano" }) {
 
   return (
     <div>
-      <Link href="/learn" className="mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-text">
+      <Link href="/learn" className="mb-4 -ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
         <ArrowLeft className="h-4 w-4" /> All courses
       </Link>
       <PageHeader

@@ -46,7 +46,7 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <>
       {children}
-      <Toaster position="bottom-right" richColors closeButton theme={prefs.theme === "system" ? "system" : prefs.theme} toastOptions={{ className: "!rounded-xl" }} />
+      <Toaster position="bottom-right" mobileOffset={{ bottom: "calc(5rem + env(safe-area-inset-bottom))" }} richColors closeButton theme={prefs.theme === "system" ? "system" : prefs.theme} toastOptions={{ className: "!rounded-xl" }} />
     </>
   );
 }

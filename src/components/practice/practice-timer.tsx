@@ -185,7 +185,7 @@ export function PracticeTimer() {
                   <div className="flex shrink-0 items-center gap-2">
                     <Badge tone={s.instrument}>{s.instrument}</Badge>
                     <span className="w-14 text-right text-sm tabular-nums">{formatDuration(s.durationSec * 1000)}</span>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" aria-label={`Delete session ${s.activity}`} onClick={() => void practiceRepo.remove(s.id)}><Trash2 className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" className="h-10 w-10 sm:h-8 sm:w-8" aria-label={`Delete session ${s.activity}`} onClick={() => void practiceRepo.remove(s.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </li>
               ))}

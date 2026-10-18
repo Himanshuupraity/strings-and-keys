@@ -84,7 +84,7 @@ export function Transposer({ initialProgression, initialKey }: { initialProgress
               {chords.map((c, i) => (
                 <span key={i} className="inline-flex items-center gap-1 rounded-lg bg-surface-2 py-1 pl-2.5 pr-1 font-semibold">
                   {c}
-                  <button type="button" aria-label={`Remove ${c}`} className="rounded p-0.5 text-muted hover:bg-surface-3 hover:text-text" onClick={() => setChords((cs) => cs.filter((_, j) => j !== i))}><X className="h-3.5 w-3.5" /></button>
+                  <button type="button" aria-label={`Remove ${c}`} className="-my-1 -mr-1.5 rounded p-1.5 text-muted hover:bg-surface-3 hover:text-text" onClick={() => setChords((cs) => cs.filter((_, j) => j !== i))}><X className="h-3.5 w-3.5" /></button>
                 </span>
               ))}
               <Input

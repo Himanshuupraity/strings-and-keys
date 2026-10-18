@@ -16,7 +16,7 @@ export function catalogueEditorHref(s: Pick<CatalogueSong, "id" | "title" | "art
 export function CatalogueView({ song }: { song: CatalogueSong }) {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <Link href="/songs" className="inline-flex items-center gap-1 text-sm text-muted hover:text-text">
+      <Link href="/songs" className="-ml-1 inline-flex min-h-10 items-center gap-1 px-1 text-sm text-muted hover:text-text">
         <ChevronLeft className="h-4 w-4" /> All songs
       </Link>
       <div>

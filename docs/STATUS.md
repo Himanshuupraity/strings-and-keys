@@ -4,6 +4,11 @@ Verified on 2026-10-18 with: `npm run typecheck` (clean), `npm run lint` (clean)
 
 ## Implemented
 
+**Mobile (primary target)**
+- Every main page is checked at 360px and 390px: no sideways page scrolling (guarded by an end-to-end test), text fields are 16px so iOS doesn't zoom, touch targets are 40–44px on phones, taps fire without the double-tap delay, and safe-area insets are respected (notch and home indicator).
+- Phone layouts: compact header (volume and theme move into the menu), equal-width bottom bar, toasts above the bottom bar, piano keyboard shown before its settings, song-sheet settings collapsible, and no duplicate instrument switch on the dashboard.
+- Installable: "Add to Home Screen" on iPhone and Android, with PNG and maskable icons, a standalone display mode and the offline service worker.
+
 **Foundation**
 - Next.js 16, TypeScript and Tailwind v4.
 - Design tokens with light and dark themes. The theme follows the OS on first visit, is remembered after that, and is applied before first paint so there is no flash.

@@ -85,7 +85,7 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Prominent instrument toggle */}
-      <section aria-label="Instrument mode" className="flex flex-col items-start gap-3 rounded-2xl border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
+      <section aria-label="Instrument mode" className="hidden flex-col items-start gap-3 rounded-2xl sm:flex border border-border bg-surface p-4 shadow-card sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-subtle">Instrument mode</p>
           <p className="text-sm text-muted">Lessons, tools and recommendations follow this choice. Progress is kept separately for each.</p>
