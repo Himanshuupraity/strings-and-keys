@@ -162,7 +162,7 @@ A daily "time to practise" notification at the time each learner picks in **Sett
 3. In Supabase → SQL Editor, run `supabase/migrations/003_push_subscriptions.sql`.
 4. Open the deployed site, go to Settings, turn on the reminder and tap **Send a test notification**.
 
-**How often it checks.** `vercel.json` asks Vercel Cron to call `/api/push/cron` every hour. On Vercel's free Hobby plan, cron jobs may run only once a day, so reminders could arrive late. Two fixes: upgrade to a paid plan, or use a free external scheduler such as [cron-job.org](https://cron-job.org) to call `https://YOUR-SITE/api/push/cron` every 15 minutes with the header `Authorization: Bearer YOUR_CRON_SECRET`. Each device gets at most one reminder per local day, however often the route is called.
+**How often it checks.** Vercel's free Hobby plan only allows a cron job once a day, so `vercel.json` calls `/api/push/cron` daily at 13:30 UTC (7:00 pm India time). Everyone whose reminder time has passed by then gets it at that moment, so reminders set later than that arrive the next day. For reminders at each person's exact chosen time, use a free external scheduler such as [cron-job.org](https://cron-job.org) to call `https://YOUR-SITE/api/push/cron` every 15 minutes with the header `Authorization: Bearer YOUR_CRON_SECRET` (or upgrade to Vercel Pro and change the schedule to hourly). Each device gets at most one reminder per local day, however often the route is called.
 
 **Privacy.** Only the browser's push address, the reminder time and the time zone are stored (in the server-only `push_subscriptions` table). Turning the reminder off deletes it.
 
