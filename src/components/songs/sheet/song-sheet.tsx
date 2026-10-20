@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, Hand, Mic, Minus, Pause, Play, PlayCircle as Youtube, Plus, Timer, Type } from "lucide-react";
 import { Badge, Button, Callout, Card, CardBody, Segmented, Slider, cn } from "@/components/ui";
 import { ChordDiagram } from "@/components/instruments/chord-diagram";
+import { ChordTag } from "./chord-tag";
 import { MicButton } from "@/components/instruments/mic-button";
 import { RecorderPanel } from "@/components/recordings/recorder-panel";
 import { RecordingsList } from "@/components/recordings/recordings-list";
@@ -13,7 +14,7 @@ import { useT } from "@/lib/i18n";
 import { usePracticeLog } from "@/hooks/use-practice-log";
 import { chordNoteNames } from "@/lib/music/chords";
 import { transposeKey } from "@/lib/music/transpose";
-import { guessKey, isNoChord, lyricSegments, parseSheet, transposeSheet, uniqueChords, youtubeId, type SheetLine } from "@/lib/sheet/parse";
+import { guessKey, lyricSegments, parseSheet, transposeSheet, uniqueChords, youtubeId, type SheetLine } from "@/lib/sheet/parse";
 import { advanceOn, DEFAULT_FOLLOWER, firstStop, nextStop, PhraseFollower, prevStop } from "@/lib/sheet/follow";
 
 type Mode = "voice" | "auto" | "manual";
@@ -432,15 +433,6 @@ function InlinePaste({ onPaste, findHref }: { onPaste: (text: string) => Promise
         </Button>
       )}
     </div>
-  );
-}
-
-/** A chord name in a small grey box, as on printed chord sheets. N.C. = no chord. */
-function ChordTag({ chord }: { chord: string }) {
-  return (
-    <span className={cn("rounded-[3px] px-[0.2ch] font-bold leading-[1.25]", isNoChord(chord) ? "text-muted" : "bg-surface-3 text-text")} data-chord={chord}>
-      {chord}
-    </span>
   );
 }
 

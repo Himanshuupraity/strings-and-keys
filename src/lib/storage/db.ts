@@ -45,7 +45,7 @@ export function setAdapter(a: StorageAdapter) {
 
 export const ALL_COLLECTIONS: CollectionName[] = [
   "profile", "lessonProgress", "quizAttempts", "practiceSessions", "chordDrills", "exerciseResults",
-  "savedSongs", "songProgress", "videoState", "transpositions", "coachHistory", "goals", "revision",
+  "savedSongs", "songProgress", "videoState", "transpositions", "coachHistory", "goals", "revision", "notes",
 ];
 
 export function subscribe(fn: Listener): () => void {

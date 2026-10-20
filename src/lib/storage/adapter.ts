@@ -17,6 +17,7 @@ export type CollectionName =
   | "coachHistory"
   | "goals"
   | "revision"
+  | "notes"
   | "meta";
 
 export interface StorageAdapter {

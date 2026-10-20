@@ -1,5 +1,5 @@
 import {
-  BarChart3, BookOpen, Bot, RotateCcw, Gauge, Guitar, LayoutDashboard, ListMusic, Music4, Piano, Settings, Timer, Video,
+  BarChart3, BookOpen, Bot, RotateCcw, Gauge, Guitar, LayoutDashboard, ListMusic, Music4, NotebookPen, Piano, Settings, Timer, Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +34,7 @@ export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
     title: "Explore",
     items: [
       { href: "/songs", label: "Song Lab", icon: ListMusic },
+      { href: "/notes", label: "Notes", icon: NotebookPen },
       { href: "/videos", label: "Video Hub", icon: Video },
       { href: "/progress", label: "Progress", icon: BarChart3 },
       { href: "/settings", label: "Settings", icon: Settings },
