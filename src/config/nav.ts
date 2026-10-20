@@ -1,5 +1,5 @@
 import {
-  BarChart3, BookOpen, Bot, RotateCcw, Gauge, Guitar, LayoutDashboard, ListMusic, Music4, NotebookPen, Piano, Settings, Timer, Video,
+  BarChart3, BookOpen, Bot, Languages, Mic, RotateCcw, Gauge, Guitar, LayoutDashboard, ListMusic, Music4, NotebookPen, Piano, Settings, Timer, Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -9,6 +9,8 @@ export interface NavItem {
   icon: LucideIcon;
   /** Shown in the mobile bottom bar */
   mobile?: boolean;
+  /** Another site: opens in a new tab. */
+  external?: boolean;
 }
 
 export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
@@ -38,6 +40,13 @@ export const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
       { href: "/videos", label: "Video Hub", icon: Video },
       { href: "/progress", label: "Progress", icon: BarChart3 },
       { href: "/settings", label: "Settings", icon: Settings },
+    ],
+  },
+  {
+    title: "More apps",
+    items: [
+      { href: "https://vocal-singing-learning.vercel.app/", label: "Learn Singing", icon: Mic, external: true },
+      { href: "https://speak-better-ai.vercel.app/welcome", label: "Learn English", icon: Languages, external: true },
     ],
   },
 ];

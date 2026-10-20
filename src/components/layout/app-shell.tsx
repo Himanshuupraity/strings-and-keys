@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Menu, X } from "lucide-react";
+import { ExternalLink, Menu, X } from "lucide-react";
 import { BRAND } from "@/config/brand";
 import { ALL_NAV, BRAND_ICON as Logo, NAV_SECTIONS } from "@/config/nav";
 import { cn } from "@/components/ui";
@@ -21,7 +21,8 @@ function isActive(pathname: string, href: string) {
   return pathname === href || (href !== "/" && pathname.startsWith(href + "/")) || (href === "/learn" && pathname.startsWith("/lesson"));
 }
 
-const SECTION_KEY: Record<string, MessageKey> = { Learn: "nav.section.learn", Practice: "nav.section.practice", Explore: "nav.section.explore" };
+const SECTION_KEY: Record<string, MessageKey> = { Learn: "nav.section.learn", Practice: "nav.section.practice", Explore: "nav.section.explore", "More apps": "nav.section.moreApps" };
+const EXTERNAL_KEY: Record<string, MessageKey> = { "Learn Singing": "nav.learnSinging", "Learn English": "nav.learnEnglish" };
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
@@ -32,7 +33,24 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
         <div key={section.title}>
           <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-subtle">{SECTION_KEY[section.title] ? t(SECTION_KEY[section.title]) : section.title}</p>
           <ul className="space-y-0.5">
-            {section.items.map(({ href, icon: Icon }) => {
+            {section.items.map(({ href, icon: Icon, external, label }) => {
+              if (external) {
+                return (
+                  <li key={href}>
+                    <a
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={onNavigate}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-surface-2 hover:text-text"
+                    >
+                      <Icon className="h-[18px] w-[18px]" aria-hidden />
+                      <span className="flex-1">{EXTERNAL_KEY[label] ? t(EXTERNAL_KEY[label]) : label}</span>
+                      <ExternalLink className="h-3.5 w-3.5 text-subtle" aria-label={t("nav.opensNewTab")} />
+                    </a>
+                  </li>
+                );
+              }
               const active = isActive(pathname, href);
               return (
                 <li key={href}>

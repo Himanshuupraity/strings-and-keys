@@ -26,6 +26,10 @@ export const HI: Record<MessageKey, string> = {
   "nav.short./learn": "पाठ",
   "nav.short./ai-coach": "कोच",
   "nav.short./practice": "अभ्यास",
+  "nav.section.moreApps": "और ऐप्स",
+  "nav.learnSinging": "गाना सीखें",
+  "nav.learnEnglish": "इंग्लिश सीखें",
+  "nav.opensNewTab": "नए टैब में खुलेगा",
   "nav.more": "और",
 
   // Shell

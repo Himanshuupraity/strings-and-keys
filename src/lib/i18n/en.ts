@@ -23,6 +23,10 @@ export const EN = {
   "nav.short./learn": "Curriculum",
   "nav.short./ai-coach": "Coach",
   "nav.short./practice": "Practice",
+  "nav.section.moreApps": "More apps",
+  "nav.learnSinging": "Learn Singing",
+  "nav.learnEnglish": "Learn English",
+  "nav.opensNewTab": "Opens in a new tab",
   "nav.more": "More",
 
   // Shell

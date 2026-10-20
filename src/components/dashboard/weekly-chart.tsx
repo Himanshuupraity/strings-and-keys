@@ -18,6 +18,9 @@ const SERIES = [
   { key: "piano", name: "Piano", color: "var(--chart-piano)" },
 ] as const;
 
+/** Minutes to one decimal place (3.6999… → 3.7). */
+const mins = (v: number) => Math.round(v * 10) / 10;
+
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; value: number }[]; label?: string }) {
   const tl = useT();
   if (!active || !payload?.length) return null;
@@ -30,11 +33,11 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
         return (
           <p key={s.key} className="flex items-center gap-2 text-muted">
             <span className="h-2 w-2 rounded-sm" style={{ background: s.color }} />
-            {s.name}: <span className="font-medium text-text tabular-nums">{v} min</span>
+            {s.name}: <span className="font-medium text-text tabular-nums">{mins(v)} min</span>
           </p>
         );
       })}
-      <p className="mt-1 border-t border-border pt-1 text-muted">{tl("ui.total")} <span className="font-medium text-text">{Math.round(total * 10) / 10} min</span></p>
+      <p className="mt-1 border-t border-border pt-1 text-muted">{tl("ui.total")} <span className="font-medium text-text">{mins(total)} min</span></p>
     </div>
   );
 }
@@ -71,14 +74,14 @@ export function WeeklyChart({ data, height = 220 }: { data: WeeklyRow[]; height?
             {data.map((r) => (
               <tr key={r.day} className="border-t border-border">
                 <td className="py-1">{r.label}</td>
-                <td className="py-1 text-right tabular-nums">{r.guitar} min</td>
-                <td className="py-1 text-right tabular-nums">{r.piano} min</td>
+                <td className="py-1 text-right tabular-nums">{mins(r.guitar)} min</td>
+                <td className="py-1 text-right tabular-nums">{mins(r.piano)} min</td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <div className={cn("w-full")} style={{ height }} role="img" aria-label={`Practice minutes for the last 7 days: ${data.map((r) => `${r.label} ${Math.round((r.guitar + r.piano) * 10) / 10} minutes`).join(", ")}`}>
+        <div className={cn("w-full")} style={{ height }} role="img" aria-label={`Practice minutes for the last 7 days: ${data.map((r) => `${r.label} ${mins(r.guitar + r.piano)} minutes`).join(", ")}`}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 4, right: 4, left: -18, bottom: 0 }} barCategoryGap="28%">
               <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="0" />
