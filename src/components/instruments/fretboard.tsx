@@ -1,13 +1,14 @@
 "use client";
 import { useT } from "@/lib/i18n";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { DOUBLE_INLAY_FRETS, INLAY_FRETS, STANDARD_TUNING, stringNumber } from "@/lib/music/guitar";
 import { midiToName, mod12, pcName } from "@/lib/music/notes";
 import { labelNote, type LabelMode } from "@/lib/music/sargam";
 import { playGuitarNote } from "@/lib/audio/engine";
 import { usePrefs } from "@/hooks/use-prefs";
 import { cn } from "@/components/ui";
+import { ScrollControls } from "./scroll-controls";
 
 export type FretTone = "target" | "correct" | "wrong" | "root" | "scale" | "chord" | "hint";
 
@@ -74,6 +75,7 @@ export function Fretboard({
 }: FretboardProps) {
   const tr = useT();
   const [prefs] = usePrefs();
+  const scroller = useRef<HTMLDivElement>(null);
   const frets = fretsProp ?? prefs.fretCount;
   const leftHanded = lhProp ?? prefs.leftHanded;
   const mode = labelMode ?? prefs.labelMode;
@@ -111,114 +113,117 @@ export function Fretboard({
   };
 
   return (
-    <div className={cn("scrollbar-thin overflow-x-auto rounded-2xl border border-border bg-surface-2 p-2 shadow-card", className)}>
-      <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={ariaLabel ?? tr("ui.guitar_fretboard")} className="block h-auto min-w-[720px] w-full select-none" style={{ touchAction: "manipulation" }}>
-        <defs>
-          <linearGradient id="fb-wood" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="var(--fret-wood)" />
-            <stop offset="1" stopColor="var(--fret-wood-2)" />
-          </linearGradient>
-        </defs>
-        {/* Neck */}
-        <rect x={flipX(leftHanded ? xs[xs.length - 1] : openW)} y={top - 12} width={xs[xs.length - 1] - openW} height={gap * 5 + 24} rx={4} fill="url(#fb-wood)" />
-        {/* Inlays */}
-        {INLAY_FRETS.filter((f) => f <= frets).map((f) =>
-          DOUBLE_INLAY_FRETS.includes(f) ? (
-            <g key={f}>
-              <circle cx={flipX(cx(f))} cy={top + gap * 1.5} r={5} fill="var(--inlay)" opacity={0.7} />
-              <circle cx={flipX(cx(f))} cy={top + gap * 3.5} r={5} fill="var(--inlay)" opacity={0.7} />
-            </g>
-          ) : (
-            <circle key={f} cx={flipX(cx(f))} cy={top + gap * 2.5} r={5} fill="var(--inlay)" opacity={0.7} />
-          ),
-        )}
-        {/* Nut and frets */}
-        <rect x={flipX(openW) - (leftHanded ? 0 : 5)} y={top - 12} width={5} height={gap * 5 + 24} fill="var(--inlay)" />
-        {xs.slice(1).map((x, i) => (
-          <rect key={i} x={flipX(x) - 1.5} y={top - 12} width={3} height={gap * 5 + 24} fill="var(--fret-wire)" />
-        ))}
-        {/* Fret numbers */}
-        {Array.from({ length: frets }, (_, i) => i + 1).map((f) => (
-          <text key={f} x={flipX(cx(f))} y={H - 6} textAnchor="middle" fontSize={11} fill="var(--muted)" className={cn(INLAY_FRETS.includes(f) && "font-semibold")}>
-            {f}
-          </text>
-        ))}
-        {/* Strings */}
-        {tuning.map((open, s) => (
-          <g key={s}>
-            <line
-              x1={flipX(openW)}
-              x2={flipX(xs[xs.length - 1])}
-              y1={yOf(s)}
-              y2={yOf(s)}
-              stroke={activeString === s ? "var(--accent)" : "var(--string)"}
-              strokeWidth={activeString === s ? 3.5 : 1 + (5 - s) * 0.35}
-            />
-            <text x={flipX(12)} y={yOf(s) + 4} textAnchor="middle" fontSize={11} fontWeight={600} fill={activeString === s ? "var(--accent)" : "var(--muted)"}>
-              {mutedStrings.includes(s) ? "×" : pcName(open + capo, prefs.spelling)}
-            </text>
-            <text x={flipX(31)} y={yOf(s) + 4} textAnchor="middle" fontSize={9} fill="var(--subtle)">
-              {stringNumber(s)}
-            </text>
-          </g>
-        ))}
-        {/* Capo */}
-        {capo > 0 && capo <= frets && (
-          <g aria-label={tr("ui.capo_on_fret_aria", { n: capo })}>
-            <rect x={flipX(xs[capo - 1] + (xs[capo] - xs[capo - 1]) * 0.55) - 7} y={top - 16} width={14} height={gap * 5 + 32} rx={6} fill="var(--text)" opacity={0.85} />
-          </g>
-        )}
-        {/* Positions */}
-        {tuning.map((open, s) =>
-          Array.from({ length: frets + 1 }, (_, f) => {
-            const blocked = f > 0 && f < capo;
-            const soundingFret = f === 0 ? capo : f;
-            const midi = open + soundingFret;
-            const mark = markMap.get(`${s}:${f}`);
-            const inSet = pcs?.has(mod12(midi));
-            const isRoot = rootPc !== undefined && mod12(midi) === mod12(rootPc) && inSet;
-            const tone: FretTone | undefined = mark?.tone ?? (isRoot ? "root" : inSet ? "scale" : undefined);
-            const show = !!mark || !!inSet || showAllNotes;
-            const x = flipX(cx(f));
-            const y = yOf(s);
-            const fill = tone ? TONE_FILL[tone] : "var(--surface)";
-            const label = mark?.finger !== undefined ? String(mark.finger) : mark?.label ?? labelFor(midi);
-            return (
-              <g
-                key={`${s}-${f}`}
-                role="button"
-                tabIndex={blocked ? -1 : 0}
-                aria-disabled={blocked || undefined}
-                aria-label={tr(f === 0 ? (capo ? "ui.fb_cell_open_capo" : "ui.fb_cell_open") : "ui.fb_cell_fret", { s: stringNumber(s), f, note: midiToName(midi, prefs.spelling) })}
-                data-string={s}
-                data-fret={f}
-                data-midi={midi}
-                className={cn("cursor-pointer outline-none [&:focus-visible>circle]:stroke-[var(--ring)] [&:focus-visible>circle]:stroke-[3]", blocked && "cursor-not-allowed opacity-30")}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  if (!blocked) play(s, f);
-                }}
-                onKeyDown={(e) => {
-                  if ((e.key === "Enter" || e.key === " ") && !blocked) {
-                    e.preventDefault();
-                    play(s, f);
-                  }
-                }}
-              >
-                <rect x={x - (f === 0 ? openW / 2 : widths[f - 1] / 2)} y={y - gap / 2} width={f === 0 ? openW : widths[f - 1]} height={gap} fill="transparent" />
-                {show && (
-                  <>
-                    <circle cx={x} cy={y} r={11.5} fill={fill} stroke={tone ? "none" : "var(--border-strong)"} opacity={tone ? 1 : 0.92} />
-                    <text x={x} y={y + 3.8} textAnchor="middle" fontSize={label.length > 3 ? 7.5 : 10} fontWeight={600} fill={tone ? "#fff" : "var(--text)"} pointerEvents="none">
-                      {label}
-                    </text>
-                  </>
-                )}
+    <div className={className}>
+      <div ref={scroller} className="scrollbar-thin overflow-x-auto rounded-2xl border border-border bg-surface-2 p-2 shadow-card">
+        <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={ariaLabel ?? tr("ui.guitar_fretboard")} className="block h-auto min-w-[720px] w-full select-none" style={{ touchAction: "manipulation" }}>
+          <defs>
+            <linearGradient id="fb-wood" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="var(--fret-wood)" />
+              <stop offset="1" stopColor="var(--fret-wood-2)" />
+            </linearGradient>
+          </defs>
+          {/* Neck */}
+          <rect x={flipX(leftHanded ? xs[xs.length - 1] : openW)} y={top - 12} width={xs[xs.length - 1] - openW} height={gap * 5 + 24} rx={4} fill="url(#fb-wood)" />
+          {/* Inlays */}
+          {INLAY_FRETS.filter((f) => f <= frets).map((f) =>
+            DOUBLE_INLAY_FRETS.includes(f) ? (
+              <g key={f}>
+                <circle cx={flipX(cx(f))} cy={top + gap * 1.5} r={5} fill="var(--inlay)" opacity={0.7} />
+                <circle cx={flipX(cx(f))} cy={top + gap * 3.5} r={5} fill="var(--inlay)" opacity={0.7} />
               </g>
-            );
-          }),
-        )}
-      </svg>
+            ) : (
+              <circle key={f} cx={flipX(cx(f))} cy={top + gap * 2.5} r={5} fill="var(--inlay)" opacity={0.7} />
+            ),
+          )}
+          {/* Nut and frets */}
+          <rect x={flipX(openW) - (leftHanded ? 0 : 5)} y={top - 12} width={5} height={gap * 5 + 24} fill="var(--inlay)" />
+          {xs.slice(1).map((x, i) => (
+            <rect key={i} x={flipX(x) - 1.5} y={top - 12} width={3} height={gap * 5 + 24} fill="var(--fret-wire)" />
+          ))}
+          {/* Fret numbers */}
+          {Array.from({ length: frets }, (_, i) => i + 1).map((f) => (
+            <text key={f} x={flipX(cx(f))} y={H - 6} textAnchor="middle" fontSize={11} fill="var(--muted)" className={cn(INLAY_FRETS.includes(f) && "font-semibold")}>
+              {f}
+            </text>
+          ))}
+          {/* Strings */}
+          {tuning.map((open, s) => (
+            <g key={s}>
+              <line
+                x1={flipX(openW)}
+                x2={flipX(xs[xs.length - 1])}
+                y1={yOf(s)}
+                y2={yOf(s)}
+                stroke={activeString === s ? "var(--accent)" : "var(--string)"}
+                strokeWidth={activeString === s ? 3.5 : 1 + (5 - s) * 0.35}
+              />
+              <text x={flipX(12)} y={yOf(s) + 4} textAnchor="middle" fontSize={11} fontWeight={600} fill={activeString === s ? "var(--accent)" : "var(--muted)"}>
+                {mutedStrings.includes(s) ? "×" : pcName(open + capo, prefs.spelling)}
+              </text>
+              <text x={flipX(31)} y={yOf(s) + 4} textAnchor="middle" fontSize={9} fill="var(--subtle)">
+                {stringNumber(s)}
+              </text>
+            </g>
+          ))}
+          {/* Capo */}
+          {capo > 0 && capo <= frets && (
+            <g aria-label={tr("ui.capo_on_fret_aria", { n: capo })}>
+              <rect x={flipX(xs[capo - 1] + (xs[capo] - xs[capo - 1]) * 0.55) - 7} y={top - 16} width={14} height={gap * 5 + 32} rx={6} fill="var(--text)" opacity={0.85} />
+            </g>
+          )}
+          {/* Positions */}
+          {tuning.map((open, s) =>
+            Array.from({ length: frets + 1 }, (_, f) => {
+              const blocked = f > 0 && f < capo;
+              const soundingFret = f === 0 ? capo : f;
+              const midi = open + soundingFret;
+              const mark = markMap.get(`${s}:${f}`);
+              const inSet = pcs?.has(mod12(midi));
+              const isRoot = rootPc !== undefined && mod12(midi) === mod12(rootPc) && inSet;
+              const tone: FretTone | undefined = mark?.tone ?? (isRoot ? "root" : inSet ? "scale" : undefined);
+              const show = !!mark || !!inSet || showAllNotes;
+              const x = flipX(cx(f));
+              const y = yOf(s);
+              const fill = tone ? TONE_FILL[tone] : "var(--surface)";
+              const label = mark?.finger !== undefined ? String(mark.finger) : mark?.label ?? labelFor(midi);
+              return (
+                <g
+                  key={`${s}-${f}`}
+                  role="button"
+                  tabIndex={blocked ? -1 : 0}
+                  aria-disabled={blocked || undefined}
+                  aria-label={tr(f === 0 ? (capo ? "ui.fb_cell_open_capo" : "ui.fb_cell_open") : "ui.fb_cell_fret", { s: stringNumber(s), f, note: midiToName(midi, prefs.spelling) })}
+                  data-string={s}
+                  data-fret={f}
+                  data-midi={midi}
+                  className={cn("cursor-pointer outline-none [&:focus-visible>circle]:stroke-[var(--ring)] [&:focus-visible>circle]:stroke-[3]", blocked && "cursor-not-allowed opacity-30")}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    if (!blocked) play(s, f);
+                  }}
+                  onKeyDown={(e) => {
+                    if ((e.key === "Enter" || e.key === " ") && !blocked) {
+                      e.preventDefault();
+                      play(s, f);
+                    }
+                  }}
+                >
+                  <rect x={x - (f === 0 ? openW / 2 : widths[f - 1] / 2)} y={y - gap / 2} width={f === 0 ? openW : widths[f - 1]} height={gap} fill="transparent" />
+                  {show && (
+                    <>
+                      <circle cx={x} cy={y} r={11.5} fill={fill} stroke={tone ? "none" : "var(--border-strong)"} opacity={tone ? 1 : 0.92} />
+                      <text x={x} y={y + 3.8} textAnchor="middle" fontSize={label.length > 3 ? 7.5 : 10} fontWeight={600} fill={tone ? "#fff" : "var(--text)"} pointerEvents="none">
+                        {label}
+                      </text>
+                    </>
+                  )}
+                </g>
+              );
+            }),
+          )}
+        </svg>
+      </div>
+      <ScrollControls target={scroller} />
     </div>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 import { useT } from "@/lib/i18n";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { blackKeyOffset, COMPUTER_KEY_MAP, keysInRange } from "@/lib/music/keyboard";
@@ -9,6 +8,7 @@ import { labelNote, type LabelMode } from "@/lib/music/sargam";
 import { pianoAttack, pianoRelease } from "@/lib/audio/engine";
 import { usePrefs } from "@/hooks/use-prefs";
 import { cn } from "@/components/ui";
+import { ScrollControls } from "./scroll-controls";
 
 export type KeyTone = "target" | "correct" | "wrong" | "hint" | "scale" | "root" | "chord";
 
@@ -118,37 +118,6 @@ export function PianoKeyboard({
     if (!k) return;
     el.scrollLeft = k.whiteIndex * whiteKeyWidth - el.clientWidth / 2 + whiteKeyWidth / 2;
   }, [focusMidi, keys, whiteKeyWidth]);
-
-  // Keys are touch-none (so taps and glissandos play), which means a swipe can't scroll them on a phone.
-  // Track the scroll position so we can offer arrow buttons and a draggable bar instead.
-  const [view, setView] = useState({ overflow: false, start: 0, size: 1 });
-  useEffect(() => {
-    const el = scroller.current;
-    if (!el) return;
-    const update = () => {
-      const sw = el.scrollWidth;
-      setView({ overflow: sw > el.clientWidth + 1, start: el.scrollLeft / sw, size: el.clientWidth / sw });
-    };
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => {
-      el.removeEventListener("scroll", update);
-      ro.disconnect();
-    };
-  }, [totalW]);
-  const scrollByOctave = (dir: 1 | -1) => scroller.current?.scrollBy({ left: dir * 7 * whiteKeyWidth, behavior: "smooth" });
-  const dragTrack = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = scroller.current;
-    if (!el || (e.type === "pointermove" && !e.currentTarget.hasPointerCapture(e.pointerId))) return;
-    if (e.type === "pointerdown") e.currentTarget.setPointerCapture(e.pointerId);
-    const r = e.currentTarget.getBoundingClientRect();
-    // Centre the visible window on the finger.
-    el.scrollLeft = ((e.clientX - r.left) / r.width) * el.scrollWidth - el.clientWidth / 2;
-  };
-  const atStart = view.start <= 0.001;
-  const atEnd = view.start + view.size >= 0.999;
 
   // Latest handlers via refs, so a parent passing inline callbacks doesn't re-run the listener
   // effect (whose cleanup releases held notes) on every render.
@@ -333,41 +302,7 @@ export function PianoKeyboard({
           })}
         </div>
       </div>
-      {view.overflow && (
-        <div className="mt-2 flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => scrollByOctave(-1)}
-            disabled={atStart}
-            aria-label={tr("ui.scroll_keys_left")}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-muted hover:text-text disabled:opacity-40"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-          <div
-            aria-hidden
-            title={tr("ui.drag_to_scroll_keys")}
-            className="relative h-8 flex-1 cursor-grab touch-none select-none active:cursor-grabbing"
-            onPointerDown={dragTrack}
-            onPointerMove={dragTrack}
-          >
-            <div className="absolute inset-x-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-surface-2" />
-            <div
-              className="absolute top-1/2 h-3 -translate-y-1/2 rounded-full bg-accent/70"
-              style={{ left: `${view.start * 100}%`, width: `${view.size * 100}%` }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => scrollByOctave(1)}
-            disabled={atEnd}
-            aria-label={tr("ui.scroll_keys_right")}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-surface-2 text-muted hover:text-text disabled:opacity-40"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      <ScrollControls target={scroller} step={7 * whiteKeyWidth} />
       {computerKeyboard && (
         <p className="mt-2 text-xs text-muted">
           {tr("ui.kb_help_a")} <kbd className="rounded bg-surface-2 px-1">A</kbd>–<kbd className="rounded bg-surface-2 px-1">;</kbd> {tr("ui.kb_help_b")} <kbd className="rounded bg-surface-2 px-1">W E T Y U O P</kbd> {tr("ui.kb_help_c")} <strong>{midiToName(baseC)}</strong>. <kbd className="rounded bg-surface-2 px-1">Z</kbd>/<kbd className="rounded bg-surface-2 px-1">X</kbd> {tr("ui.kb_help_d")}
