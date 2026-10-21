@@ -47,7 +47,7 @@ export function CapoSimulator() {
                 <tr><th className="px-3 py-2">{tl("ui.string")}</th><th className="px-3 py-2">{tl("ui.without_capo")}</th><th className="px-3 py-2" /><th className="px-3 py-2">{tl("ui.with_capo_n", { n: capo || "—" })}</th></tr>
               </thead>
               <tbody>
-                {[5, 4, 3, 2, 1, 0].map((s) => (
+                {[0, 1, 2, 3, 4, 5].map((s) => (
                   <tr key={s} className="border-t border-border">
                     <td className="px-3 py-1.5 text-muted">{stringNumber(s)}</td>
                     <td className="px-3 py-1.5"><NoteText midi={STANDARD_TUNING[s]} withOctave /></td>

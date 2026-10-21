@@ -63,7 +63,7 @@ export function PlayOneString() {
         <label className="space-y-1 text-sm">
           <span className="block font-medium">{tr("ui.target_string")}</span>
           <Select aria-label={tr("ui.target_string")} value={string} onChange={(e) => { setString(Number(e.target.value)); setAttempts([]); }}>
-            {[5, 4, 3, 2, 1, 0].map((s) => <option key={s} value={s}>{sl(s)}</option>)}
+            {[0, 1, 2, 3, 4, 5].map((s) => <option key={s} value={s}>{sl(s)}</option>)}
           </Select>
         </label>
         <Button variant="secondary" onClick={() => void playReferenceTone(midiToFrequency(target, prefs.a4))}><Volume2 className="h-4 w-4" /> {tr("ui.hear_the_target")}</Button>

@@ -53,7 +53,7 @@ const TONE_FILL: Record<FretTone, string> = {
 };
 
 /**
- * Horizontal fretboard: high E string on top (like tablature), nut on the left
+ * Horizontal fretboard: low E (6th string) on top, reading E A D G B E downwards; nut on the left
  * (right in left-handed mode). Every position is a focusable button that plays its note.
  */
 export function Fretboard({
@@ -92,7 +92,7 @@ export function Fretboard({
   const top = 26;
   const gap = 30;
   const H = top + gap * 5 + 34;
-  const yOf = (s: number) => top + (5 - s) * gap; // string 5 (high E) at top
+  const yOf = (s: number) => top + s * gap; // string 0 (low E, 6th) at top: E A D G B E downwards
   const cx = (f: number) => (f === 0 ? openW / 2 : (xs[f - 1] + xs[f]) / 2);
   const flipX = (x: number) => (leftHanded ? W - x : x);
 

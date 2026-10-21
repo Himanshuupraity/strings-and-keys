@@ -18,7 +18,7 @@ export function TuningReference() {
       <CardHeader icon={<Gauge className="h-5 w-5" />} title={tr("ui.tuning_reference")} description={tr("ui.play_each_reference_note_then_turn_the_tuning_pe")} action={<Link href="/tuner"><Button size="sm">{tr("ui.open_tuner")}</Button></Link>} />
       <CardBody className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {[5, 4, 3, 2, 1, 0].map((s) => {
+          {[0, 1, 2, 3, 4, 5].map((s) => {
             const m = STANDARD_TUNING[s];
             const f = midiToFrequency(m, prefs.a4);
             return (
