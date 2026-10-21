@@ -40,3 +40,21 @@ test("mobile: bottom navigation works", async ({ page }) => {
   await page.getByRole("navigation", { name: "Quick" }).getByRole("link", { name: /Practice/ }).click();
   await expect(page).toHaveURL(/\/practice/);
 });
+
+test("mobile: piano keys can be scrolled with the arrows and the drag bar", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await seedPrefs(page);
+  await page.goto("/piano-lab");
+  const scroller = page.getByRole("group", { name: "Piano keyboard" }).first().locator("..");
+  const pos = () => scroller.evaluate((el) => el.scrollLeft);
+  const before = await pos();
+  await page.getByRole("button", { name: "Scroll keys right" }).first().click();
+  await expect.poll(pos).toBeGreaterThan(before);
+  const bar = page.getByTitle("Drag to see more keys").first();
+  const box = (await bar.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 2, box.y + box.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await expect.poll(pos).toBe(0);
+});
