@@ -123,6 +123,7 @@ export function SettingsView({ accountPanel }: { accountPanel?: ReactNode }) {
           <Switch checked={prefs.showBlackKeyLabels} onChange={(showBlackKeyLabels) => setPrefs({ showBlackKeyLabels })} label={t("ui.label_black_keys")} />
           <Switch checked={prefs.leftHanded} onChange={(leftHanded) => setPrefs({ leftHanded })} label={t("ui.left_handed_guitar_view")} description={t("ui.mirrors_the_fretboard_so_the_nut_is_on_the_right")} />
           <Slider label={t("ui.frets_shown")} min={12} max={24} value={prefs.fretCount} onChange={(fretCount) => setPrefs({ fretCount })} />
+          <Switch checked={prefs.autoMic} onChange={(autoMic) => setPrefs({ autoMic })} label={t("ui.auto_mic")} description={t("ui.auto_mic_hint")} />
           <Slider label={t("ui.tuning_reference_a4")} min={430} max={450} value={prefs.a4} onChange={(a4) => setPrefs({ a4 })} format={(v) => `${v} Hz`} />
           <Slider label={t("ui.volume")} min={0} max={1} step={0.05} value={prefs.volume} onChange={(volume) => setPrefs({ volume })} format={(v) => `${Math.round(v * 100)}%`} />
         </Section>

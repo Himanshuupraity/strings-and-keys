@@ -26,3 +26,23 @@ test("microphone denial is handled gracefully", async ({ page }) => {
   // The rest of the page still works
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
+
+test("once allowed, the microphone turns itself on where it's needed (and can be switched off)", async ({ page }) => {
+  await seedPrefs(page);
+  await mockMicrophone(page, 110);
+  await page.goto("/tuner");
+  // Never allowed yet: waits for a press.
+  await expect(page.getByTestId("mic-start").first()).toBeVisible();
+  await page.getByTestId("mic-start").first().click();
+  await expect(page.getByTestId("mic-stop").first()).toBeVisible();
+  // Next page that listens starts by itself.
+  await page.goto("/practice/note-detector");
+  await expect(page.getByTestId("mic-stop").first()).toBeVisible();
+  // Turned off in Settings: back to pressing the button.
+  await page.goto("/settings");
+  await page.getByRole("switch", { name: "Turn the microphone on automatically" }).click();
+  await page.goto("/tuner");
+  await expect(page.getByTestId("mic-start").first()).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId("mic-stop")).toHaveCount(0);
+});

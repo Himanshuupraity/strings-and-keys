@@ -26,6 +26,8 @@ export const PrefsSchema = z.object({
   capo: z.number().int().min(0).max(12).catch(0),
   onboarded: z.boolean().catch(false),
   coachEnabled: z.boolean().catch(true),
+  /** Turn the microphone on by itself wherever a "Listen" button appears, once permission is granted. */
+  autoMic: z.boolean().catch(true),
   /** Interface language. */
   uiLanguage: z.enum(["en", "hi"]).catch("en"),
   /** Piano sound: recorded grand-piano samples, or the lightweight synth. */

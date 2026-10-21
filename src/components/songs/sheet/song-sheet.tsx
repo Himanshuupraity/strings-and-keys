@@ -191,7 +191,7 @@ export function SongSheet({ title, artist, sheet, youtube, onLineChange, onPaste
 
             {mode === "voice" && (
               <div className="space-y-2">
-                <MicButton status={mic.status} error={mic.error} onStart={startVoice} onStop={mic.stop} label={t("sheet.startVoice")} showPrivacy={false} />
+                <MicButton status={mic.status} error={mic.error} onStart={startVoice} onStop={mic.stop} label={t("sheet.startVoice")} showPrivacy={false} autoStart={false} />
                 {mic.listening && (
                   <div className="flex flex-wrap items-center gap-3 text-sm" role="status" aria-live="polite" data-testid="voice-status">
                     <span className={cn("font-medium", voiceState === "singing" ? "text-success" : "text-muted")}>

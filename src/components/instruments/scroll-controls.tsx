@@ -21,12 +21,12 @@ export function ScrollControls({ target, step }: { target: RefObject<HTMLElement
     };
     update();
     el.addEventListener("scroll", update, { passive: true });
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    const ro = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update);
+    ro?.observe(el);
+    if (el.firstElementChild) ro?.observe(el.firstElementChild);
     return () => {
       el.removeEventListener("scroll", update);
-      ro.disconnect();
+      ro?.disconnect();
     };
   }, [target]);
 

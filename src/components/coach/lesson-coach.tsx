@@ -391,7 +391,7 @@ export function LessonCoach({ onResult }: { onResult?: (r: LastExercise) => void
           </Button>
         </div>
 
-        <MicButton status={micStatus.status} error={micStatus.error} onStart={() => void listen()} onStop={stopMic} label={tr("ui.listen_to_me")} />
+        <MicButton status={micStatus.status} error={micStatus.error} onStart={() => void listen()} onStop={stopMic} label={tr("ui.listen_to_me")} autoStart={false} />
         {ex.kind === "chord" && <p className="-mt-1 text-xs text-muted">{tr("ui.chord_listening_is_a_best_effort_estimate_with_a")}</p>}
         {input.midi.supported && (
           <div className="flex flex-wrap items-center gap-2 text-sm">

@@ -27,6 +27,38 @@ export function micSupported(): boolean {
   return typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
 }
 
+const GRANTED_KEY = "mic-granted";
+
+/**
+ * True when the microphone can start without a new permission prompt, so a "Listen" control may
+ * turn it on by itself. Uses the Permissions API, falling back to "it worked here before" for
+ * browsers that don't report microphone permission.
+ */
+export async function micPermissionGranted(): Promise<boolean> {
+  if (typeof window === "undefined" || !window.isSecureContext || !micSupported()) return false;
+  try {
+    const p = await navigator.permissions?.query({ name: "microphone" as PermissionName });
+    if (p?.state === "granted") return true;
+    if (p?.state === "denied") return false;
+  } catch {
+    /* "microphone" isn't a queryable permission in this browser */
+  }
+  try {
+    return localStorage.getItem(GRANTED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function rememberGrant(granted: boolean) {
+  try {
+    if (granted) localStorage.setItem(GRANTED_KEY, "1");
+    else localStorage.removeItem(GRANTED_KEY);
+  } catch {
+    /* storage blocked */
+  }
+}
+
 export function describeMicError(e: unknown): { kind: MicErrorKind; message: string } {
   if (e instanceof MicError) return { kind: e.kind, message: e.message };
   const name = (e as { name?: string })?.name;
@@ -112,11 +144,23 @@ export class MicListener {
       });
     } catch (e) {
       const d = describeMicError(e);
+      if (d.kind === "denied") rememberGrant(false);
       throw new MicError(d.kind, d.message);
     }
+    rememberGrant(true);
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new Ctx();
-    if (this.ctx.state === "suspended") await this.ctx.resume();
+    if (this.ctx.state === "suspended") {
+      // Started automatically before any tap on the page: the browser keeps audio suspended until one.
+      const activated = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation?.hasBeenActive ?? true;
+      if (activated) await this.ctx.resume();
+      else {
+        const ctx = this.ctx;
+        const resume = () => void ctx.resume();
+        window.addEventListener("pointerdown", resume, { once: true, capture: true });
+        window.addEventListener("keydown", resume, { once: true, capture: true });
+      }
+    }
     this.source = this.ctx.createMediaStreamSource(this.stream);
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = this.opts.fftSize;
