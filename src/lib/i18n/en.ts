@@ -1658,7 +1658,7 @@ export const EN = {
   "ui.additionally_requires_passing_the_measured_exerc": "additionally requires passing the measured exercises — played on the virtual instrument, a MIDI keyboard or your real instrument through the microphone.",
   "ui.complete": "Complete",
   "ui.mastery": "Mastery",
-  "ui.best_quiz_score": "Best quiz score:",
+  "ui.best_quiz_score": "Best quiz score: {pct}%",
   "ui.complete_first": "Complete first:",
   "ui.not_started": "Not started",
   "ui.in_progress": "In progress",

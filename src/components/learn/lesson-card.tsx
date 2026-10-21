@@ -70,7 +70,7 @@ export function LessonCard({ view, highlight }: { view: LessonView; highlight?: 
         </p>
       )}
       {cta && (
-        <span className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-accent">
+        <span className={cn("mt-3 inline-flex items-center gap-1.5 text-sm font-medium", done ? "text-success" : "text-accent")}>
           <cta.icon className="h-4 w-4" aria-hidden /> {cta.label}
         </span>
       )}
@@ -79,7 +79,11 @@ export function LessonCard({ view, highlight }: { view: LessonView; highlight?: 
 
   const cls = cn(
     "block h-full rounded-2xl border bg-surface p-4 shadow-card transition-all",
-    unlocked ? "border-border hover:-translate-y-0.5 hover:border-accent/60" : "border-dashed border-border-strong opacity-80",
+    !unlocked
+      ? "border-dashed border-border-strong opacity-80"
+      : done
+        ? "border-success/50 bg-[color-mix(in_oklab,var(--success)_10%,var(--surface))] hover:-translate-y-0.5 hover:border-success"
+        : "border-border hover:-translate-y-0.5 hover:border-accent/60",
     highlight && "ring-2 ring-accent/50",
   );
 

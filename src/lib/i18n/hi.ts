@@ -1661,7 +1661,7 @@ export const HI: Record<MessageKey, string> = {
   "ui.additionally_requires_passing_the_measured_exerc": "के लिए मापे गए अभ्यास भी पास करने होते हैं — वर्चुअल वाद्य, MIDI कीबोर्ड या माइक्रोफ़ोन से असली वाद्य पर बजाकर।",
   "ui.complete": "पूरा",
   "ui.mastery": "महारत",
-  "ui.best_quiz_score": "क्विज़ का सबसे अच्छा स्कोर:",
+  "ui.best_quiz_score": "क्विज़ का सबसे अच्छा स्कोर: {pct}%",
   "ui.complete_first": "पहले पूरा करें:",
   "ui.not_started": "शुरू नहीं हुआ",
   "ui.in_progress": "चल रहा है",
